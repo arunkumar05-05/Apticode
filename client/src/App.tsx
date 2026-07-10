@@ -33,21 +33,29 @@ export default function App() {
   const [xp, setXp] = useState(24500); // start at master level
   const [level, setLevel] = useState('Master');
 
-  // Dynamic Theme Mode: default to dark
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  // Dynamic Theme Mode with localStorage persistence and system-theme check on first visit
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('apticode-theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+      return 'light';
+    }
+    return 'dark';
+  });
 
   React.useEffect(() => {
-    document.documentElement.classList.add('dark');
-  }, []);
-
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    if (nextTheme === 'dark') {
+    if (theme === 'dark') {
       document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
     } else {
+      document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('apticode-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   // AI Career Co-Pilot Chat Companion Drawer State
