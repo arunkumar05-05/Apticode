@@ -13,7 +13,7 @@
   --slate-700: #cbd5e1;
   --slate-850: #e2e8f0;
   --slate-800: #e2e8f0;
-  --slate-900: #f8fafc;
+  --slate-900: #f1f5f9;
   --slate-950: #ffffff;
 
   --color-brand-purple: #6366f1; /* Professional Indigo */
@@ -21,9 +21,11 @@
   
   --bg-base: #f8fafc;
   --bg-sidebar: #ffffff;
-  --bg-card: rgba(255, 255, 255, 0.8);
-  --border-subtle: rgba(15, 23, 42, 0.06);
-  --shadow-main: 0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-subtle: rgba(15, 23, 42, 0.03);
+  --bg-card-subtle-light: rgba(15, 23, 42, 0.015);
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --shadow-main: 0 12px 30px -10px rgba(15, 23, 42, 0.06);
 
   --font-sans: "Inter", "Outfit", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
@@ -51,8 +53,10 @@
   --bg-base: #05070f;
   --bg-sidebar: rgba(9, 13, 26, 0.85);
   --bg-card: rgba(13, 20, 40, 0.45);
+  --bg-card-subtle: rgba(2, 6, 23, 0.45);
+  --bg-card-subtle-light: rgba(2, 6, 23, 0.2);
   --border-subtle: rgba(255, 255, 255, 0.04);
-  --shadow-main: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  --shadow-main: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 @theme {
@@ -87,12 +91,12 @@
     @apply bg-obsidian-950 text-slate-100 font-sans antialiased overflow-x-hidden;
     /* Expensive grid blueprint background details */
     background-image: 
-      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.05) 0px, transparent 50%),
+      radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.04) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.04) 0px, transparent 50%),
       radial-gradient(rgba(15, 23, 42, 0.015) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 24px 24px;
     background-attachment: fixed;
-    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
   }
 
   .dark body {
@@ -108,16 +112,16 @@
   background: var(--bg-card);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle) !important;
   box-shadow: var(--shadow-main);
-  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-panel-accent {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(14, 165, 233, 0.03) 100%);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.15) !important;
   box-shadow: var(--shadow-main);
 }
 
@@ -125,17 +129,17 @@
   background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid var(--border-subtle);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--border-subtle) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .dark .glass-card {
   background: rgba(15, 23, 42, 0.3);
-  border-color: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.02) !important;
 }
 
 .glass-card:hover {
-  border-color: rgba(14, 165, 233, 0.25);
+  border-color: rgba(14, 165, 233, 0.25) !important;
   background: rgba(255, 255, 255, 0.6);
   transform: translateY(-2px);
 }
@@ -158,4 +162,49 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.3);
+}
+
+/* -------------------------------------------------------------
+   Dynamic Layout Interceptor Overrides for Light Theme Mode
+   ------------------------------------------------------------- */
+.border-white\/5,
+.border-white\/10,
+.border-white\/20 {
+  border-color: var(--border-subtle) !important;
+}
+
+.border-t-white\/5 {
+  border-top-color: var(--border-subtle) !important;
+}
+
+.border-b-white\/5 {
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+.border-r-white\/5 {
+  border-right-color: var(--border-subtle) !important;
+}
+
+.border-l-white\/5 {
+  border-left-color: var(--border-subtle) !important;
+}
+
+.divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-subtle) !important;
+}
+
+.bg-slate-950\/40,
+.bg-slate-950\/50,
+.bg-slate-950\/60,
+.bg-slate-900\/30 {
+  background-color: var(--bg-card-subtle) !important;
+}
+
+.bg-slate-950\/20,
+.bg-slate-950\/10 {
+  background-color: var(--bg-card-subtle-light) !important;
+}
+
+.bg-slate-900\/85 {
+  background-color: var(--bg-sidebar) !important;
 }
