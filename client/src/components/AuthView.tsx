@@ -127,12 +127,12 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 -z-10" />
 
       {/* Brand logo link */}
-      <div className="flex items-center space-x-2 mb-8 cursor-pointer" onClick={onBack}>
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-purple to-brand-cyan flex items-center justify-center shadow-lg shadow-brand-purple/20">
-          <Terminal className="w-4.5 h-4.5 text-white" />
+      <div className="brand-logo-wrapper flex items-center space-x-3.5 mb-8 cursor-pointer" onClick={onBack}>
+        <div className="brand-logo-container">
+          <img src="/favicon.svg" alt="AptiCode Logo" className="w-5.5 h-5.5" />
         </div>
-        <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-          Apti<span className="bg-gradient-to-r from-brand-purple to-brand-cyan bg-clip-text text-transparent">Code</span>
+        <span className="font-extrabold text-2xl tracking-tight brand-logo-text leading-none select-none">
+          Apti<span className="brand-logo-code">Code</span>
         </span>
       </div>
 

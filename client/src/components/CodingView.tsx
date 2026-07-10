@@ -133,7 +133,7 @@ export default function CodingView() {
       {/* Right Pane: IDE Editor and Console */}
       <div className="flex flex-col space-y-6 h-full">
         {/* Editor Area */}
-        <div className="flex-1 glass-panel overflow-hidden flex flex-col">
+        <div className="flex-1 glass-panel overflow-hidden flex flex-col min-h-[350px]">
           {/* Editor Header */}
           <div className="flex justify-between items-center px-4 py-2 bg-slate-950/40 border-b border-white/5">
             <div className="flex items-center space-x-1.5">
