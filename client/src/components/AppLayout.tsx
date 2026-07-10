@@ -87,7 +87,7 @@ export default function AppLayout({
             {sidebarOpen && (
               <button 
                 onClick={() => setSidebarOpen(false)}
-                className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer"
+                className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-400 hover:text-white cursor-pointer"
                 title="Collapse Sidebar"
               >
                 <ChevronDown className="w-4 h-4 -rotate-90" />
@@ -122,7 +122,7 @@ export default function AppLayout({
                     title={sidebarOpen ? undefined : item.label}
                   >
                     <div className={`p-1.5 rounded-full flex items-center justify-center transition-all ${
-                      isActive ? 'bg-gradient-to-r from-purple-500/15 to-cyan-500/15 border border-purple-500/20 text-white' : 'bg-slate-900 border border-slate-850 text-slate-500 dark:text-slate-400'
+                      isActive ? 'bg-brand-purple/20 text-brand-purple' : 'bg-slate-900 border border-slate-850 text-slate-400'
                     }`}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
@@ -173,7 +173,7 @@ export default function AppLayout({
               {(!sidebarOpen) && (
                 <button 
                   onClick={() => setSidebarOpen(true)}
-                  className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer shrink-0"
+                  className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-400 hover:text-white cursor-pointer shrink-0"
                   aria-label="Expand Navigation Menu"
                 >
                   <Menu className="w-5 h-5" />
@@ -194,7 +194,7 @@ export default function AppLayout({
               {/* Notification Bell Button */}
               <button 
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white relative cursor-pointer"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white relative cursor-pointer"
                 aria-label="Toggle notifications panel"
               >
                 <Bell className="w-5 h-5" />
@@ -206,7 +206,7 @@ export default function AppLayout({
               {/* Theme Toggle Button */}
               <button 
                 onClick={toggleTheme}
-                className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-all"
+                className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white cursor-pointer transition-all"
                 aria-label="Toggle Theme"
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400 fill-amber-400/10" /> : <Moon className="w-5 h-5 text-indigo-400 fill-indigo-400/10" />}
@@ -260,7 +260,7 @@ export default function AppLayout({
               {(!sidebarOpen) && (
                 <button 
                   onClick={() => setSidebarOpen(true)}
-                  className="p-1.5 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer shrink-0"
+                  className="p-1.5 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-400 hover:text-white cursor-pointer shrink-0"
                   title="Expand Sidebar"
                   aria-label="Expand Sidebar"
                 >
@@ -321,7 +321,7 @@ export default function AppLayout({
                 {/* Theme Toggle Button */}
                 <button 
                   onClick={toggleTheme}
-                  className="p-2 rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white cursor-pointer transition-all flex items-center justify-center"
+                  className="p-2 rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white cursor-pointer transition-all flex items-center justify-center"
                   title="Toggle Light/Dark Theme"
                   aria-label="Toggle Theme"
                 >
