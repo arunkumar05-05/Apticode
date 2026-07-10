@@ -89,8 +89,33 @@
 }
 
 @layer base {
+  html,
   body {
-    @apply bg-obsidian-950 text-slate-100 font-sans antialiased overflow-x-hidden;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .main-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    @apply bg-obsidian-950 text-slate-100 font-sans antialiased;
     /* Soft grid blueprint detail background */
     background-image: 
       radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.03) 0px, transparent 50%),

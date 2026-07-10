@@ -242,7 +242,7 @@ export default function AppLayout({
         </header>
 
         {/* View container */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           {children}
         </main>
       </div>
