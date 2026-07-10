@@ -137,10 +137,8 @@ export default function App() {
         <div className="space-y-8">
           {/* Logo Brand */}
           <div className="flex items-center justify-between pb-2 border-b border-white/5">
-            <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-purple to-brand-cyan flex items-center justify-center">
-                <Terminal className="w-4.5 h-4.5 text-white" />
-              </div>
+            <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
+              <img src="/favicon.svg" alt="AptiCode" className="w-7 h-7" />
               <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
                 Apti<span className="bg-gradient-to-r from-brand-purple to-brand-cyan bg-clip-text text-transparent">Code</span>
               </span>
