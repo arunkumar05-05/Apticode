@@ -12,21 +12,21 @@
   --slate-600: #9ca3af;
   --slate-700: #d1d5db;
   --slate-800: #EEF2F7;     /* Card border #EEF2F7 */
-  --slate-850: #E8ECF4;     /* Standard border #E8ECF4 */
-  --slate-900: #F8FAFC;     /* Secondary background #F8FAFC */
-  --slate-950: #F6F8FC;     /* Background base #F6F8FC */
+  --slate-850: #E7EBF2;     /* Standard border #E7EBF2 */
+  --slate-900: #F7F9FC;     /* Secondary Surface #F7F9FC */
+  --slate-950: #F3F5F9;     /* Background base #F3F5F9 */
 
   --color-brand-purple: #4F46E5; /* Accent Indigo #4F46E5 */
-  --color-brand-cyan: #0EA5E9;   /* Chart Cyan */
+  --color-brand-cyan: #3B82F6;   /* Accent Blue #3B82F6 */
   
-  --bg-base: #F6F8FC;
-  --bg-sidebar: #FFFFFF;
+  --bg-base: #F3F5F9;
+  --bg-sidebar: #FAFBFD;
   --bg-card: #FFFFFF;
-  --bg-card-subtle: #F8FAFC;
-  --bg-card-subtle-light: #F8FAFC;
-  --border-subtle: #E8ECF4;
+  --bg-card-subtle: #F7F9FC;
+  --bg-card-subtle-light: #F7F9FC;
+  --border-subtle: #E7EBF2;
   --border-card: #EEF2F7;
-  --shadow-main: 0 4px 20px -2px rgba(17, 24, 39, 0.04), 0 2px 6px -1px rgba(17, 24, 39, 0.02);
+  --shadow-main: 0 10px 30px rgba(15, 23, 42, 0.05);
 
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
@@ -94,13 +94,13 @@
     /* Soft grid blueprint detail background */
     background-image: 
       radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.03) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.03) 0px, transparent 50%),
       radial-gradient(rgba(15, 23, 42, 0.015) 1px, transparent 1px);
     background-size: 100% 100%, 100% 100%, 24px 24px;
     background-attachment: fixed;
     font-size: 14px;
     line-height: 1.5;
-    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 
   .dark body {
@@ -112,42 +112,43 @@
 
   /* Typography Specification */
   h1 {
-    font-size: 34px !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.025em !important;
+    font-size: 48px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.03em !important;
   }
   
   h2 {
-    font-size: 28px !important;
-    font-weight: 700 !important;
+    font-size: 36px !important;
+    font-weight: 800 !important;
     letter-spacing: -0.02em !important;
   }
   
   h3 {
-    font-size: 22px !important;
-    font-weight: 600 !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
     letter-spacing: -0.015em !important;
   }
   
   h4 {
     font-size: 15px !important;
-    font-weight: 600 !important;
+    font-weight: 500 !important;
   }
 }
 
-/* Premium Sidebar Active Indicator */
+/* Premium Sidebar Active Indicator - Gradient with Left Glowing Border */
 .premium-active-nav {
   border-radius: 12px !important;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.06) 0%, rgba(14, 165, 233, 0.03) 100%) !important;
-  color: var(--color-brand-purple) !important;
-  border-left: 3px solid var(--color-brand-purple) !important;
+  background: linear-gradient(135deg, var(--color-brand-cyan) 0%, var(--color-brand-purple) 100%) !important;
+  color: #ffffff !important;
+  border-left: 4px solid #3b82f6 !important;
+  box-shadow: 0 4px 15px -3px rgba(99, 102, 241, 0.3) !important;
   font-weight: 600 !important;
 }
 
-.dark .premium-active-nav {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(6, 182, 212, 0.04) 100%) !important;
+.premium-active-nav div.rounded-full {
+  background-color: rgba(255, 255, 255, 0.2) !important;
   color: #ffffff !important;
-  border-left-color: var(--color-brand-purple) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Rounded circles for icons inside sidebar */
@@ -163,20 +164,49 @@ aside nav button:hover div.rounded-full {
   border-color: rgba(79, 70, 229, 0.2) !important;
 }
 
+/* Premium Floating Sidebar Configuration */
+@media (min-width: 768px) {
+  aside {
+    width: 290px !important;
+    margin: 20px !important;
+    border-radius: 24px !important;
+    height: calc(100vh - 40px) !important;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
+    border: 1px solid var(--border-subtle) !important;
+    background-color: var(--bg-sidebar) !important;
+  }
+}
+
+/* Premium Top Navigation Glass Effect */
+@media (min-width: 768px) {
+  header.glass-panel {
+    margin: 20px 20px 0 20px !important;
+    border-radius: 26px !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    box-shadow: var(--shadow-main) !important;
+    border: 1px solid var(--border-subtle) !important;
+    background-color: rgba(255, 255, 255, 0.72) !important;
+  }
+  .dark header.glass-panel {
+    background-color: rgba(9, 13, 26, 0.85) !important;
+  }
+}
+
 /* Premium Cards Style System */
 .glass-panel {
   background: var(--bg-card) !important;
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
   border: 1px solid var(--border-card) !important;
-  border-radius: 20px !important;
+  border-radius: 24px !important;
   box-shadow: var(--shadow-main) !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .glass-panel:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px -10px rgba(17, 24, 39, 0.08) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08) !important;
 }
 
 .glass-panel-accent {
@@ -184,7 +214,7 @@ aside nav button:hover div.rounded-full {
   backdrop-filter: blur(14px) !important;
   -webkit-backdrop-filter: blur(14px) !important;
   border: 1px solid rgba(79, 70, 229, 0.15) !important;
-  border-radius: 20px !important;
+  border-radius: 24px !important;
   box-shadow: var(--shadow-main) !important;
 }
 
@@ -193,20 +223,49 @@ aside nav button:hover div.rounded-full {
   backdrop-filter: blur(8px) !important;
   -webkit-backdrop-filter: blur(8px) !important;
   border: 1px solid var(--border-subtle) !important;
-  border-radius: 20px !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-radius: 24px !important;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 .glass-card:hover {
   border-color: rgba(79, 70, 229, 0.2) !important;
   background: var(--bg-card) !important;
-  transform: translateY(-2px);
+  transform: translateY(-4px) !important;
   box-shadow: var(--shadow-main) !important;
 }
 
-/* Premium Buttons rounded 14px */
+/* Premium Buttons rounded 16px */
 button:not(.md\:hidden):not(.absolute):not(.p-1):not(.p-1\.5):not(.p-2) {
-  border-radius: 14px !important;
+  border-radius: 16px !important;
+}
+
+/* Gradient Primary Button with soft shadow */
+button.bg-brand-purple,
+button.bg-gradient-to-r {
+  background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%) !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+  transition: all 0.3s ease !important;
+  border: none !important;
+  color: #ffffff !important;
+}
+
+button.bg-brand-purple:hover,
+button.bg-gradient-to-r:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25) !important;
+}
+
+/* Hero Welcome Banner Redesign styling */
+.relative.overflow-hidden.rounded-2xl.bg-gradient-to-r {
+  background: linear-gradient(135deg, #F8FAFD 0%, #EEF4FF 100%) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 24px !important;
+  box-shadow: var(--shadow-main) !important;
+}
+
+.dark .relative.overflow-hidden.rounded-2xl.bg-gradient-to-r {
+  background: linear-gradient(135deg, rgba(13, 20, 40, 0.45) 0%, rgba(9, 13, 26, 0.85) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.04) !important;
 }
 
 /* Custom Scrollbar */
