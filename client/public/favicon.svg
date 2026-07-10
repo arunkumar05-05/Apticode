@@ -1,14 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
   <defs>
     <linearGradient id="logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#06b6d4"/>
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
     </linearGradient>
   </defs>
-  <!-- Outer rounded square container -->
-  <rect x="8" y="8" width="84" height="84" rx="24" fill="#090d1a" stroke="url(#logo-grad)" stroke-width="6" />
-  
-  <!-- Code brackets and cursor prompt symbol inside -->
-  <path d="M34 35 L48 50 L34 65" stroke="url(#logo-grad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-  <line x1="56" y1="65" x2="70" y2="65" stroke="#06b6d4" stroke-width="8" stroke-linecap="round" />
+  <!-- Modern geometric layout: Code prompt chevron & intelligence diamond node -->
+  <path d="M25 25 L50 50 L25 75" stroke="url(#logo-grad)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M60 50 L75 35 L90 50 L75 65 Z" fill="url(#logo-grad)" />
+  <circle cx="75" cy="50" r="4" fill="#ffffff" />
 </svg>

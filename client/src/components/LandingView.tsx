@@ -10,10 +10,12 @@ export default function LandingView({ onEnterApp }: LandingViewProps) {
     <div className="min-h-screen text-slate-100 selection:bg-brand-cyan/30">
       {/* Navbar */}
       <nav className="fixed top-0 left-0 right-0 z-50 glass-panel border-b border-white/5 py-4 px-6 md:px-12 flex justify-between items-center">
-        <div className="flex items-center space-x-2.5 cursor-pointer" onClick={onEnterApp}>
-          <img src="/favicon.svg" alt="AptiCode Logo" className="w-9 h-9" />
-          <span className="font-extrabold text-2xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            Apti<span className="bg-gradient-to-r from-brand-purple to-brand-cyan bg-clip-text text-transparent">Code</span>
+        <div className="brand-logo-wrapper flex items-center space-x-3.5 cursor-pointer" onClick={onEnterApp}>
+          <div className="brand-logo-container">
+            <img src="/favicon.svg" alt="AptiCode Logo" className="w-6.5 h-6.5" />
+          </div>
+          <span className="font-extrabold text-2xl tracking-tight brand-logo-text leading-none select-none">
+            Apti<span className="brand-logo-code">Code</span>
           </span>
         </div>
         <div className="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-400">

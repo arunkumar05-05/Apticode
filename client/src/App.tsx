@@ -154,11 +154,13 @@ export default function App() {
       }`}>
         <div className="space-y-8">
           {/* Logo Brand */}
-          <div className="flex items-center justify-between pb-2 border-b border-white/5">
-            <div className="flex items-center space-x-2.5 cursor-pointer" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
-              <img src="/favicon.svg" alt="AptiCode" className="w-7 h-7" />
-              <span className="font-extrabold text-lg tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                Apti<span className="bg-gradient-to-r from-brand-purple to-brand-cyan bg-clip-text text-transparent">Code</span>
+          <div className="flex items-center justify-between h-[72px] pb-3 border-b border-slate-800/10 brand-header-border">
+            <div className="brand-logo-wrapper flex items-center space-x-3.5 cursor-pointer animate-fade-in" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
+              <div className="brand-logo-container">
+                <img src="/favicon.svg" alt="AptiCode Logo" className="w-5.5 h-5.5" />
+              </div>
+              <span className="font-extrabold text-[19px] brand-logo-text leading-none select-none">
+                Apti<span className="brand-logo-code">Code</span>
               </span>
             </div>
             <button className="md:hidden" onClick={() => setSidebarOpen(false)}>
