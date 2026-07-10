@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Terminal, LayoutDashboard, BookOpen, Code, Mic, Brain, 
-  FileText, Award, BarChart2, Shield, LogOut, Zap, Menu, X, Sparkles
+  FileText, Award, BarChart2, Shield, LogOut, Zap, Menu, X, Sparkles,
+  Sun, Moon
 } from 'lucide-react';
 import LandingView from './components/LandingView';
 import AuthView from './components/AuthView';
@@ -32,6 +33,23 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [xp, setXp] = useState(24500); // start at master level
   const [level, setLevel] = useState('Master');
+
+  // Dynamic Theme Mode: default to dark
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  React.useEffect(() => {
+    document.documentElement.classList.add('dark');
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (nextTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
 
   // AI Career Co-Pilot Chat Companion Drawer State
   const [aiCoachOpen, setAiCoachOpen] = useState(false);
@@ -221,6 +239,15 @@ export default function App() {
             >
               <Sparkles className="w-3.5 h-3.5 fill-brand-purple/20" />
               <span>AI Coach</span>
+            </button>
+
+            {/* Theme Toggle button */}
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 rounded-lg bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-450 hover:text-white cursor-pointer transition-all flex items-center justify-center"
+              title="Toggle Light/Dark Theme"
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 fill-amber-400/10" /> : <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400/10" />}
             </button>
 
             {/* Streak indicator */}
