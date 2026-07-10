@@ -167,13 +167,13 @@ aside nav button:hover div.rounded-full {
 /* Premium Floating Sidebar Configuration */
 @media (min-width: 768px) {
   aside {
-    width: 290px !important;
     margin: 20px !important;
     border-radius: 24px !important;
     height: calc(100vh - 40px) !important;
     box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04) !important;
     border: 1px solid var(--border-subtle) !important;
     background-color: var(--bg-sidebar) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
 }
 
