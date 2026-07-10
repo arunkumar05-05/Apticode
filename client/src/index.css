@@ -411,3 +411,83 @@ button.bg-gradient-to-r:hover {
   border-color: rgba(37, 99, 235, 0.25) !important;
 }
 
+/* -------------------------------------------------------------
+   Mobile UX Redesign Normalization (8-point Spacing System)
+   ------------------------------------------------------------- */
+@media (max-width: 768px) {
+  /* Smaller headings on mobile */
+  h1 {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+  }
+  
+  h2 {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.015em !important;
+  }
+  
+  h3 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+  }
+  
+  h4 {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }
+
+  /* Consistent 20px card padding and 24px section margins on mobile */
+  .glass-panel {
+    padding: 20px !important;
+    border-radius: 20px !important;
+  }
+
+  .glass-card {
+    padding: 20px !important;
+    border-radius: 20px !important;
+  }
+
+  /* Reduce excessive vertical spacing by 20-30% on mobile */
+  .space-y-8 {
+    row-gap: 24px !important; /* space-y-6 equivalent */
+  }
+
+  .space-y-6 {
+    row-gap: 16px !important; /* space-y-4 equivalent */
+  }
+
+  .gap-8 {
+    gap: 24px !important;
+  }
+
+  .gap-6 {
+    gap: 16px !important;
+  }
+
+  /* Improve touch targets and heights (44px - 48px) for buttons, inputs, dropdowns */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  button:not(.p-1):not(.p-2):not(.p-1\.5):not(.p-3):not(.p-2\.5):not(.rounded-full):not(.md\:hidden):not(.absolute) {
+    height: 46px !important;
+    font-size: 13px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Make sure flex wraps and min-w-0 apply */
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  .flex-nowrap {
+    flex-wrap: nowrap;
+  }
+}
+
+
