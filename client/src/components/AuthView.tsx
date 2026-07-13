@@ -170,16 +170,29 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       }
 
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-        if (userCredential.user) {
-          await sendEmailVerification(userCredential.user);
-          setVerificationEmailSent(true);
-          alert(`Registration initialized! A verification email link has been sent to ${email}. Please verify your email before logging in.`);
-          setAuthTab('signin');
-        }
-      } catch (err: any) {
-        console.error('Firebase Auth Signup Error:', err);
-        setValidationError(getFirebaseErrorMessage(err, 'Failed to create user.'));
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email.trim(),
+          password
+        );
+
+        console.log("User created:", userCredential.user?.email);
+
+        await sendEmailVerification(userCredential.user, {
+          url: "http://localhost:5173/signin",
+          handleCodeInApp: false,
+        });
+
+        console.log("Verification email request succeeded");
+
+        setVerificationEmailSent(true);
+        alert(`Registration initialized! A verification email link has been sent to ${email}. Please verify your email before logging in.`);
+        setAuthTab('signin');
+      } catch (error: any) {
+        console.error("Full Firebase error:", error);
+        console.error("Code:", error.code);
+        console.error("Message:", error.message);
+        setValidationError(getFirebaseErrorMessage(error, 'Failed to create user.'));
       }
     }
   };
