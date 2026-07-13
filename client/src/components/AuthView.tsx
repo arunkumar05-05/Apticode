@@ -4,6 +4,28 @@ import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-reac
 import { auth } from '../firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
+const getFirebaseErrorMessage = (error: any, defaultFallback: string): string => {
+  const code = error?.code || error?.message;
+  switch (code) {
+    case 'auth/operation-not-allowed':
+      return 'Email/password accounts are not enabled. Please enable this option in the Firebase Console.';
+    case 'auth/invalid-email':
+      return 'The email address is invalid. Please check the format.';
+    case 'auth/network-request-failed':
+      return 'A network error occurred. Please check your internet connection and try again.';
+    case 'auth/email-already-in-use':
+      return 'This email address is already registered.';
+    case 'auth/weak-password':
+      return 'The password is too weak. It must be at least 6 characters.';
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'Invalid email or password. Please try again.';
+    default:
+      return error?.message || defaultFallback;
+  }
+};
+
 interface AuthViewProps {
   onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN' }) => void;
   onBack: () => void;
@@ -58,7 +80,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       alert(`Verification link resent to ${email}. Please check your inbox.`);
     } catch (err: any) {
       console.error(err);
-      setValidationError(err.message || 'Failed to resend verification link.');
+      setValidationError(getFirebaseErrorMessage(err, 'Failed to resend verification link.'));
     }
   };
 
@@ -123,7 +145,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         }
       } catch (err: any) {
         console.error('Firebase Auth Error:', err);
-        setValidationError(err.message || 'Invalid credentials or Firebase authentication error.');
+        setValidationError(getFirebaseErrorMessage(err, 'Invalid credentials or Firebase authentication error.'));
       }
     } else {
       // Sign Up
@@ -155,7 +177,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         }
       } catch (err: any) {
         console.error('Firebase Auth Signup Error:', err);
-        setValidationError(err.message || 'Failed to create user.');
+        setValidationError(getFirebaseErrorMessage(err, 'Failed to create user.'));
       }
     }
   };
