@@ -52,7 +52,10 @@ enum InterviewType {
 model User {
   id               String                 @id @default(uuid())
   email            String                 @unique
-  passwordHash     String
+  passwordHash     String?
+  firebaseUid      String?                @unique
+  authProvider     String?
+  fullName         String?
   role             UserRole               @default(STUDENT)
   level            Int                    @default(1)
   xp               Int                    @default(0)

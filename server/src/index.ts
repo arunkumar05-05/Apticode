@@ -135,10 +135,21 @@ app.post('/api/mcqs', (req: Request, res: Response) => {
 });
 
 app.post('/api/auth/register', async (req: Request, res: Response) => {
-  const { email, password, fullName, role, phoneNumber } = req.body;
+  const { email, password, fullName, role } = req.body;
 
   if (!email || !fullName) {
     return res.status(400).json({ status: 'fail', message: 'Email and full name are required.' });
+  }
+
+  const userRole = role === 'ADMIN' ? 'ADMIN' : 'STUDENT';
+  if (userRole === 'ADMIN') {
+    const isAdminAllowed = email === 'admin@college.edu' || email.endsWith('@admin.college.edu') || email.includes('.admin.');
+    if (!isAdminAllowed) {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Unauthorized email domain for Admin role registration.'
+      });
+    }
   }
 
   try {
@@ -147,13 +158,15 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
       return res.status(400).json({ status: 'fail', message: 'An account with this email address already exists.' });
     }
 
-    const passwordHash = password ? await bcrypt.hash(password, 10) : 'OTP_AUTH';
+    const passwordHash = password ? await bcrypt.hash(password, 10) : null;
 
     const user = await prisma.user.create({
       data: {
         email,
         passwordHash,
-        role: role === 'ADMIN' ? 'ADMIN' : 'STUDENT',
+        fullName,
+        role: userRole,
+        authProvider: 'local-password',
         profile: {
           create: {
             fullName,
@@ -171,7 +184,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
     res.status(201).json({
       status: 'success',
       user: {
-        name: user.profile?.fullName || fullName,
+        name: user.fullName || user.profile?.fullName || fullName,
         email: user.email,
         role: user.role
       }
@@ -184,7 +197,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
       user: {
         name: fullName,
         email,
-        role: role === 'ADMIN' ? 'ADMIN' : 'STUDENT'
+        role: userRole
       }
     });
   }
@@ -201,11 +214,15 @@ app.post('/api/auth/firebase-verify', async (req: Request, res: Response) => {
   try {
     if (firebaseActive) {
       decodedToken = await getAuth().verifyIdToken(idToken);
+      if (!decodedToken.email_verified) {
+        return res.status(401).json({ status: 'fail', message: 'Email address is not verified.' });
+      }
     } else {
       console.warn('[Firebase] Warning: Running verifyIdToken in Mock Mode.');
       decodedToken = {
         email: email || 'student@college.edu',
-        uid: 'mock-firebase-uid'
+        uid: 'mock-firebase-uid',
+        email_verified: true
       };
     }
   } catch (err: any) {
@@ -213,10 +230,27 @@ app.post('/api/auth/firebase-verify', async (req: Request, res: Response) => {
   }
 
   const userEmail = decodedToken.email || email || `${decodedToken.uid}@example.com`;
+  const userRole = role === 'ADMIN' ? 'ADMIN' : 'STUDENT';
+
+  // Server-side validation of the admin role
+  if (userRole === 'ADMIN') {
+    const isAdminAllowed = userEmail === 'admin@college.edu' || userEmail.endsWith('@admin.college.edu') || userEmail.includes('.admin.');
+    if (!isAdminAllowed) {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Unauthorized email domain for Admin role registration.'
+      });
+    }
+  }
 
   try {
-    let user = await prisma.user.findUnique({
-      where: { email: userEmail },
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: userEmail },
+          { firebaseUid: decodedToken.uid }
+        ]
+      },
       include: { profile: true }
     });
 
@@ -224,8 +258,10 @@ app.post('/api/auth/firebase-verify', async (req: Request, res: Response) => {
       user = await prisma.user.create({
         data: {
           email: userEmail,
-          passwordHash: 'FIREBASE_OTP',
-          role: role === 'ADMIN' ? 'ADMIN' : 'STUDENT',
+          firebaseUid: firebaseActive ? decodedToken.uid : 'mock-firebase-uid',
+          authProvider: 'firebase-email',
+          fullName: decodedToken.name || userEmail.split('@')[0],
+          role: userRole,
           profile: {
             create: {
               fullName: decodedToken.name || userEmail.split('@')[0],
@@ -237,12 +273,25 @@ app.post('/api/auth/firebase-verify', async (req: Request, res: Response) => {
         },
         include: { profile: true }
       });
+    } else {
+      if (!user.firebaseUid || !user.authProvider) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            firebaseUid: firebaseActive ? decodedToken.uid : 'mock-firebase-uid',
+            authProvider: 'firebase-email',
+            fullName: user.fullName || decodedToken.name || userEmail.split('@')[0]
+          },
+          include: { profile: true }
+        });
+      }
     }
 
     res.json({
       status: 'success',
+      token: 'mock-jwt-access-token-string',
       user: {
-        name: user.profile?.fullName || user.email.split('@')[0],
+        name: user.fullName || user.profile?.fullName || user.email.split('@')[0],
         email: user.email,
         role: user.role
       }
@@ -251,10 +300,11 @@ app.post('/api/auth/firebase-verify', async (req: Request, res: Response) => {
     console.error('Firebase verify database error:', err);
     res.json({
       status: 'success',
+      token: 'mock-jwt-access-token-string',
       user: {
         name: userEmail.split('@')[0],
         email: userEmail,
-        role: role === 'ADMIN' ? 'ADMIN' : 'STUDENT'
+        role: userRole
       }
     });
   }
@@ -277,9 +327,13 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       return res.status(400).json({ status: 'fail', message: 'Invalid email or password.' });
     }
 
+    if (user.authProvider === 'firebase-email' && !user.passwordHash) {
+      return res.status(400).json({ status: 'fail', message: 'This account uses Firebase Authentication. Please sign in via the Firebase portal.' });
+    }
+
     const isDefaultAdmin = email === 'admin@college.edu' && password === 'AdminPassword2026!';
     const isDefaultStudent = email === 'student@college.edu' && password === 'StudentPassword2026!';
-    const passwordMatch = (isDefaultAdmin || isDefaultStudent) || await bcrypt.compare(password, user.passwordHash);
+    const passwordMatch = (isDefaultAdmin || isDefaultStudent) || (user.passwordHash && await bcrypt.compare(password, user.passwordHash));
 
     if (!passwordMatch) {
       return res.status(400).json({ status: 'fail', message: 'Invalid email or password.' });
@@ -289,7 +343,7 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
       status: 'success',
       token: 'mock-jwt-access-token-string',
       user: {
-        name: user.profile?.fullName || (email === 'admin@college.edu' ? 'Prof. Shastri' : 'Rahul Sharma'),
+        name: user.fullName || user.profile?.fullName || (email === 'admin@college.edu' ? 'Prof. Shastri' : 'Rahul Sharma'),
         email: user.email,
         role: user.role
       }

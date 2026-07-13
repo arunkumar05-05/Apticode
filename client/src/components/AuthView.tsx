@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight, KeyRound, Phone } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 import { auth } from '../firebase';
-import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 
 interface AuthViewProps {
   onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN' }) => void;
@@ -16,17 +16,12 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [validationError, setValidationError] = useState('');
-  const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [recaptchaVerifier, setRecaptchaVerifier] = useState<any>(null);
+  const [verificationEmailSent, setVerificationEmailSent] = useState(false);
+  const [sandboxUsers, setSandboxUsers] = useState<Array<{ email: string; fullName: string; role: 'STUDENT' | 'ADMIN' }>>([]);
 
   const handleAutofill = (selectedRole: 'STUDENT' | 'ADMIN') => {
     setRole(selectedRole);
     setValidationError('');
-    setLoginMethod('password');
     if (selectedRole === 'STUDENT') {
       setEmail('student@college.edu');
       setPassword('StudentPassword2026!');
@@ -38,41 +33,32 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
     }
   };
 
-  const handleSendOtp = async () => {
-    if (!phoneNumber.trim()) {
-      setValidationError('Please input a valid phone number (including country code, e.g. +919876543210) first.');
-      return;
-    }
+  const validateEmail = (emailStr: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr);
+  };
+
+  const validatePassword = (pass: string) => {
+    return pass.length >= 6 && /[a-zA-Z]/.test(pass) && /[0-9!@#$%^&*()_+\-=\[\]{};':",./<>?]/.test(pass);
+  };
+
+  const handleResendVerification = async () => {
     setValidationError('');
-
-    const hasConfig = import.meta.env.VITE_FIREBASE_API_KEY && !import.meta.env.VITE_FIREBASE_API_KEY.includes('PLACEHOLDER');
-
-    if (!hasConfig) {
-      setOtpSent(true);
-      alert(`[Firebase Config Missing] Falling back to Sandbox mode. A simulated verification OTP has been dispatched to: ${phoneNumber}. Use code '43210' to sign in.`);
+    if (!email.trim() || !validateEmail(email.trim())) {
+      setValidationError('Please input a valid college email address.');
       return;
     }
-
+    if (!password.trim()) {
+      setValidationError('Please enter your password first.');
+      return;
+    }
+    
     try {
-      let verifier = recaptchaVerifier;
-      if (!verifier) {
-        verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-          size: 'invisible',
-          callback: () => {
-            // reCAPTCHA solved
-          }
-        });
-        setRecaptchaVerifier(verifier);
-      }
-
-      const confirmation = await signInWithPhoneNumber(auth, phoneNumber.trim(), verifier);
-      setConfirmationResult(confirmation);
-      setOtpSent(true);
-      alert(`A verification code has been sent to ${phoneNumber}. Please check your phone.`);
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      await sendEmailVerification(userCredential.user);
+      alert(`Verification link resent to ${email}. Please check your inbox.`);
     } catch (err: any) {
-      console.error('Firebase Auth Error:', err);
-      setOtpSent(true);
-      alert(`Firebase error: ${err.message || err}. Falling back to Sandbox mode. Use code '43210' to sign in.`);
+      console.error(err);
+      setValidationError(err.message || 'Failed to resend verification link.');
     }
   };
 
@@ -80,135 +66,96 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
     e.preventDefault();
     setValidationError('');
 
+    if (!email.trim()) {
+      setValidationError('Please enter your college email address.');
+      return;
+    }
+    if (!validateEmail(email.trim())) {
+      setValidationError('Please enter a valid email address format.');
+      return;
+    }
+    if (!password.trim()) {
+      setValidationError('Please input your password.');
+      return;
+    }
+
+    const hasConfig = import.meta.env.VITE_FIREBASE_API_KEY && !import.meta.env.VITE_FIREBASE_API_KEY.includes('PLACEHOLDER');
+
     if (authTab === 'signin') {
-      if (role === 'STUDENT' && loginMethod === 'otp') {
-        if (!phoneNumber.trim()) {
-          setValidationError('Please enter your phone number.');
-          return;
-        }
-        if (!otpCode.trim()) {
-          setValidationError('Please input the 6-digit verification code.');
-          return;
-        }
+      if (!hasConfig) {
+        // Sandbox Sign In Fallback
+        const defaultStudent = email === 'student@college.edu' && password === 'StudentPassword2026!';
+        const defaultAdmin = email === 'admin@college.edu' && password === 'AdminPassword2026!';
+        const registeredUser = sandboxUsers.find(u => u.email === email.trim());
 
-        if (!confirmationResult) {
-          if (otpCode !== '43210') {
-            setValidationError('Invalid verification code entered. Check phone or use code 43210.');
-            return;
-          }
-          onAuthenticate({ name: 'Rahul Sharma', email: email || 'student@college.edu', role });
-          return;
-        }
-
-        try {
-          const credential = await confirmationResult.confirm(otpCode.trim());
-          const firebaseUser = credential.user;
-          const idToken = await firebaseUser.getIdToken();
-
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/firebase-verify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken, role, email: email || firebaseUser.email || `${firebaseUser.uid}@example.com` })
-          });
-          const result = await response.json();
-          if (result.status === 'success' && result.user) {
-            onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
-            return;
-          } else {
-            setValidationError(result.message || 'Verification failed on server.');
-          }
-        } catch (err: any) {
-          console.error(err);
-          setValidationError(err.message || 'Invalid verification code or Firebase authentication error.');
+        if (defaultStudent || defaultAdmin || registeredUser) {
+          const finalName = defaultStudent ? 'Rahul Sharma' : (defaultAdmin ? 'Prof. Shastri' : registeredUser!.fullName);
+          const finalRole = defaultStudent ? 'STUDENT' : (defaultAdmin ? 'ADMIN' : registeredUser!.role);
+          onAuthenticate({ name: finalName, email: email.trim(), role: finalRole });
+        } else {
+          setValidationError('Invalid email or password (Sandbox Mode). Use student@college.edu / Admin credentials or register a sandbox account.');
         }
         return;
-      } else {
-        if (!email.trim()) {
-          setValidationError('Please enter your college email address.');
+      }
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+          setValidationError('Your email address is not verified. Please check your inbox for the verification link.');
           return;
         }
-        if (!password.trim()) {
-          setValidationError('Please input your account password.');
+
+        const idToken = await user.getIdToken();
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/firebase-verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken, role, email: email.trim() })
+        });
+        const result = await response.json();
+        if (result.status === 'success' && result.user) {
+          onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
           return;
+        } else {
+          setValidationError(result.message || 'Verification failed on server.');
         }
-        try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
-          const result = await response.json();
-          if (result.status === 'success' && result.user) {
-            onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
-            return;
-          } else {
-            setValidationError(result.message || 'Invalid credentials.');
-          }
-        } catch {
-          console.warn('Backend server offline. Switching dynamically to mock sandbox session.');
-          onAuthenticate({ name: role === 'STUDENT' ? 'Rahul Sharma' : 'Prof. Shastri', email, role });
-        }
+      } catch (err: any) {
+        console.error('Firebase Auth Error:', err);
+        setValidationError(err.message || 'Invalid credentials or Firebase authentication error.');
       }
     } else {
+      // Sign Up
       if (!fullName.trim()) {
         setValidationError('Please input your full name for roster registration.');
         return;
       }
-      if (!email.trim()) {
-        setValidationError('Please enter your college email address.');
-        return;
-      }
-      if (!phoneNumber.trim()) {
-        setValidationError('Please enter your phone number.');
-        return;
-      }
-      if (!password.trim()) {
-        setValidationError('Please assign a secure login password.');
+      if (!validatePassword(password)) {
+        setValidationError('Password must be at least 6 characters long and contain both letters and numbers/special characters.');
         return;
       }
 
-      if (!otpSent) {
-        await handleSendOtp();
+      if (!hasConfig) {
+        // Sandbox Sign Up Fallback
+        setSandboxUsers(prev => [...prev, { email: email.trim(), fullName: fullName.trim(), role }]);
+        setVerificationEmailSent(true);
+        alert(`[Sandbox Mode] Account successfully simulated for ${email}. You can now sign in!`);
+        setAuthTab('signin');
         return;
-      }
-
-      if (!otpCode.trim()) {
-        setValidationError('Please input the 6-digit verification code sent to your phone to complete registration.');
-        return;
-      }
-
-      if (!confirmationResult) {
-        if (otpCode !== '43210') {
-          setValidationError('Invalid verification code entered. Check phone or use code 43210.');
-          return;
-        }
-      } else {
-        try {
-          await confirmationResult.confirm(otpCode.trim());
-        } catch (err: any) {
-          setValidationError(err.message || 'Invalid verification code or Firebase authentication error.');
-          return;
-        }
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, fullName, role, phoneNumber })
-        });
-        const result = await response.json();
-        if (result.status === 'success' && result.user) {
-          alert('Registration successful!');
-          onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
-          return;
-        } else {
-          setValidationError(result.message || 'Registration failed on server.');
+        const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        if (userCredential.user) {
+          await sendEmailVerification(userCredential.user);
+          setVerificationEmailSent(true);
+          alert(`Registration initialized! A verification email link has been sent to ${email}. Please verify your email before logging in.`);
+          setAuthTab('signin');
         }
       } catch (err: any) {
-        console.error(err);
-        alert('Signup initialized! (Server offline fallback). Logging you in directly...');
-        onAuthenticate({ name: fullName, email, role });
+        console.error('Firebase Auth Signup Error:', err);
+        setValidationError(err.message || 'Failed to create user.');
       }
     }
   };
@@ -241,7 +188,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
               <div className="mb-1 flex justify-center"><User className="h-4 w-4" /></div>
               Student
             </button>
-            <button onClick={() => { setRole('ADMIN'); setValidationError(''); setLoginMethod('password'); }} className={`rounded-[16px] border p-3 text-sm font-semibold ${role === 'ADMIN' ? 'border-brand-purple/40 bg-brand-purple/10 text-brand-purple' : 'border-white/10 bg-slate-950/30 text-slate-400'}`}>
+            <button onClick={() => { setRole('ADMIN'); setValidationError(''); }} className={`rounded-[16px] border p-3 text-sm font-semibold ${role === 'ADMIN' ? 'border-brand-purple/40 bg-brand-purple/10 text-brand-purple' : 'border-white/10 bg-slate-950/30 text-slate-400'}`}>
               <div className="mb-1 flex justify-center"><ShieldCheck className="h-4 w-4" /></div>
               Admin
             </button>
@@ -266,66 +213,24 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
               </div>
             </div>
 
-            {/* Phone Number Input (for Signup or OTP Signin) */}
-            {((authTab === 'signup') || (authTab === 'signin' && role === 'STUDENT' && loginMethod === 'otp')) && (
-              <div className="space-y-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Phone Number</label>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                  <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+919876543210" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
-                </div>
+            <div className="space-y-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Password</label>
+              <div className="relative">
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
               </div>
-            )}
-
-            {role === 'STUDENT' && authTab === 'signin' && (
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
-                <span>Sign-in mode</span>
-                <button type="button" onClick={() => { setLoginMethod((prev) => (prev === 'password' ? 'otp' : 'password')); setValidationError(''); }} className="text-brand-cyan">
-                  {loginMethod === 'password' ? 'Use OTP instead' : 'Use password instead'}
-                </button>
-              </div>
-            )}
-
-            {authTab === 'signin' && role === 'STUDENT' && loginMethod === 'otp' ? (
-              <div className="space-y-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Verification code</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                    <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter 6-digit code" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
-                  </div>
-                  <button type="button" onClick={handleSendOtp} className="h-12 rounded-[16px] border border-brand-cyan/20 bg-brand-cyan/10 px-3 text-sm font-semibold text-brand-cyan">Send OTP</button>
-                </div>
-                {otpSent && <p className="text-xs text-emerald-400">Sandbox code ready: 43210</p>}
-              </div>
-            ) : (
-              <div className="space-y-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Password</label>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
-                </div>
-              </div>
-            )}
-
-            {/* Signup Verification Code Input (Shown after OTP is sent during Signup) */}
-            {authTab === 'signup' && otpSent && (
-              <div className="space-y-1.5 text-left animate-fade-in">
-                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Phone Verification Code</label>
-                <div className="relative">
-                  <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                  <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter 6-digit code" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
-                </div>
-                <p className="text-xs text-emerald-400">Please enter the OTP sent to verify your phone.</p>
-              </div>
-            )}
-
-            <div id="recaptcha-container" className="my-2"></div>
+            </div>
 
             {validationError && <div className="rounded-[16px] border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{validationError}</div>}
 
+            {validationError.includes('verified') && (
+              <button type="button" onClick={handleResendVerification} className="mt-1 text-xs text-brand-cyan hover:underline block text-left bg-transparent border-0 cursor-pointer p-0">
+                Resend verification link
+              </button>
+            )}
+
             <button type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]">
-              <span>{authTab === 'signin' ? 'Continue to workspace' : (otpSent ? 'Confirm & Create Account' : 'Send OTP & Create Account')}</span>
+              <span>{authTab === 'signin' ? 'Continue to workspace' : 'Create account'}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
