@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight, KeyRound } from 'lucide-react';
+import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight, KeyRound, Phone } from 'lucide-react';
+import { auth } from '../firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber, type ConfirmationResult } from 'firebase/auth';
 
 interface AuthViewProps {
   onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN' }) => void;
@@ -17,6 +19,9 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
   const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState<any>(null);
 
   const handleAutofill = (selectedRole: 'STUDENT' | 'ADMIN') => {
     setRole(selectedRole);
@@ -33,74 +38,179 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
     }
   };
 
-  const handleSendOtp = () => {
-    if (!email.trim() || !email.includes('@')) {
-      setValidationError('Please input a valid college email address first.');
+  const handleSendOtp = async () => {
+    if (!phoneNumber.trim()) {
+      setValidationError('Please input a valid phone number (including country code, e.g. +919876543210) first.');
       return;
     }
     setValidationError('');
-    setOtpSent(true);
-    alert(`A sandboxed verification OTP has been dispatched to: ${email}. Use code '43210' to sign in.`);
+
+    const hasConfig = import.meta.env.VITE_FIREBASE_API_KEY && !import.meta.env.VITE_FIREBASE_API_KEY.includes('PLACEHOLDER');
+
+    if (!hasConfig) {
+      setOtpSent(true);
+      alert(`[Firebase Config Missing] Falling back to Sandbox mode. A simulated verification OTP has been dispatched to: ${phoneNumber}. Use code '43210' to sign in.`);
+      return;
+    }
+
+    try {
+      let verifier = recaptchaVerifier;
+      if (!verifier) {
+        verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          size: 'invisible',
+          callback: () => {
+            // reCAPTCHA solved
+          }
+        });
+        setRecaptchaVerifier(verifier);
+      }
+
+      const confirmation = await signInWithPhoneNumber(auth, phoneNumber.trim(), verifier);
+      setConfirmationResult(confirmation);
+      setOtpSent(true);
+      alert(`A verification code has been sent to ${phoneNumber}. Please check your phone.`);
+    } catch (err: any) {
+      console.error('Firebase Auth Error:', err);
+      setOtpSent(true);
+      alert(`Firebase error: ${err.message || err}. Falling back to Sandbox mode. Use code '43210' to sign in.`);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
 
-    if (!email.trim()) {
-      setValidationError('Please enter your college email address.');
-      return;
-    }
-
     if (authTab === 'signin') {
       if (role === 'STUDENT' && loginMethod === 'otp') {
+        if (!phoneNumber.trim()) {
+          setValidationError('Please enter your phone number.');
+          return;
+        }
         if (!otpCode.trim()) {
-          setValidationError('Please input the 5-digit verification code.');
+          setValidationError('Please input the 6-digit verification code.');
           return;
         }
-        if (otpCode !== '43210') {
-          setValidationError('Invalid verification code entered. Check email or use code 43210.');
+
+        if (!confirmationResult) {
+          if (otpCode !== '43210') {
+            setValidationError('Invalid verification code entered. Check phone or use code 43210.');
+            return;
+          }
+          onAuthenticate({ name: 'Rahul Sharma', email: email || 'student@college.edu', role });
           return;
         }
-      } else if (!password.trim()) {
-        setValidationError('Please input your account password.');
+
+        try {
+          const credential = await confirmationResult.confirm(otpCode.trim());
+          const firebaseUser = credential.user;
+          const idToken = await firebaseUser.getIdToken();
+
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/firebase-verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken, role, email: email || firebaseUser.email || `${firebaseUser.uid}@example.com` })
+          });
+          const result = await response.json();
+          if (result.status === 'success' && result.user) {
+            onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
+            return;
+          } else {
+            setValidationError(result.message || 'Verification failed on server.');
+          }
+        } catch (err: any) {
+          console.error(err);
+          setValidationError(err.message || 'Invalid verification code or Firebase authentication error.');
+        }
         return;
+      } else {
+        if (!email.trim()) {
+          setValidationError('Please enter your college email address.');
+          return;
+        }
+        if (!password.trim()) {
+          setValidationError('Please input your account password.');
+          return;
+        }
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const result = await response.json();
+          if (result.status === 'success' && result.user) {
+            onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
+            return;
+          } else {
+            setValidationError(result.message || 'Invalid credentials.');
+          }
+        } catch {
+          console.warn('Backend server offline. Switching dynamically to mock sandbox session.');
+          onAuthenticate({ name: role === 'STUDENT' ? 'Rahul Sharma' : 'Prof. Shastri', email, role });
+        }
       }
     } else {
       if (!fullName.trim()) {
         setValidationError('Please input your full name for roster registration.');
         return;
       }
+      if (!email.trim()) {
+        setValidationError('Please enter your college email address.');
+        return;
+      }
+      if (!phoneNumber.trim()) {
+        setValidationError('Please enter your phone number.');
+        return;
+      }
       if (!password.trim()) {
         setValidationError('Please assign a secure login password.');
         return;
       }
-    }
 
-    const fallbackName = authTab === 'signin' ? (role === 'STUDENT' ? 'Rahul Sharma' : 'Prof. Shastri') : fullName;
+      if (!otpSent) {
+        await handleSendOtp();
+        return;
+      }
 
-    if (authTab === 'signin') {
+      if (!otpCode.trim()) {
+        setValidationError('Please input the 6-digit verification code sent to your phone to complete registration.');
+        return;
+      }
+
+      if (!confirmationResult) {
+        if (otpCode !== '43210') {
+          setValidationError('Invalid verification code entered. Check phone or use code 43210.');
+          return;
+        }
+      } else {
+        try {
+          await confirmationResult.confirm(otpCode.trim());
+        } catch (err: any) {
+          setValidationError(err.message || 'Invalid verification code or Firebase authentication error.');
+          return;
+        }
+      }
+
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/login`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: password || 'OTP_SANDBOX' })
+          body: JSON.stringify({ email, password, fullName, role, phoneNumber })
         });
         const result = await response.json();
         if (result.status === 'success' && result.user) {
+          alert('Registration successful!');
           onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
           return;
+        } else {
+          setValidationError(result.message || 'Registration failed on server.');
         }
-      } catch {
-        console.warn('Backend server offline. Switching dynamically to mock sandbox session.');
+      } catch (err: any) {
+        console.error(err);
+        alert('Signup initialized! (Server offline fallback). Logging you in directly...');
+        onAuthenticate({ name: fullName, email, role });
       }
     }
-
-    if (authTab === 'signup') {
-      alert(`Signup initialized! A confirmation validation link has been sent to ${email}. Logging you in directly for workspace demo...`);
-    }
-
-    onAuthenticate({ name: fallbackName, email, role });
   };
 
   return (
@@ -156,6 +266,17 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
               </div>
             </div>
 
+            {/* Phone Number Input (for Signup or OTP Signin) */}
+            {((authTab === 'signup') || (authTab === 'signin' && role === 'STUDENT' && loginMethod === 'otp')) && (
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Phone Number</label>
+                <div className="relative">
+                  <Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+919876543210" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
+                </div>
+              </div>
+            )}
+
             {role === 'STUDENT' && authTab === 'signin' && (
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
                 <span>Sign-in mode</span>
@@ -171,7 +292,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                    <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter 5-digit code" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
+                    <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter 6-digit code" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
                   </div>
                   <button type="button" onClick={handleSendOtp} className="h-12 rounded-[16px] border border-brand-cyan/20 bg-brand-cyan/10 px-3 text-sm font-semibold text-brand-cyan">Send OTP</button>
                 </div>
@@ -187,10 +308,24 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
               </div>
             )}
 
+            {/* Signup Verification Code Input (Shown after OTP is sent during Signup) */}
+            {authTab === 'signup' && otpSent && (
+              <div className="space-y-1.5 text-left animate-fade-in">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Phone Verification Code</label>
+                <div className="relative">
+                  <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter 6-digit code" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
+                </div>
+                <p className="text-xs text-emerald-400">Please enter the OTP sent to verify your phone.</p>
+              </div>
+            )}
+
+            <div id="recaptcha-container" className="my-2"></div>
+
             {validationError && <div className="rounded-[16px] border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{validationError}</div>}
 
             <button type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]">
-              <span>{authTab === 'signin' ? 'Continue to workspace' : 'Create account'}</span>
+              <span>{authTab === 'signin' ? 'Continue to workspace' : (otpSent ? 'Confirm & Create Account' : 'Send OTP & Create Account')}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
