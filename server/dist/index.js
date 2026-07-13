@@ -10,6 +10,8 @@ const client_1 = require("@prisma/client");
 const app_1 = require("firebase-admin/app");
 const auth_1 = require("firebase-admin/auth");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 5000;
@@ -17,9 +19,30 @@ const prisma = new client_1.PrismaClient();
 // Initialize Firebase Admin SDK
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 let firebaseActive = false;
+let serviceAccount = null;
 if (serviceAccountJson && !serviceAccountJson.includes('your-project-id')) {
     try {
-        const serviceAccount = JSON.parse(serviceAccountJson);
+        serviceAccount = JSON.parse(serviceAccountJson);
+    }
+    catch (error) {
+        console.error('[Firebase] Failed to parse service account JSON from env:', error);
+    }
+}
+if (!serviceAccount) {
+    try {
+        const serviceAccountPath = path_1.default.join(__dirname, '../firebase-service-account.json');
+        if (fs_1.default.existsSync(serviceAccountPath)) {
+            const fileContent = fs_1.default.readFileSync(serviceAccountPath, 'utf8');
+            serviceAccount = JSON.parse(fileContent);
+            console.log('[Firebase] Loaded service account from firebase-service-account.json file.');
+        }
+    }
+    catch (error) {
+        console.error('[Firebase] Failed to read firebase-service-account.json file:', error);
+    }
+}
+if (serviceAccount) {
+    try {
         (0, app_1.initializeApp)({
             credential: (0, app_1.cert)(serviceAccount)
         });
@@ -27,7 +50,7 @@ if (serviceAccountJson && !serviceAccountJson.includes('your-project-id')) {
         console.log('[Firebase] Admin SDK initialized successfully.');
     }
     catch (error) {
-        console.error('[Firebase] Failed to initialize Admin SDK with credentials:', error);
+        console.error('[Firebase] Failed to initialize Admin SDK:', error);
     }
 }
 else {

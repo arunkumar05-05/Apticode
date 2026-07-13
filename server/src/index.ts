@@ -5,6 +5,8 @@ import { PrismaClient } from '@prisma/client';
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -15,21 +17,43 @@ const prisma = new PrismaClient();
 // Initialize Firebase Admin SDK
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 let firebaseActive = false;
+let serviceAccount: any = null;
 
 if (serviceAccountJson && !serviceAccountJson.includes('your-project-id')) {
   try {
-    const serviceAccount = JSON.parse(serviceAccountJson);
+    serviceAccount = JSON.parse(serviceAccountJson);
+  } catch (error) {
+    console.error('[Firebase] Failed to parse service account JSON from env:', error);
+  }
+}
+
+if (!serviceAccount) {
+  try {
+    const serviceAccountPath = path.join(__dirname, '../firebase-service-account.json');
+    if (fs.existsSync(serviceAccountPath)) {
+      const fileContent = fs.readFileSync(serviceAccountPath, 'utf8');
+      serviceAccount = JSON.parse(fileContent);
+      console.log('[Firebase] Loaded service account from firebase-service-account.json file.');
+    }
+  } catch (error) {
+    console.error('[Firebase] Failed to read firebase-service-account.json file:', error);
+  }
+}
+
+if (serviceAccount) {
+  try {
     initializeApp({
       credential: cert(serviceAccount)
     });
     firebaseActive = true;
     console.log('[Firebase] Admin SDK initialized successfully.');
   } catch (error) {
-    console.error('[Firebase] Failed to initialize Admin SDK with credentials:', error);
+    console.error('[Firebase] Failed to initialize Admin SDK:', error);
   }
 } else {
   console.log('[Firebase] Admin SDK missing active credentials. Running in sandbox/development mode.');
 }
+
 
 app.use(cors({
   origin: ['http://localhost:5173'],
