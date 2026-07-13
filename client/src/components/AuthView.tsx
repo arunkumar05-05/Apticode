@@ -125,7 +125,9 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         const user = userCredential.user;
 
         if (!user.emailVerified) {
-          setValidationError('Your email address is not verified. Please check your inbox for the verification link.');
+          await sendEmailVerification(user);
+          alert("Verification email sent. Please check your inbox.");
+          setValidationError('Your email address is not verified. A verification link has been sent to your inbox.');
           return;
         }
 
