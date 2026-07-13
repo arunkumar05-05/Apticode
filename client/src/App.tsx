@@ -147,7 +147,7 @@ export default function App() {
       theme={theme}
       setAiCoachOpen={setAiCoachOpen}
     >
-      {currentView === 'dashboard' && <DashboardView onNavigate={handleNavigation} xp={xp} level={level} spendXp={handleSpendXp} />}
+      {currentView === 'dashboard' && <DashboardView onNavigate={handleNavigation} xp={xp} level={level} spendXp={handleSpendXp} openAiCoach={() => setAiCoachOpen(true)} />}
       {currentView === 'aptitude' && <AptitudeView />}
       {currentView === 'coding' && <CodingView />}
       {currentView === 'communication' && <CommunicationView />}

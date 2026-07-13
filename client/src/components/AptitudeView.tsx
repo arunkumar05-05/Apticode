@@ -62,7 +62,7 @@ export default function AptitudeView() {
   useEffect(() => {
     const fetchLiveMcqs = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/mcqs');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
           // Merge dynamic MCQs from the backend into matching topic buckets

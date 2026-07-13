@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Terminal, Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight, KeyRound } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight, KeyRound } from 'lucide-react';
 
 interface AuthViewProps {
   onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN' }) => void;
@@ -9,13 +10,10 @@ interface AuthViewProps {
 export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
   const [role, setRole] = useState<'STUDENT' | 'ADMIN'>('STUDENT');
-  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [validationError, setValidationError] = useState('');
-
-  // Student OTP state toggles
   const [loginMethod, setLoginMethod] = useState<'password' | 'otp'>('password');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -42,7 +40,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
     }
     setValidationError('');
     setOtpSent(true);
-    alert(`A sandboxed Verification OTP has been dispatched to: ${email}. Use code '43210' to sign in.`);
+    alert(`A sandboxed verification OTP has been dispatched to: ${email}. Use code '43210' to sign in.`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,14 +62,11 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
           setValidationError('Invalid verification code entered. Check email or use code 43210.');
           return;
         }
-      } else {
-        if (!password.trim()) {
-          setValidationError('Please input your account password.');
-          return;
-        }
+      } else if (!password.trim()) {
+        setValidationError('Please input your account password.');
+        return;
       }
     } else {
-      // Sign Up validation
       if (!fullName.trim()) {
         setValidationError('Please input your full name for roster registration.');
         return;
@@ -82,260 +77,135 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       }
     }
 
-    // Success Authentication simulation fallback
-    const fallbackName = authTab === 'signin' 
-      ? (role === 'STUDENT' ? 'Rahul Sharma' : 'Prof. Shastri') 
-      : fullName;
+    const fallbackName = authTab === 'signin' ? (role === 'STUDENT' ? 'Rahul Sharma' : 'Prof. Shastri') : fullName;
 
-    // Try live REST connection
     if (authTab === 'signin') {
       try {
-        const response = await fetch('http://localhost:5000/api/auth/login', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password: password || 'OTP_SANDBOX' })
         });
         const result = await response.json();
         if (result.status === 'success' && result.user) {
-          onAuthenticate({
-            name: result.user.name,
-            email: result.user.email,
-            role: result.user.role
-          });
+          onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
           return;
         }
-      } catch (err) {
+      } catch {
         console.warn('Backend server offline. Switching dynamically to mock sandbox session.');
       }
     }
 
-    // Simulate verification warning on signup
     if (authTab === 'signup') {
       alert(`Signup initialized! A confirmation validation link has been sent to ${email}. Logging you in directly for workspace demo...`);
     }
 
-    onAuthenticate({
-      name: fallbackName,
-      email: email,
-      role: role
-    });
+    onAuthenticate({ name: fallbackName, email, role });
   };
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-slate-100 flex flex-col justify-center items-center p-6 relative selection:bg-brand-cyan/30">
-      {/* Decorative Grid */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-30 -z-10" />
-
-      {/* Brand logo link */}
-      <div className="brand-logo-wrapper flex items-center space-x-3.5 mb-8 cursor-pointer" onClick={onBack}>
-        <div className="brand-logo-container">
-          <img src="/favicon.svg" alt="AptiCode Logo" className="w-5.5 h-5.5" />
-        </div>
-        <span className="font-extrabold text-2xl tracking-tight brand-logo-text leading-none select-none">
-          Apti<span className="brand-logo-code">Code</span>
-        </span>
-      </div>
-
-      {/* Auth Panel Card */}
-      <div className="glass-panel p-8 max-w-md w-full border-white/5 space-y-6 relative shadow-2xl">
-        {/* Toggle tabs */}
-        <div className="flex space-x-1 bg-slate-950/40 p-1 rounded-lg">
-          <button
-            onClick={() => { setAuthTab('signin'); setValidationError(''); }}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              authTab === 'signin' ? 'bg-brand-purple text-white shadow' : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => { setAuthTab('signup'); setValidationError(''); }}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              authTab === 'signup' ? 'bg-brand-purple text-white shadow' : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        {/* Role Toggle Switcher */}
-        <div className="space-y-2">
-          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Account Role</label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => { setRole('STUDENT'); setValidationError(''); }}
-              className={`p-3 rounded-xl border text-[11px] font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                role === 'STUDENT'
-                  ? 'bg-brand-cyan/15 border-brand-cyan text-brand-cyan'
-                  : 'bg-slate-950/20 border-white/5 text-slate-400 hover:border-slate-800'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              <span>Student Profile</span>
-            </button>
-            <button
-              onClick={() => { setRole('ADMIN'); setValidationError(''); setLoginMethod('password'); }}
-              className={`p-3 rounded-xl border text-[11px] font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer ${
-                role === 'ADMIN'
-                  ? 'bg-brand-purple/15 border-brand-purple text-brand-purple'
-                  : 'bg-slate-950/20 border-white/5 text-slate-400 hover:border-slate-800'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin / Officer</span>
-            </button>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--bg-base)] px-4 py-6 text-slate-100 sm:px-6">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-20" />
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="relative w-full max-w-md">
+        <div className="mb-5 flex items-center gap-3" onClick={onBack}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan shadow-lg shadow-brand-purple/15">
+            <img src="/favicon.svg" alt="AptiCode Logo" className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-lg font-semibold tracking-tight">Apti<span className="text-brand-cyan">Code</span></p>
+            <p className="text-[10px] uppercase tracking-[0.24em] text-slate-500">Sign in to continue</p>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {authTab === 'signup' && (
-            <div className="space-y-1 text-left">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">Full Name</label>
+        <div className="glass-panel space-y-4 p-4 sm:p-5">
+          <div className="flex rounded-[16px] bg-slate-950/40 p-1">
+            {(['signin', 'signup'] as const).map((tab) => (
+              <button key={tab} onClick={() => { setAuthTab(tab); setValidationError(''); }} className={`flex-1 rounded-[12px] py-2.5 text-sm font-semibold transition-all ${authTab === tab ? 'bg-brand-purple text-white' : 'text-slate-500'}`}>
+                {tab === 'signin' ? 'Sign in' : 'Sign up'}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => { setRole('STUDENT'); setValidationError(''); }} className={`rounded-[16px] border p-3 text-sm font-semibold ${role === 'STUDENT' ? 'border-brand-cyan/40 bg-brand-cyan/10 text-brand-cyan' : 'border-white/10 bg-slate-950/30 text-slate-400'}`}>
+              <div className="mb-1 flex justify-center"><User className="h-4 w-4" /></div>
+              Student
+            </button>
+            <button onClick={() => { setRole('ADMIN'); setValidationError(''); setLoginMethod('password'); }} className={`rounded-[16px] border p-3 text-sm font-semibold ${role === 'ADMIN' ? 'border-brand-purple/40 bg-brand-purple/10 text-brand-purple' : 'border-white/10 bg-slate-950/30 text-slate-400'}`}>
+              <div className="mb-1 flex justify-center"><ShieldCheck className="h-4 w-4" /></div>
+              Admin
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {authTab === 'signup' && (
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Full name</label>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Rahul Sharma" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none ring-0 placeholder:text-slate-500 focus:border-brand-purple/40" />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Email</label>
               <div className="relative">
-                <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-300 outline-none focus:border-brand-purple/50"
-                />
-                <User className="w-4 h-4 text-slate-650 absolute left-3 top-3.5" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="student@college.edu" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
               </div>
             </div>
-          )}
 
-          <div className="space-y-1 text-left">
-            <label className="text-[10px] font-bold text-slate-500 uppercase">Email Address</label>
-            <div className="relative flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@college.edu"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-300 outline-none focus:border-brand-purple/50"
-                />
-                <Mail className="w-4 h-4 text-slate-650 absolute left-3 top-3.5" />
-              </div>
-              {role === 'STUDENT' && authTab === 'signin' && loginMethod === 'otp' && (
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  className="px-3 bg-slate-900 border border-slate-800 text-[10px] font-bold text-brand-cyan hover:bg-slate-850 rounded-lg transition-colors cursor-pointer shrink-0"
-                >
-                  Send OTP
+            {role === 'STUDENT' && authTab === 'signin' && (
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                <span>Sign-in mode</span>
+                <button type="button" onClick={() => { setLoginMethod((prev) => (prev === 'password' ? 'otp' : 'password')); setValidationError(''); }} className="text-brand-cyan">
+                  {loginMethod === 'password' ? 'Use OTP instead' : 'Use password instead'}
                 </button>
-              )}
-            </div>
-          </div>
-
-          {/* Student OTP vs Password login toggles */}
-          {role === 'STUDENT' && authTab === 'signin' ? (
-            <div className="flex justify-between items-center px-1">
-              <span className="text-[9px] text-slate-500 font-bold uppercase">Sign-in Mode</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoginMethod(prev => prev === 'password' ? 'otp' : 'password');
-                  setValidationError('');
-                }}
-                className="text-[9px] text-brand-cyan font-bold hover:underline cursor-pointer"
-              >
-                {loginMethod === 'password' ? 'Verify with OTP' : 'Verify with Password'}
-              </button>
-            </div>
-          ) : null}
-
-          {/* Dynamic Code / Password entry box */}
-          {authTab === 'signin' && role === 'STUDENT' && loginMethod === 'otp' ? (
-            <div className="space-y-1 text-left">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">Verification OTP</label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={otpCode}
-                  onChange={(e) => setOtpCode(e.target.value)}
-                  placeholder="Enter 5-digit verification code"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-300 outline-none focus:border-brand-purple/50"
-                />
-                <KeyRound className="w-4 h-4 text-slate-650 absolute left-3 top-3.5" />
               </div>
-              {otpSent && (
-                <p className="text-[8px] text-emerald-400 font-semibold pl-1">
-                  ✓ Sandboxed validation code sent. Use: <strong className="font-mono">43210</strong>
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-1 text-left">
-              <label className="text-[10px] font-bold text-slate-500 uppercase">Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-950/40 border border-slate-800 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-300 outline-none focus:border-brand-purple/50"
-                />
-                <Lock className="w-4 h-4 text-slate-650 absolute left-3 top-3.5" />
+            )}
+
+            {authTab === 'signin' && role === 'STUDENT' && loginMethod === 'otp' ? (
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Verification code</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                    <input value={otpCode} onChange={(e) => setOtpCode(e.target.value)} placeholder="Enter 5-digit code" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
+                  </div>
+                  <button type="button" onClick={handleSendOtp} className="h-12 rounded-[16px] border border-brand-cyan/20 bg-brand-cyan/10 px-3 text-sm font-semibold text-brand-cyan">Send OTP</button>
+                </div>
+                {otpSent && <p className="text-xs text-emerald-400">Sandbox code ready: 43210</p>}
+              </div>
+            ) : (
+              <div className="space-y-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Password</label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="h-12 w-full rounded-[16px] border border-white/10 bg-slate-950/40 pl-10 pr-4 text-sm text-slate-200 outline-none placeholder:text-slate-500 focus:border-brand-purple/40" />
+                </div>
+              </div>
+            )}
+
+            {validationError && <div className="rounded-[16px] border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{validationError}</div>}
+
+            <button type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]">
+              <span>{authTab === 'signin' ? 'Continue to workspace' : 'Create account'}</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
+
+          {import.meta.env.DEV && (
+            <div className="rounded-[16px] border border-white/10 bg-slate-950/30 p-3">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Sandbox shortcuts</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button onClick={() => handleAutofill('STUDENT')} className="rounded-[12px] border border-brand-cyan/20 bg-brand-cyan/10 px-3 py-2 text-[11px] font-semibold text-brand-cyan">Student demo</button>
+                <button onClick={() => handleAutofill('ADMIN')} className="rounded-[12px] border border-brand-purple/20 bg-brand-purple/10 px-3 py-2 text-[11px] font-semibold text-brand-purple">Admin demo</button>
               </div>
             </div>
           )}
-
-          {authTab === 'signup' && (
-            <div className="p-3 bg-brand-cyan/5 border border-brand-cyan/15 rounded-lg text-left">
-              <p className="text-[9px] text-slate-400 leading-relaxed font-semibold">
-                📧 <strong>Validation check:</strong> An email verification link will be sent to confirm your college enrollment status.
-              </p>
-            </div>
-          )}
-
-          {validationError && (
-            <p className="text-[10px] font-semibold text-red-400 bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg text-left leading-relaxed">
-              ⚠️ {validationError}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-purple to-brand-cyan text-white font-bold text-xs flex items-center justify-center space-x-1 hover:brightness-110 shadow-lg shadow-brand-purple/15 cursor-pointer"
-          >
-            <span>{authTab === 'signin' ? 'Verify & Authenticate' : 'Verify & Sign Up'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </form>
-
-        {/* Quick Testing Autofill Panel - DEV ONLY GATED */}
-        {import.meta.env.DEV && (
-          <div className="pt-4 border-t border-white/5 space-y-2">
-            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider text-left">Sandbox Test Keys (Dev mode only)</p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => handleAutofill('STUDENT')}
-                className="py-2 rounded-lg bg-slate-900 border border-slate-800 text-[9px] font-bold text-brand-cyan hover:bg-slate-850 cursor-pointer flex items-center justify-center space-x-1"
-              >
-                <Sparkles className="w-3 h-3 text-brand-cyan" />
-                <span>Autofill Student</span>
-              </button>
-              <button
-                onClick={() => handleAutofill('ADMIN')}
-                className="py-2 rounded-lg bg-slate-900 border border-slate-800 text-[9px] font-bold text-brand-purple hover:bg-slate-850 cursor-pointer flex items-center justify-center space-x-1"
-              >
-                <ShieldCheck className="w-3 h-3 text-brand-purple" />
-                <span>Autofill Admin</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <button
-        onClick={onBack}
-        className="mt-6 text-xs text-slate-500 hover:text-slate-300 font-semibold cursor-pointer"
-      >
-        ✕ Cancel and go back
-      </button>
+        </div>
+      </motion.div>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 import React from 'react';
-import { 
-  LayoutDashboard, BookOpen, Code, Mic, Brain, 
-  FileText, Award, BarChart2, Shield, LogOut, Zap, Menu, X, Sparkles,
+import { motion } from 'framer-motion';
+import {
+  LayoutDashboard, BookOpen, Code, Mic, Brain,
+  FileText, Award, BarChart2, Shield, LogOut, Menu, X, Sparkles,
   Sun, Moon, Search, Bell, ChevronDown
 } from 'lucide-react';
 
@@ -47,342 +48,168 @@ export default function AppLayout({
   setAiCoachOpen
 }: AppLayoutProps) {
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
-  const [notifications, setNotifications] = React.useState([
+  const [notifications] = React.useState([
     { id: '1', title: 'AI ATS Audit Finished', time: '10m ago', read: false, text: 'Your resume was successfully audited with suggestions.' },
     { id: '2', title: 'Daily Coding streak preserved!', time: '2h ago', read: true, text: 'Keep coding to secure your 12-day streak!' },
-    { id: '3', title: 'Cohort test unlocked', time: '1d ago', read: true, text: 'Solve Quantitative questions to unlocked level 3.' }
+    { id: '3', title: 'Cohort test unlocked', time: '1d ago', read: true, text: 'Solve Quantitative questions to unlock level 3.' }
   ]);
 
-  const hasUnread = notifications.some(n => !n.read);
+  const hasUnread = notifications.some((n) => !n.read);
 
   return (
-    <div className="min-h-screen bg-obsidian-950 text-slate-100 flex font-sans antialiased">
-      {/* Mobile Sidebar Backdrop Overlay */}
+    <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-slate-100 antialiased">
       {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-35 bg-slate-950/60 backdrop-blur-sm md:hidden cursor-pointer" 
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 z-35 cursor-pointer bg-slate-950/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar Navigation */}
-      <aside className={`fixed md:relative top-0 bottom-0 left-0 z-40 bg-slate-900/85 backdrop-blur-md border-r border-white/5 p-4 flex flex-col justify-between transition-all duration-300 ${
-        sidebarOpen 
-          ? 'translate-x-0 w-[290px]' 
-          : '-translate-x-full md:translate-x-0 md:w-[84px]'
-      }`}>
-        <div className="space-y-8">
-          {/* Logo Brand */}
-          <div className={`flex items-center justify-between h-[72px] pb-3 border-b border-slate-800/10 brand-header-border ${sidebarOpen ? '' : 'justify-center'}`}>
-            <div className="brand-logo-wrapper flex items-center space-x-3.5 cursor-pointer animate-fade-in" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
-              <div className="brand-logo-container">
-                <img src="/favicon.svg" alt="AptiCode Logo" className="w-5.5 h-5.5" />
+      <aside className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col justify-between border-r border-white/10 bg-slate-900/90 p-4 backdrop-blur-xl transition-all duration-300 md:relative md:w-[280px] md:translate-x-0 ${sidebarOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:w-[84px]'}`}>
+        <div className="space-y-6">
+          <div className={`flex items-center justify-between border-b border-white/10 pb-4 ${sidebarOpen ? '' : 'justify-center'}`}>
+            <div className="flex cursor-pointer items-center gap-3" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan shadow-lg shadow-brand-purple/20">
+                <img src="/favicon.svg" alt="AptiCode Logo" className="h-6 w-6" />
               </div>
-              {sidebarOpen && (
-                <span className="font-extrabold text-[19px] brand-logo-text leading-none select-none">
-                  Apti<span className="brand-logo-code">Code</span>
-                </span>
-              )}
+              {sidebarOpen && <span className="text-lg font-semibold tracking-tight">Apti<span className="text-brand-cyan">Code</span></span>}
             </div>
             {sidebarOpen && (
-              <button 
-                onClick={() => setSidebarOpen(false)}
-                className="hidden md:flex p-1.5 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-400 hover:text-white cursor-pointer"
-                title="Collapse Sidebar"
-              >
-                <ChevronDown className="w-4 h-4 -rotate-90" />
+              <button onClick={() => setSidebarOpen(false)} className="hidden rounded-xl p-2 text-slate-400 hover:bg-slate-800 hover:text-white md:inline-flex" title="Collapse sidebar">
+                <ChevronDown className="h-4 w-4 -rotate-90" />
               </button>
             )}
             <button className="md:hidden" onClick={() => setSidebarOpen(false)}>
-              <X className="w-5 h-5 text-slate-400 hover:text-white" />
+              <X className="h-5 w-5 text-slate-400" />
             </button>
           </div>
 
-          {/* Navigation Links */}
           <nav className="space-y-1.5">
-            {navItems
-              .filter((item) => user && (item.roles as readonly string[]).includes(user.role))
-              .map((item) => {
-                const Icon = item.icon;
-                const isActive = currentView === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setCurrentView(item.id);
-                      if (window.innerWidth < 768) setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer ${
-                      sidebarOpen ? 'space-x-3 px-3.5 py-3' : 'justify-center p-2.5'
-                    } ${
-                      isActive 
-                        ? 'premium-active-nav shadow'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-900/30'
-                    }`}
-                    title={sidebarOpen ? undefined : item.label}
-                  >
-                    <div className={`p-1.5 rounded-full flex items-center justify-center transition-all ${
-                      isActive ? 'bg-brand-purple/20 text-brand-purple' : 'bg-slate-900 border border-slate-850 text-slate-400'
-                    }`}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    {sidebarOpen && <span className="animate-fade-in">{item.label}</span>}
-                  </button>
-                );
-              })}
+            {navItems.filter((item) => user && (item.roles as readonly string[]).includes(user.role)).map((item) => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setCurrentView(item.id);
+                    if (window.innerWidth < 768) setSidebarOpen(false);
+                  }}
+                  className={`flex w-full items-center rounded-[14px] px-3 py-3 text-sm font-semibold transition-all ${sidebarOpen ? 'justify-start gap-3' : 'justify-center'} ${isActive ? 'premium-active-nav' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                >
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                    <Icon className="h-4.5 w-4.5" />
+                  </div>
+                  {sidebarOpen && <span>{item.label}</span>}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        {/* User profile footer */}
-        <div className="pt-4 border-t border-white/5 space-y-4">
-          <div className={`flex items-center p-2 rounded-xl bg-slate-950/20 border border-slate-850/50 ${sidebarOpen ? 'space-x-3' : 'justify-center'}`}>
-            <div className="w-9 h-9 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-black text-brand-cyan shrink-0">
+        <div className="space-y-3 border-t border-white/10 pt-4">
+          <div className={`flex items-center rounded-[16px] border border-white/10 bg-slate-950/30 p-2 ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-sm font-semibold text-white">
               {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'RS'}
             </div>
             {sidebarOpen && (
-              <div className="text-left animate-fade-in">
-                <p className="text-xs font-bold text-slate-200">{user ? user.name : 'Rahul Sharma'}</p>
-                <p className="text-[10px] text-slate-500 font-mono">
-                  {user?.role === 'ADMIN' ? 'Administrator' : `Level: ${level}`}
-                </p>
+              <div>
+                <p className="text-sm font-semibold text-slate-100">{user ? user.name : 'Rahul Sharma'}</p>
+                <p className="text-[11px] text-slate-500">{user?.role === 'ADMIN' ? 'Administrator' : `Level: ${level}`}</p>
               </div>
             )}
           </div>
-          
-          <button 
-            onClick={handleLogout}
-            className={`w-full flex items-center text-slate-500 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-colors ${
-              sidebarOpen ? 'space-x-2 px-3 py-2 text-xs font-semibold' : 'justify-center p-2'
-            }`}
-            title={sidebarOpen ? undefined : "Sign Out"}
-          >
-            <LogOut className="w-4 h-4" />
-            {sidebarOpen && <span>Sign Out</span>}
+          <button onClick={handleLogout} className={`flex w-full items-center rounded-[14px] px-3 py-2.5 text-sm font-semibold text-slate-400 transition-all hover:bg-red-500/10 hover:text-red-400 ${sidebarOpen ? 'justify-start gap-2' : 'justify-center'}`}>
+            <LogOut className="h-4 w-4" />
+            {sidebarOpen && <span>Sign out</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Workspace Frame */}
-      <div className="flex-1 flex flex-col min-w-0 md:pl-0">
-        {/* Header Bar */}
-        <header className="glass-panel border-b border-slate-800/10 z-30 sticky top-0 px-4 md:px-12 py-0 flex flex-col justify-center h-16 md:h-auto md:py-5 md:space-y-4.5">
-          
-          {/* Mobile Header (Visible on screen < 768px) */}
-          <div className="flex md:hidden items-center justify-between w-full h-full relative">
-            <div className="flex items-center space-x-2">
-              {(!sidebarOpen) && (
-                <button 
-                  onClick={() => setSidebarOpen(true)}
-                  className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-400 hover:text-white cursor-pointer shrink-0"
-                  aria-label="Expand Navigation Menu"
-                >
-                  <Menu className="w-5 h-5" />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="sticky top-0 z-30 border-b border-white/10 bg-white/70 px-3 py-3 backdrop-blur-xl dark:bg-slate-950/70 sm:px-5 lg:px-8">
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              {!sidebarOpen && (
+                <button onClick={() => setSidebarOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-300" aria-label="Open navigation">
+                  <Menu className="h-5 w-5" />
                 </button>
               )}
-              {/* Brand Logo Wrapper (simplified for mobile header) */}
-              <div className="brand-logo-wrapper flex items-center space-x-2" onClick={() => setCurrentView('dashboard')}>
-                <div className="brand-logo-container !w-8 !h-8 !border-none !shadow-none !bg-transparent">
-                  <img src="/favicon.svg" alt="AptiCode Logo" className="w-5.5 h-5.5" />
+              <div className="flex min-w-0 items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan shadow-lg shadow-brand-purple/20">
+                  <img src="/favicon.svg" alt="AptiCode Logo" className="h-6 w-6" />
                 </div>
-                <span className="font-extrabold text-sm brand-logo-text leading-none select-none">
-                  Apti<span className="brand-logo-code">Code</span>
-                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-100">Apti<span className="text-brand-cyan">Code</span></p>
+                  <p className="truncate text-[10px] uppercase tracking-[0.24em] text-slate-500">Mobile learning hub</p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              {/* Notification Bell Button */}
-              <button 
-                onClick={() => setNotificationsOpen(!notificationsOpen)}
-                className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white relative cursor-pointer"
-                aria-label="Toggle notifications panel"
-              >
-                <Bell className="w-5 h-5" />
-                {hasUnread && (
-                  <span className="absolute top-3.5 right-3.5 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                )}
+            <div className="flex items-center gap-2">
+              <button onClick={() => setNotificationsOpen((v) => !v)} className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Notifications">
+                <Bell className="h-5 w-5" />
+                {hasUnread && <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500" />}
               </button>
-
-              {/* Theme Toggle Button */}
-              <button 
-                onClick={toggleTheme}
-                className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white cursor-pointer transition-all"
-                aria-label="Toggle Theme"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400 fill-amber-400/10" /> : <Moon className="w-5 h-5 text-indigo-400 fill-indigo-400/10" />}
+              <button onClick={toggleTheme} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Toggle theme">
+                {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-400" />}
               </button>
-
-              {/* Profile Avatar Trigger Button */}
-              <button 
-                onClick={() => setCurrentView('dashboard')}
-                className="w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
-                aria-label="Profile Avatar"
-              >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-purple to-brand-cyan flex items-center justify-center text-[10px] font-black text-white shadow shadow-brand-purple/15 shrink-0">
+              <button onClick={() => setCurrentView('dashboard')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Profile">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-[10px] font-semibold text-white">
                   {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'RS'}
                 </div>
               </button>
             </div>
-
-            {/* Notification Drawer (Mobile dropdown) */}
-            {notificationsOpen && (
-              <div className="absolute right-0 top-14 w-72 bg-slate-900 border border-slate-850 rounded-2xl p-4 shadow-2xl z-50 text-left space-y-3 animate-fade-in">
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <h4 className="text-xs font-bold text-slate-200">Notifications</h4>
-                  <button 
-                    onClick={() => {
-                      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                    }}
-                    className="text-[10px] font-bold text-brand-cyan hover:underline cursor-pointer"
-                  >
-                    Mark all read
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {notifications.map(n => (
-                    <div key={n.id} className={`p-2.5 rounded-lg border text-[11px] transition-colors ${n.read ? 'bg-slate-950/20 border-white/5 text-slate-500' : 'bg-brand-purple/5 border-brand-purple/20 text-slate-200'}`}>
-                      <div className="flex justify-between items-center mb-0.5">
-                        <span className="font-bold">{n.title}</span>
-                        <span className="text-[9px] text-slate-500 font-mono">{n.time}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 leading-tight">{n.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Desktop Header (Visible on screen >= 768px) */}
-          <div className="hidden md:flex md:flex-col md:space-y-4.5 w-full relative">
-            {/* Row 1: Page Title & Subtitle */}
-            <div className="flex items-center space-x-3 w-full">
-              {(!sidebarOpen) && (
-                <button 
-                  onClick={() => setSidebarOpen(true)}
-                  className="p-1.5 rounded-lg hover:bg-slate-900 border border-transparent hover:border-slate-850 text-slate-400 hover:text-white cursor-pointer shrink-0"
-                  title="Expand Sidebar"
-                  aria-label="Expand Sidebar"
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
-              )}
-              <div className="flex flex-col text-left">
-                <h1 className="text-xl md:text-2xl font-black text-slate-100 tracking-tight uppercase leading-tight select-none">
-                  {navItems.find((n) => n.id === currentView)?.label || 'Workspace'}
-                </h1>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  AI-Powered Placement Prep Co-Pilot & Workspace
-                </p>
+          {notificationsOpen && (
+            <div className="mx-auto mt-3 max-w-7xl rounded-[20px] border border-white/10 bg-slate-950/90 p-3 shadow-2xl">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
+                <span className="text-[11px] text-brand-cyan">{notifications.filter((n) => !n.read).length} new</span>
               </div>
-            </div>
-
-            {/* Row 2: Search, XP, Streak, Notification, Theme Toggle, AI Coach, Profile */}
-            <div className="flex flex-wrap items-center justify-between gap-4 w-full pt-4 border-t border-slate-800/10">
-              {/* Search Box */}
-              <div className="relative w-full max-w-xs">
-                <span className="absolute inset-y-0 left-3 flex items-center text-slate-400">
-                  <Search className="w-4 h-4" />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Search resources, topics..."
-                  className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-850 text-slate-300 text-xs rounded-full outline-none focus:border-brand-purple/50 focus:bg-slate-950 transition-all"
-                  aria-label="Search resources"
-                />
-              </div>
-
-              {/* Status and Action Buttons */}
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                {/* Streak indicator */}
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-850 text-xs font-bold text-orange-500">
-                  <Zap className="w-4 h-4 fill-orange-500" />
-                  <span>12d Streak</span>
-                </div>
-
-                {/* XP indicator */}
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-850 text-xs font-bold text-brand-cyan">
-                  <Sparkles className="w-3.5 h-3.5 fill-brand-cyan/25" />
-                  <span>{xp.toLocaleString()} XP</span>
-                </div>
-
-                {/* Notification Bell Button */}
-                <button 
-                  onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  className="p-2 rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white relative cursor-pointer"
-                  aria-label="Toggle notifications panel"
-                >
-                  <Bell className="w-4 h-4" />
-                  {hasUnread && (
-                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                  )}
-                </button>
-
-                {/* Theme Toggle Button */}
-                <button 
-                  onClick={toggleTheme}
-                  className="p-2 rounded-full bg-slate-900 border border-slate-850 hover:bg-slate-850 text-slate-400 hover:text-white cursor-pointer transition-all flex items-center justify-center"
-                  title="Toggle Light/Dark Theme"
-                  aria-label="Toggle Theme"
-                >
-                  {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400 fill-amber-400/10" /> : <Moon className="w-4 h-4 text-indigo-400 fill-indigo-400/10" />}
-                </button>
-
-                {/* Premium AI Coach button */}
-                <button 
-                  onClick={() => setAiCoachOpen(true)}
-                  className="flex items-center space-x-1.5 px-4.5 py-2 rounded-full bg-gradient-to-r from-brand-purple to-brand-cyan text-white text-xs font-black hover:scale-[1.03] active:scale-[0.98] cursor-pointer shadow-lg shadow-brand-purple/20 transition-all"
-                  aria-label="Ask AI Career Coach"
-                >
-                  <Sparkles className="w-3.5 h-3.5 fill-white/20 animate-pulse" />
-                  <span>AI Coach</span>
-                </button>
-
-                {/* Profile Dropdown */}
-                <div className="flex items-center space-x-1.5 pl-2 border-l border-slate-850 cursor-pointer group">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-purple to-brand-cyan flex items-center justify-center text-[10px] font-black text-white shadow shadow-brand-purple/15">
-                    {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'RS'}
+              <div className="space-y-2">
+                {notifications.map((n) => (
+                  <div key={n.id} className={`rounded-[16px] border p-3 ${n.read ? 'border-white/10 bg-slate-900/70' : 'border-brand-purple/20 bg-brand-purple/10'}`}>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-100">{n.title}</p>
+                      <span className="text-[10px] text-slate-500">{n.time}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-500">{n.text}</p>
                   </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-colors" />
-                </div>
+                ))}
               </div>
             </div>
+          )}
+        </motion.header>
 
-            {/* Notification Drawer (Desktop dropdown) */}
-            {notificationsOpen && (
-              <div className="absolute right-8 top-16 w-80 bg-slate-900 border border-slate-850 rounded-2xl p-4 shadow-2xl z-50 text-left space-y-3 animate-fade-in">
-                <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <h4 className="text-xs font-bold text-slate-200">Alert Notifications Dashboard</h4>
-                  <button 
-                    onClick={() => {
-                      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-                    }}
-                    className="text-[10px] font-bold text-brand-cyan hover:underline cursor-pointer"
-                  >
-                    Mark all read
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {notifications.map(n => (
-                    <div key={n.id} className={`p-2.5 rounded-lg border text-[11px] transition-colors ${n.read ? 'bg-slate-950/20 border-white/5 text-slate-500' : 'bg-brand-purple/5 border-brand-purple/20 text-slate-200'}`}>
-                      <div className="flex justify-between items-center mb-0.5">
-                        <span className="font-bold">{n.title}</span>
-                        <span className="text-[9px] text-slate-500 font-mono">{n.time}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 leading-tight">{n.text}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </header>
-
-        {/* View container */}
-        <main className="flex-1 overflow-y-auto w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-          {children}
+        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-4 pb-24 sm:px-5 lg:px-8 lg:py-6 lg:pb-8">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="w-full">
+            {children}
+          </motion.div>
         </main>
       </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-white/80 px-2 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:bg-slate-950/80 md:hidden">
+        <div className="mx-auto flex max-w-5xl items-center justify-around gap-1">
+          {navItems.filter((item) => (item.roles as readonly string[]).includes(user?.role || 'STUDENT') && ['dashboard', 'coding', 'interview', 'resume', 'leaderboard'].some((id) => id === item.id)).map((item) => {
+            const Icon = item.icon;
+            const isActive = currentView === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setCurrentView(item.id);
+                  setSidebarOpen(false);
+                }}
+                className={`flex min-h-[56px] flex-1 flex-col items-center justify-center rounded-[16px] px-2 py-1.5 text-[10px] font-semibold transition-all active:scale-95 ${isActive ? 'bg-brand-purple/10 text-slate-100' : 'text-slate-500'}`}
+              >
+                <div className={`mb-1 flex h-9 w-9 items-center justify-center rounded-full ${isActive ? 'bg-gradient-to-br from-brand-purple to-brand-cyan text-white shadow-lg shadow-brand-purple/20' : 'bg-slate-100 text-slate-500 dark:bg-slate-900'}`}>
+                  <Icon className="h-4.5 w-4.5" />
+                </div>
+                <span>{item.label === 'AI Resume Audit' ? 'Resume' : item.label === 'Mock Interviews' ? 'Interview' : item.label === 'Coding Arena' ? 'Practice' : item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

@@ -94,7 +94,7 @@ export default function AdminView() {
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/challenges');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/challenges`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
           setActiveProblemsList(result.data);
@@ -106,7 +106,7 @@ export default function AdminView() {
 
     const fetchMcqs = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/mcqs');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
           const mapped = result.data.map((q: any) => ({
@@ -189,7 +189,7 @@ export default function AdminView() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/api/mcqs', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
