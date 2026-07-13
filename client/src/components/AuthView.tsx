@@ -180,7 +180,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
 
         console.log("Sending verification email to:", userCredential.user?.email);
         await sendEmailVerification(userCredential.user, {
-          url: "http://localhost:5173/signin",
+          url: `${window.location.origin}/signin`,
           handleCodeInApp: false,
         });
         console.log("Verification email sent successfully");
