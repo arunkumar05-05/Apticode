@@ -178,18 +178,18 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
 
         console.log("User created:", userCredential.user?.email);
 
+        console.log("Sending verification email to:", userCredential.user?.email);
         await sendEmailVerification(userCredential.user, {
           url: "http://localhost:5173/signin",
           handleCodeInApp: false,
         });
-
-        console.log("Verification email request succeeded");
+        console.log("Verification email sent successfully");
 
         setVerificationEmailSent(true);
         alert(`Registration initialized! A verification email link has been sent to ${email}. Please verify your email before logging in.`);
         setAuthTab('signin');
       } catch (error: any) {
-        console.error("Full Firebase error:", error);
+        console.error("Signup error in Firebase:", error);
         console.error("Code:", error.code);
         console.error("Message:", error.message);
         setValidationError(getFirebaseErrorMessage(error, 'Failed to create user.'));
