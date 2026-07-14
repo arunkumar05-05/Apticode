@@ -57,7 +57,7 @@ export default function AppLayout({
   const hasUnread = notifications.some((n) => !n.read);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg-base)] text-slate-100 antialiased">
+    <div className="flex min-h-screen md:flex-row flex-col bg-[var(--bg-base)] text-slate-100 antialiased">
       {sidebarOpen && (
         <div className="fixed inset-0 z-35 cursor-pointer bg-slate-950/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}

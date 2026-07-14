@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { 
+import {
   Terminal, Sparkles, X
 } from 'lucide-react';
 import LandingView from './components/LandingView';
 import AuthView from './components/AuthView';
+import OnboardingView from './components/OnboardingView';
 import DashboardView from './components/DashboardView';
 import AptitudeView from './components/AptitudeView';
 import CodingView from './components/CodingView';
@@ -14,16 +15,21 @@ import LeaderboardView from './components/LeaderboardView';
 import AnalyticsView from './components/AnalyticsView';
 import AdminView from './components/AdminView';
 import AppLayout from './components/AppLayout';
+import { auth, db } from './firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
-type ViewState = 
-  | 'landing' | 'auth' | 'dashboard' | 'aptitude' | 'coding' 
-  | 'communication' | 'interview' | 'resume' 
+
+
+type ViewState =
+  | 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'aptitude' | 'coding'
+  | 'communication' | 'interview' | 'resume'
   | 'leaderboard' | 'analytics' | 'admin';
 
 interface UserSession {
   name: string;
   email: string;
   role: 'STUDENT' | 'ADMIN';
+  onboardingCompleted?: boolean;
 }
 
 export default function App() {
@@ -54,6 +60,58 @@ export default function App() {
     localStorage.setItem('apticode-theme', theme);
   }, [theme]);
 
+  React.useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!user) return;
+      if (user.role === 'ADMIN') {
+        setCurrentView('admin');
+        return;
+      }
+
+      const currentUser = auth.currentUser;
+      const storageKey = currentUser ? `onboarding_${currentUser.uid}` : `onboarding_${user.email}`;
+      
+      // Check localStorage first
+      const cached = localStorage.getItem(storageKey);
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          if (parsed.onboardingCompleted) {
+            setCurrentView('dashboard');
+            return;
+          }
+        } catch (e) {
+          console.error('[Onboarding] Failed to parse cached onboarding profile:', e);
+        }
+      }
+
+      // Check Firestore using UID (or email for sandbox mode) as document ID fallback
+      try {
+        const docId = currentUser ? currentUser.uid : user.email;
+        const docRef = doc(db, 'users', docId);
+        const docSnap = await Promise.race([
+          getDoc(docRef),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Firestore read timeout')), 2500))
+        ]);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.onboardingCompleted) {
+            localStorage.setItem(storageKey, JSON.stringify(data));
+            setCurrentView('dashboard');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('[Onboarding] Firestore fetch error:', err);
+      }
+
+      // Route to onboarding if not completed
+      setCurrentView('onboarding');
+    };
+
+    checkOnboarding();
+  }, [user]);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
@@ -75,7 +133,7 @@ export default function App() {
 
     setTimeout(() => {
       let replyText = "Based on your current master level metrics:\n\n1. **Aptitude Focus**: You are at 84% accuracy in Quant. Focus on Probability (weak area).\n2. **Google standard prep**: Master 'Permutations' and 'B-Tree' indexing structures.\n3. **Action item**: Complete mock interview chapter 2.";
-      
+
       if (textToSubmit.toLowerCase().includes('time') || textToSubmit.toLowerCase().includes('work')) {
         replyText = "**Quant Cheat Sheet (Time & Work):**\n\n- If A completes work in X days: A's 1-day work = 1/X.\n- Combined efficiency: $(1/A + 1/B) = 1/\\text{Total Days}$.\n- Try solving MCQ Question 2 in the Aptitude dashboard.";
       } else if (textToSubmit.toLowerCase().includes('python') || textToSubmit.toLowerCase().includes('code')) {
@@ -122,13 +180,20 @@ export default function App() {
       <AuthView
         onAuthenticate={(session) => {
           setUser(session);
-          if (session.role === 'ADMIN') {
-            setCurrentView('admin');
-          } else {
-            setCurrentView('dashboard');
-          }
         }}
         onBack={() => setCurrentView('landing')}
+      />
+    );
+  }
+
+  if (currentView === 'onboarding') {
+    return (
+      <OnboardingView
+        userEmail={user?.email || ''}
+        onComplete={(data) => {
+          setUser(prev => prev ? { ...prev, onboardingCompleted: true } : null);
+          setCurrentView('dashboard');
+        }}
       />
     );
   }
@@ -161,7 +226,7 @@ export default function App() {
       {aiCoachOpen && (
         <>
           {/* Backdrop overlay */}
-          <div 
+          <div
             className="fixed inset-0 z-45 bg-slate-950/60 backdrop-blur-sm cursor-pointer animate-fade-in"
             onClick={() => setAiCoachOpen(false)}
           />
@@ -177,7 +242,7 @@ export default function App() {
                     <p className="text-[9px] text-slate-500 uppercase tracking-wider">Placement Advisor Room</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => setAiCoachOpen(false)}
                   className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
                 >
@@ -188,20 +253,18 @@ export default function App() {
               {/* Message Arena */}
               <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-hidden">
                 {coachMessages.map((msg, i) => (
-                  <div 
-                    key={i} 
-                    className={`flex flex-col space-y-1 ${
-                      msg.sender === 'user' ? 'items-end' : 'items-start'
-                    }`}
+                  <div
+                    key={i}
+                    className={`flex flex-col space-y-1 ${msg.sender === 'user' ? 'items-end' : 'items-start'
+                      }`}
                   >
                     <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider font-mono">
                       {msg.sender === 'user' ? 'Rahul' : 'AI Placement Coach'}
                     </span>
-                    <div className={`p-3 rounded-xl text-xs leading-relaxed max-w-[85%] whitespace-pre-line ${
-                      msg.sender === 'user' 
-                        ? 'bg-brand-purple/20 border border-brand-purple/30 text-slate-200 rounded-tr-none' 
+                    <div className={`p-3 rounded-xl text-xs leading-relaxed max-w-[85%] whitespace-pre-line ${msg.sender === 'user'
+                        ? 'bg-brand-purple/20 border border-brand-purple/30 text-slate-200 rounded-tr-none'
                         : 'bg-slate-950/40 border border-white/5 text-slate-300 rounded-tl-none'
-                    }`}>
+                      }`}>
                       {msg.text}
                     </div>
                   </div>
@@ -236,7 +299,7 @@ export default function App() {
             </div>
 
             {/* Input Box */}
-            <form 
+            <form
               onSubmit={(e) => { e.preventDefault(); handleSendCoachMessage(coachInput); }}
               className="mt-4 flex space-x-2 pt-4 border-t border-white/5"
             >
