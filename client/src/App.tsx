@@ -15,6 +15,9 @@ import LeaderboardView from './components/LeaderboardView';
 import AnalyticsView from './components/AnalyticsView';
 import AdminView from './components/AdminView';
 import AppLayout from './components/AppLayout';
+import CompanyPrepView from './components/CompanyPrepView';
+import MockTestView from './components/MockTestView';
+import ProfileView from './components/ProfileView';
 import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -22,6 +25,7 @@ import { doc, getDoc } from 'firebase/firestore';
 
 type ViewState =
   | 'landing' | 'auth' | 'onboarding' | 'dashboard' | 'aptitude' | 'coding'
+  | 'company' | 'mocktest' | 'profile'
   | 'communication' | 'interview' | 'resume'
   | 'leaderboard' | 'analytics' | 'admin';
 
@@ -213,9 +217,12 @@ export default function App() {
       theme={theme}
       setAiCoachOpen={setAiCoachOpen}
     >
-      {currentView === 'dashboard' && <DashboardView onNavigate={handleNavigation} xp={xp} level={level} spendXp={handleSpendXp} openAiCoach={() => setAiCoachOpen(true)} />}
+       {currentView === 'dashboard' && <DashboardView onNavigate={handleNavigation} xp={xp} level={level} spendXp={handleSpendXp} openAiCoach={() => setAiCoachOpen(true)} />}
       {currentView === 'aptitude' && <AptitudeView />}
       {currentView === 'coding' && <CodingView />}
+      {currentView === 'company' && <CompanyPrepView />}
+      {currentView === 'mocktest' && <MockTestView />}
+      {currentView === 'profile' && <ProfileView />}
       {currentView === 'communication' && <CommunicationView />}
       {currentView === 'interview' && <InterviewView />}
       {currentView === 'resume' && <ResumeView />}

@@ -4,6 +4,8 @@ import {
   BarChart2, Clock, Sparkles, HelpCircle, Code, BookOpen, AlertCircle, 
   TrendingUp, Award, Layers, Volume2, Bookmark, CheckCircle 
 } from 'lucide-react';
+import { db } from '../firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 interface StudentRecord {
   id: string;
@@ -122,8 +124,51 @@ export default function AdminView() {
       }
     };
 
+    const fetchFirestoreStudents = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const list: StudentRecord[] = [];
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          list.push({
+            id: docSnap.id,
+            name: data.fullName || docSnap.id.split('@')[0],
+            email: data.email || docSnap.id,
+            branch: data.branch || 'CSE',
+            xp: data.xp || 2000,
+            level: data.level || 'Beginner',
+            status: 'ACTIVE',
+            college: data.college || 'AptiCode College',
+            department: data.branch || 'Computer Science',
+            yearOfStudy: data.year || '3rd Year',
+            regDate: data.createdAt?.split('T')[0] || '2026-07-14',
+            lastLogin: 'Active recently',
+            readinessScore: data.readinessScore || 70,
+            isAtRisk: false,
+            mcqCorrect: data.mcqCorrect || 10,
+            mcqIncorrect: data.mcqIncorrect || 2,
+            strongTopics: data.strongTopics || ['Time & Work'],
+            weakTopics: data.weakTopics || [],
+            grammarScore: data.grammarScore || 80,
+            fluencyScore: data.fluencyScore || 75,
+            wpm: data.wpm || 110
+          });
+        });
+
+        if (list.length > 0) {
+          setStudents((prev) => {
+            const filteredPrev = prev.filter(p => !list.some(l => l.email === p.email));
+            return [...filteredPrev, ...list];
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to load registered student profiles from Firestore:', err);
+      }
+    };
+
     fetchChallenges();
     fetchMcqs();
+    fetchFirestoreStudents();
   }, []);
 
   // MCQ Ingestion Form State

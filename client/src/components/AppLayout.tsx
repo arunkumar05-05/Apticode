@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, BookOpen, Code, Mic, Brain,
   FileText, Award, BarChart2, Shield, LogOut, Menu, X, Sparkles,
-  Sun, Moon, Search, Bell, ChevronDown
+  Sun, Moon, Search, Bell, ChevronDown, Building2, ClipboardCheck, User
 } from 'lucide-react';
 
 interface AppLayoutProps {
@@ -25,11 +25,14 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['STUDENT'] },
   { id: 'aptitude', label: 'Aptitude Prep', icon: BookOpen, roles: ['STUDENT'] },
   { id: 'coding', label: 'Coding Arena', icon: Code, roles: ['STUDENT'] },
+  { id: 'company', label: 'Company Roadmaps', icon: Building2, roles: ['STUDENT'] },
+  { id: 'mocktest', label: 'Mock Tests', icon: ClipboardCheck, roles: ['STUDENT'] },
   { id: 'communication', label: 'Verbal & Speech', icon: Mic, roles: ['STUDENT'] },
   { id: 'interview', label: 'Mock Interviews', icon: Brain, roles: ['STUDENT'] },
   { id: 'resume', label: 'AI Resume Audit', icon: FileText, roles: ['STUDENT'] },
   { id: 'leaderboard', label: 'Leaderboard', icon: Award, roles: ['STUDENT'] },
   { id: 'analytics', label: 'Cohort Insights', icon: BarChart2, roles: ['STUDENT'] },
+  { id: 'profile', label: 'My Profile', icon: User, roles: ['STUDENT'] },
   { id: 'admin', label: 'Control Room', icon: Shield, roles: ['ADMIN'] }
 ] as const;
 
@@ -151,7 +154,7 @@ export default function AppLayout({
               <button onClick={toggleTheme} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Toggle theme">
                 {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-400" />}
               </button>
-              <button onClick={() => setCurrentView('dashboard')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Profile">
+              <button onClick={() => setCurrentView('profile')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Profile">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-[10px] font-semibold text-white">
                   {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'RS'}
                 </div>
