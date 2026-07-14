@@ -163,6 +163,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    auth.signOut().catch(err => console.error('[Auth] signOut error:', err));
     setUser(null);
     setCurrentView('landing');
   };

@@ -21,6 +21,8 @@ const getFirebaseErrorMessage = (error: any, defaultFallback: string): string =>
     case 'auth/user-not-found':
     case 'auth/wrong-password':
       return 'Invalid email or password. Please try again.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Your account has been temporarily locked due to repeated failed requests. Please wait a few minutes and try again.';
     default:
       return error?.message || defaultFallback;
   }
@@ -39,7 +41,16 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
   const [fullName, setFullName] = useState('');
   const [validationError, setValidationError] = useState('');
   const [verificationEmailSent, setVerificationEmailSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [sandboxUsers, setSandboxUsers] = useState<Array<{ email: string; fullName: string; role: 'STUDENT' | 'ADMIN' }>>([]);
+
+  // Resend cooldown timer
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown(prev => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
   const handleAutofill = (selectedRole: 'STUDENT' | 'ADMIN') => {
     setRole(selectedRole);
@@ -64,6 +75,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
   };
 
   const handleResendVerification = async () => {
+    if (resendCooldown > 0 || isLoading) return;
     setValidationError('');
     if (!email.trim() || !validateEmail(email.trim())) {
       setValidationError('Please input a valid college email address.');
@@ -74,18 +86,23 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       return;
     }
     
+    setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
       await sendEmailVerification(userCredential.user);
-      alert(`Verification link resent to ${email}. Please check your inbox.`);
+      setResendCooldown(60); // 60-second cooldown between resend attempts
+      setValidationError('Verification link resent! Please check your inbox. You can resend again in 60 seconds.');
     } catch (err: any) {
       console.error(err);
       setValidationError(getFirebaseErrorMessage(err, 'Failed to resend verification link.'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return; // Prevent duplicate submissions
     setValidationError('');
 
     if (!email.trim()) {
@@ -120,14 +137,14 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         return;
       }
 
+      setIsLoading(true);
       try {
         const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
         const user = userCredential.user;
 
         if (!user.emailVerified && !import.meta.env.DEV) {
-          await sendEmailVerification(user);
-          alert("Verification email sent. Please check your inbox.");
-          setValidationError('Your email address is not verified. A verification link has been sent to your inbox.');
+          // Do NOT auto-send verification email — let user click "Resend" explicitly
+          setValidationError('Your email address is not verified. Please check your inbox or click "Resend verification link" below.');
           return;
         }
 
@@ -148,6 +165,8 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       } catch (err: any) {
         console.error('Firebase Auth Error:', err);
         setValidationError(getFirebaseErrorMessage(err, 'Invalid credentials or Firebase authentication error.'));
+      } finally {
+        setIsLoading(false);
       }
     } else {
       // Sign Up
@@ -169,6 +188,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         return;
       }
 
+      setIsLoading(true);
       try {
         const userCredential = await createUserWithEmailAndPassword(
           auth,
@@ -176,23 +196,19 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
           password
         );
 
-        console.log("User created:", userCredential.user?.email);
-
-        console.log("Sending verification email to:", userCredential.user?.email);
         await sendEmailVerification(userCredential.user, {
           url: `${window.location.origin}/signin`,
           handleCodeInApp: false,
         });
-        console.log("Verification email sent successfully");
 
         setVerificationEmailSent(true);
         alert(`Registration initialized! A verification email link has been sent to ${email}. Please verify your email before logging in.`);
         setAuthTab('signin');
       } catch (error: any) {
-        console.error("Signup error in Firebase:", error);
-        console.error("Code:", error.code);
-        console.error("Message:", error.message);
+        console.error('Signup error:', error.code);
         setValidationError(getFirebaseErrorMessage(error, 'Failed to create user.'));
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -261,14 +277,29 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
             {validationError && <div className="rounded-[16px] border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">{validationError}</div>}
 
             {validationError.includes('verified') && (
-              <button type="button" onClick={handleResendVerification} className="mt-1 text-xs text-brand-cyan hover:underline block text-left bg-transparent border-0 cursor-pointer p-0">
-                Resend verification link
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resendCooldown > 0 || isLoading}
+                className={`mt-1 text-xs block text-left bg-transparent border-0 p-0 ${resendCooldown > 0 || isLoading ? 'text-slate-500 cursor-not-allowed' : 'text-brand-cyan hover:underline cursor-pointer'}`}
+              >
+                {resendCooldown > 0 ? `Resend available in ${resendCooldown}s` : 'Resend verification link'}
               </button>
             )}
 
-            <button type="submit" className="flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98]">
-              <span>{authTab === 'signin' ? 'Continue to workspace' : 'Create account'}</span>
-              <ArrowRight className="h-4 w-4" />
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white transition-all ${isLoading ? 'opacity-60 cursor-not-allowed' : 'hover:brightness-110 active:scale-[0.98]'}`}
+            >
+              {isLoading ? (
+                <span className="animate-pulse">Processing...</span>
+              ) : (
+                <>
+                  <span>{authTab === 'signin' ? 'Continue to workspace' : 'Create account'}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           </form>
 
