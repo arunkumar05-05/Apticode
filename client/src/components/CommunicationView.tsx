@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, RefreshCw, Star, AlertTriangle, CheckCircle, Volume2, Sparkles, MessageCircle, BookOpen } from 'lucide-react';
+import { auth } from '../firebase';
 
 interface GrammarQuestion {
   id: number;
@@ -34,9 +35,43 @@ const grammarDrills: GrammarQuestion[] = [
 ];
 
 export default function CommunicationView() {
-  const [activeMode, setActiveMode] = useState<'reading' | 'grammar' | 'speaking'>('reading');
+  const [activeMode, setActiveMode] = useState<'reading' | 'grammar' | 'speaking' | 'history'>('reading');
   const [isRecording, setIsRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
+
+  const getHeaders = () => {
+    const saved = localStorage.getItem('apticode-user-session');
+    const token = saved ? JSON.parse(saved).token : '';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+
+  const fetchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/communication/history`, {
+        headers: getHeaders()
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setHistoryList(data.history || []);
+      }
+    } catch (err) {
+      console.error('[Speech History] error:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeMode === 'history') {
+      fetchHistory();
+    }
+  }, [activeMode]);
   
   const [metrics, setMetrics] = useState({
     wpm: 0,
@@ -48,6 +83,8 @@ export default function CommunicationView() {
   });
 
   const [hasEvaluated, setHasEvaluated] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState('');
+  const [isEvaluating, setIsEvaluating] = useState(false);
   const [audioWave, setAudioWave] = useState<number[]>([10, 20, 15, 30, 40, 20, 10, 5, 25, 45, 30, 15, 10]);
 
   const readingPrompt = "The semiconductor industry has seen unprecedented transformations, driving high-performance computing, artificial intelligence, and edge networks across global supply chains.";
@@ -131,33 +168,65 @@ export default function CommunicationView() {
     return Math.round((matches / targetWords.length) * 100);
   };
 
-  const handleStopRecording = () => {
+  const handleStopRecording = async () => {
     setIsRecording(false);
 
     if (recognition) {
       recognition.stop();
     }
-    
-    // Evaluate metrics based on recorded transcript
-    setTimeout(() => {
+
+    setIsEvaluating(true);
+    setAiFeedback('');
+
+    setTimeout(async () => {
       const wordsCount = transcript ? transcript.trim().split(/\s+/).length : 15;
       const computedWpm = seconds > 0 ? Math.round((wordsCount / seconds) * 60) : 125;
-      
-      const fillersMatches = transcript.toLowerCase().match(/\b(um|ah|like|basically)\b/g);
+      const fillersMatches = transcript.toLowerCase().match(/\b(um|ah|like|basically|actually)\b/g);
       const computedFillers = fillersMatches ? fillersMatches.length : (activeMode === 'reading' ? 1 : 3);
-      
       const pronScore = activeMode === 'reading' ? computePronunciationScore(transcript, readingPrompt) : 90;
 
-      setMetrics({
-        wpm: computedWpm > 250 ? 120 : (computedWpm || 115),
-        fluency: Math.max(100 - computedFillers * 10, 40),
-        grammar: activeMode === 'reading' ? 95 : 85,
-        fillers: computedFillers,
-        confidence: Math.max(92 - computedFillers * 6, 50),
-        pronunciationMatch: pronScore
-      });
-      setHasEvaluated(true);
-    }, 600);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/communication/eval`, {
+          method: 'POST',
+          headers: getHeaders(),
+          body: JSON.stringify({
+            sessionType: activeMode === 'reading' ? 'READING' : 'SPEAKING',
+            transcript: transcript || (activeMode === 'reading' ? readingPrompt : 'Hello placement advisor, I want to talk about computer architecture.'),
+            promptText: activeMode === 'reading' ? readingPrompt : 'General Speaking session',
+            durationSeconds: seconds || 15
+          })
+        });
+        const result = await response.json();
+        if (result.status === 'success' && result.data) {
+          const evalData = result.data;
+          setMetrics({
+            wpm: evalData.wpm || computedWpm,
+            fluency: evalData.fluencyScore || Math.max(100 - computedFillers * 10, 40),
+            grammar: evalData.grammarScore || 85,
+            fillers: computedFillers,
+            confidence: evalData.confidenceScore || 80,
+            pronunciationMatch: pronScore
+          });
+          setAiFeedback(evalData.feedback || '');
+          setHasEvaluated(true);
+        } else {
+          throw new Error('API failed');
+        }
+      } catch (err: any) {
+        console.warn('[Speech Eval API] failed, falling back to local evaluation:', err.message);
+        setMetrics({
+          wpm: computedWpm > 250 ? 120 : (computedWpm || 115),
+          fluency: Math.max(100 - computedFillers * 10, 40),
+          grammar: activeMode === 'reading' ? 95 : 85,
+          fillers: computedFillers,
+          confidence: Math.max(92 - computedFillers * 6, 50),
+          pronunciationMatch: pronScore
+        });
+        setHasEvaluated(true);
+      } finally {
+        setIsEvaluating(false);
+      }
+    }, 1000);
   };
 
   // Word-by-word pronunciation highlights
@@ -206,7 +275,7 @@ export default function CommunicationView() {
       <div className="md:col-span-2 space-y-6">
         {/* Module Headers */}
         <div className="glass-panel p-4 flex space-x-2 bg-slate-950/20">
-          {(['reading', 'grammar', 'speaking'] as const).map((mode) => (
+          {(['reading', 'grammar', 'speaking', 'history'] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => { setActiveMode(mode); setHasEvaluated(false); }}
@@ -217,12 +286,42 @@ export default function CommunicationView() {
               {mode === 'reading' && 'Reading Practice'}
               {mode === 'grammar' && 'Grammar Drills'}
               {mode === 'speaking' && 'Speaking Practice'}
+              {mode === 'history' && 'History Logs'}
             </button>
           ))}
         </div>
 
         {/* PRONUNCIATION / SPEAKING VIEW */}
-        {activeMode !== 'grammar' ? (
+        {activeMode === 'history' ? (
+          <div className="glass-panel p-6 space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-white/5 pb-2">
+              Speech Evaluation History
+            </h3>
+            {loadingHistory ? (
+              <div className="text-slate-600 text-xs font-mono py-8 text-center">Loading attempts...</div>
+            ) : historyList.length === 0 ? (
+              <div className="text-slate-655 text-xs font-mono py-8 text-center">No past audio recordings evaluated yet.</div>
+            ) : (
+              <div className="space-y-3">
+                {historyList.map((session: any, idx: number) => (
+                  <div key={idx} className="p-4 bg-slate-950/40 rounded-xl border border-white/5 space-y-2 text-left font-mono">
+                    <div className="flex justify-between items-center text-xs font-extrabold text-slate-350">
+                      <span>{session.sessionType} Drill</span>
+                      <span className="text-brand-cyan">{new Date(session.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-555 italic">"{session.transcript}"</p>
+                    <div className="grid grid-cols-4 gap-2 text-[10px] text-center font-bold text-slate-400">
+                      <div className="bg-slate-950/50 p-1.5 rounded">WPM: {session.wpm}</div>
+                      <div className="bg-slate-950/50 p-1.5 rounded text-brand-purple">Fluency: {session.fluencyScore}%</div>
+                      <div className="bg-slate-950/50 p-1.5 rounded text-brand-cyan">Grammar: {session.grammarScore}%</div>
+                      <div className="bg-slate-950/50 p-1.5 rounded text-emerald-400">Conf: {session.confidence}%</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : activeMode !== 'grammar' ? (
           <div className="glass-panel p-8 space-y-6 flex flex-col justify-between min-h-[360px]">
             <div>
               <div className="flex items-center space-x-2 text-brand-cyan mb-4">
@@ -455,22 +554,33 @@ export default function CommunicationView() {
             </div>
 
             {/* AI Review Summary */}
-            <div className="p-4 rounded-xl bg-brand-cyan/5 border border-brand-cyan/20 space-y-2">
+            <div className="p-4 rounded-xl bg-brand-cyan/5 border border-brand-cyan/20 space-y-2 text-left">
               <h4 className="text-xs font-bold text-brand-cyan flex items-center space-x-1">
                 <Sparkles className="w-3.5 h-3.5 fill-brand-cyan/20" />
                 <span>AI Speech Critique</span>
               </h4>
-              <p className="text-[10px] text-slate-300 leading-relaxed text-left">
-                {activeMode === 'reading' ? (
-                  metrics.pronunciationMatch > 80 
-                    ? `Excellent reading alignment! Your pronunciation match is ${metrics.pronunciationMatch}%. Very clean speech flow.`
-                    : `Pronunciation match is low (${metrics.pronunciationMatch}%). Pay attention to highlighted strikethroughs on the left prompt.`
-                ) : (
-                  metrics.fillers > 2 
-                    ? "Frequent hesitation tokens detected. Practice slowing down your delivery and substituting fillers with micro-pauses."
-                    : "Excellent presentation rhythm. Speech timing and grammar structures are overall well suited for corporate rounds."
-                )}
-              </p>
+              {isEvaluating ? (
+                <div className="flex items-center space-x-2 text-slate-500 font-mono text-[9px] py-1">
+                  <Sparkles className="w-3.5 h-3.5 animate-spin text-brand-cyan" />
+                  <span>AI evaluator auditing transcript...</span>
+                </div>
+              ) : aiFeedback ? (
+                <div className="text-[10px] text-slate-350 leading-relaxed whitespace-pre-line prose prose-invert font-sans">
+                  {aiFeedback}
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-350 leading-relaxed text-left">
+                  {activeMode === 'reading' ? (
+                    metrics.pronunciationMatch > 80 
+                      ? `Excellent reading alignment! Your pronunciation match is ${metrics.pronunciationMatch}%. Very clean speech flow.`
+                      : `Pronunciation match is low (${metrics.pronunciationMatch}%). Pay attention to highlighted strikethroughs on the left prompt.`
+                  ) : (
+                    metrics.fillers > 2 
+                      ? "Frequent hesitation tokens detected. Practice slowing down your delivery and substituting fillers with micro-pauses."
+                      : "Excellent presentation rhythm. Speech timing and grammar structures are overall well suited for corporate rounds."
+                  )}
+                </p>
+              )}
             </div>
           </div>
         )}

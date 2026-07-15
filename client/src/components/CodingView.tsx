@@ -143,6 +143,19 @@ export default function CodingView() {
     const loadUserData = async () => {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
+
+      let fetchedHistory: any[] = [];
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/coding/submissions?email=${currentUser.email}`);
+        const result = await response.json();
+        if (result.status === 'success' && Array.isArray(result.data)) {
+          fetchedHistory = result.data;
+          setSubmissionHistory(result.data);
+        }
+      } catch (err: any) {
+        console.warn('[Coding] Failed to load submissions from backend API, using client state:', err.message);
+      }
+
       try {
         const docRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(docRef);
@@ -151,7 +164,7 @@ export default function CodingView() {
           if (Array.isArray(data.bookmarkedCoding)) {
             setBookmarkedIds(data.bookmarkedCoding);
           }
-          if (Array.isArray(data.codingSubmissions)) {
+          if (fetchedHistory.length === 0 && Array.isArray(data.codingSubmissions)) {
             setSubmissionHistory(data.codingSubmissions);
           }
         }
@@ -198,42 +211,86 @@ export default function CodingView() {
     setIsRunning(true);
     setConsoleTab('console');
     
-    // Simulate compilation delay
-    setTimeout(async () => {
+    const currentUser = auth.currentUser;
+    const userEmail = currentUser?.email || 'student@college.edu';
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/coding/submissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          problemId: activeProblem.id,
+          problemTitle: activeProblem.title,
+          code: editorCode,
+          language: selectedLanguage
+        })
+      });
+      
+      const result = await response.json();
       setIsRunning(false);
-      
-      const containsPlaceholders = 
-        editorCode.includes('pass') || 
-        editorCode.includes('return new int[0]') || 
-        editorCode.includes('return 0') || 
-        editorCode.includes('return null') ||
-        editorCode.includes('return NULL');
 
-      const isCorrect = !containsPlaceholders;
-      const statusResult: 'SUCCESS' | 'WRONG_ANSWER' = isCorrect ? 'SUCCESS' : 'WRONG_ANSWER';
-      setRunStatus(statusResult);
+      if (result.status === 'success' && result.data) {
+        const statusResult: 'SUCCESS' | 'WRONG_ANSWER' = result.data.status;
+        setRunStatus(statusResult);
 
-      // Record Submission
-      const newSubmission = {
-        problemTitle: activeProblem.title,
-        language: selectedLanguage,
-        status: statusResult,
-        timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
-      };
-      
-      const updatedHistory = [newSubmission, ...submissionHistory];
-      setSubmissionHistory(updatedHistory);
+        const newSubmission = {
+          problemTitle: activeProblem.title,
+          language: selectedLanguage,
+          status: statusResult,
+          timestamp: result.data.timestamp || new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
+        };
 
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        try {
-          const docRef = doc(db, 'users', currentUser.uid);
-          await setDoc(docRef, { codingSubmissions: updatedHistory }, { merge: true });
-        } catch (err) {
-          console.error('Failed to save submission history:', err);
+        const updatedHistory = [newSubmission, ...submissionHistory];
+        setSubmissionHistory(updatedHistory);
+
+        if (currentUser) {
+          try {
+            const docRef = doc(db, 'users', currentUser.uid);
+            await setDoc(docRef, { codingSubmissions: updatedHistory }, { merge: true });
+          } catch (err) {
+            console.error('Failed to save submission history backup:', err);
+          }
         }
+      } else {
+        throw new Error(result.message || 'Compiler failed');
       }
-    }, 1500);
+    } catch (err: any) {
+      console.warn('[Coding Backend] API execution failed. Simulating local sandbox compiler.', err.message);
+      
+      setTimeout(async () => {
+        setIsRunning(false);
+        const containsPlaceholders = 
+          editorCode.includes('pass') || 
+          editorCode.includes('return new int[0]') || 
+          editorCode.includes('return 0') || 
+          editorCode.includes('return null') ||
+          editorCode.includes('return NULL');
+
+        const isCorrect = !containsPlaceholders;
+        const statusResult: 'SUCCESS' | 'WRONG_ANSWER' = isCorrect ? 'SUCCESS' : 'WRONG_ANSWER';
+        setRunStatus(statusResult);
+
+        const newSubmission = {
+          problemTitle: activeProblem.title,
+          language: selectedLanguage,
+          status: statusResult,
+          timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
+        };
+        
+        const updatedHistory = [newSubmission, ...submissionHistory];
+        setSubmissionHistory(updatedHistory);
+
+        if (currentUser) {
+          try {
+            const docRef = doc(db, 'users', currentUser.uid);
+            await setDoc(docRef, { codingSubmissions: updatedHistory }, { merge: true });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      }, 1500);
+    }
   };
 
   const handleAIDebug = () => {

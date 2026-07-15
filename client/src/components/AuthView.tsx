@@ -29,7 +29,7 @@ const getFirebaseErrorMessage = (error: any, defaultFallback: string): string =>
 };
 
 interface AuthViewProps {
-  onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN' }) => void;
+  onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN'; token: string }) => void;
   onBack: () => void;
 }
 
@@ -121,50 +121,50 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
     const hasConfig = import.meta.env.VITE_FIREBASE_API_KEY && !import.meta.env.VITE_FIREBASE_API_KEY.includes('PLACEHOLDER');
 
     if (authTab === 'signin') {
-      if (!hasConfig) {
-        // Sandbox Sign In Fallback
-        const defaultStudent = email === 'student@college.edu' && password === 'StudentPassword2026!';
-        const defaultAdmin = email === 'admin@college.edu' && password === 'AdminPassword2026!';
-        const registeredUser = sandboxUsers.find(u => u.email === email.trim());
-
-        if (defaultStudent || defaultAdmin || registeredUser) {
-          const finalName = defaultStudent ? 'Rahul Sharma' : (defaultAdmin ? 'Prof. Shastri' : registeredUser!.fullName);
-          const finalRole = defaultStudent ? 'STUDENT' : (defaultAdmin ? 'ADMIN' : registeredUser!.role);
-          onAuthenticate({ name: finalName, email: email.trim(), role: finalRole });
-        } else {
-          setValidationError('Invalid email or password (Sandbox Mode). Use student@college.edu / Admin credentials or register a sandbox account.');
-        }
-        return;
-      }
-
       setIsLoading(true);
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-        const user = userCredential.user;
+        let result: any = null;
+        if (hasConfig) {
+          const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+          const user = userCredential.user;
 
-        if (!user.emailVerified && !import.meta.env.DEV) {
-          // Do NOT auto-send verification email — let user click "Resend" explicitly
-          setValidationError('Your email address is not verified. Please check your inbox or click "Resend verification link" below.');
-          return;
+          if (!user.emailVerified && !import.meta.env.DEV) {
+            setValidationError('Your email address is not verified. Please check your inbox or click "Resend verification link" below.');
+            setIsLoading(false);
+            return;
+          }
+
+          const idToken = await user.getIdToken();
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/firebase-verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken, role, email: email.trim() })
+          });
+          result = await response.json();
+        } else {
+          // Sandbox Mode (or fallback mode)
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.trim(), password })
+          });
+          result = await response.json();
         }
 
-        const idToken = await user.getIdToken();
-
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/firebase-verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken, role, email: email.trim() })
-        });
-        const result = await response.json();
-        if (result.status === 'success' && result.user) {
-          onAuthenticate({ name: result.user.name, email: result.user.email, role: result.user.role });
+        if (result && result.status === 'success' && result.user) {
+          onAuthenticate({ 
+            name: result.user.name, 
+            email: result.user.email, 
+            role: result.user.role,
+            token: result.token
+          });
           return;
         } else {
-          setValidationError(result.message || 'Verification failed on server.');
+          setValidationError(result?.message || 'Verification failed on server.');
         }
       } catch (err: any) {
-        console.error('Firebase Auth Error:', err);
-        setValidationError(getFirebaseErrorMessage(err, 'Invalid credentials or Firebase authentication error.'));
+        console.error('Auth Error:', err);
+        setValidationError(getFirebaseErrorMessage(err, 'Invalid credentials or connection error.'));
       } finally {
         setIsLoading(false);
       }
@@ -180,11 +180,27 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       }
 
       if (!hasConfig) {
-        // Sandbox Sign Up Fallback
-        setSandboxUsers(prev => [...prev, { email: email.trim(), fullName: fullName.trim(), role }]);
-        setVerificationEmailSent(true);
-        alert(`[Sandbox Mode] Account successfully simulated for ${email}. You can now sign in!`);
-        setAuthTab('signin');
+        // Sandbox Sign Up Fallback: Create account directly on backend database!
+        setIsLoading(true);
+        try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email.trim(), password, fullName: fullName.trim(), role })
+          });
+          const result = await response.json();
+          if (result.status === 'success' && result.user) {
+            setVerificationEmailSent(true);
+            alert(`[Sandbox Mode] Account successfully registered for ${email}. You can now sign in!`);
+            setAuthTab('signin');
+          } else {
+            setValidationError(result.message || 'Failed to register sandbox user.');
+          }
+        } catch (err) {
+          setValidationError('Connection failed. Sandbox server offline.');
+        } finally {
+          setIsLoading(false);
+        }
         return;
       }
 

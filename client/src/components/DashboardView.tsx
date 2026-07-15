@@ -25,6 +25,32 @@ interface DashboardViewProps {
 
 export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCoach }: DashboardViewProps) {
   const [isStoreOpen, setIsStoreOpen] = useState(false);
+  const [statsData, setStatsData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const saved = localStorage.getItem('apticode-user-session');
+        const token = saved ? JSON.parse(saved).token : '';
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/dashboard`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        const data = await response.json();
+        if (data.status === 'success') {
+          setStatsData(data.stats);
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard metrics:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboard();
+  }, []);
+
   const nextLevelXp = 30000;
   const progressPercent = Math.min((xp / nextLevelXp) * 100, 100);
 
@@ -37,10 +63,10 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   };
 
   const stats = [
-    { icon: Zap, label: 'Daily Streak', value: '12 days', accent: 'orange' },
-    { icon: Code, label: 'Coding Accuracy', value: '76.4%', accent: 'cyan' },
-    { icon: BookOpen, label: 'Aptitude Score', value: '84/100', accent: 'purple' },
-    { icon: MessageSquare, label: 'Speech Rating', value: '8.2/10', accent: 'emerald' }
+    { icon: Zap, label: 'Daily Streak', value: statsData?.streak || '0 days', accent: 'orange' },
+    { icon: Code, label: 'Coding Accuracy', value: statsData?.codingAccuracy || '0.0%', accent: 'cyan' },
+    { icon: BookOpen, label: 'Aptitude Score', value: statsData?.aptitudeScore || '0/100', accent: 'purple' },
+    { icon: MessageSquare, label: 'Speech Rating', value: statsData?.speechRating || '0.0/10', accent: 'emerald' }
   ];
 
   const quickActions = [
@@ -49,6 +75,18 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
     { id: 'communication', title: 'Speech Coach', description: 'Practice pronunciation and confidence in one tap.', icon: MessageSquare, accent: 'emerald' },
     { id: 'leaderboard', title: 'Leaderboard', description: 'Compare your momentum with your cohort.', icon: Award, accent: 'amber' }
   ];
+
+  if (loading) {
+    return (
+      <div className="flex h-[400px] flex-col items-center justify-center space-y-3 font-mono text-xs text-slate-500">
+        <Sparkles className="h-6 w-6 animate-spin text-brand-purple" />
+        <span>Loading workspace stats...</span>
+      </div>
+    );
+  }
+
+  const weakTopicName = statsData?.weakTopics?.[0] || 'Probability';
+  const strongTopicName = statsData?.strongTopics?.[0] || 'Time & Work';
 
   return (
     <div className="space-y-4 pb-24 text-left">
@@ -60,8 +98,8 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
             Premium academic account
           </div>
           <div className="space-y-2">
-            <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-semibold tracking-tight text-white">Welcome back, Rahul</h2>
-            <p className="max-w-xl text-sm leading-6 text-slate-400">You are in the top tier of your cohort. Keep the momentum going with one focused session today.</p>
+            <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-semibold tracking-tight text-white">Welcome back, {statsData?.fullName || 'Rahul'}</h2>
+            <p className="max-w-xl text-sm leading-6 text-slate-400">You are ranked #{statsData?.leaderboardRank || 1} in your cohort. Keep the momentum going with one focused session today.</p>
           </div>
           <div className="rounded-[20px] border border-white/10 bg-slate-950/60 p-3">
             <div className="mb-2 flex items-center justify-between text-[11px] text-slate-400">
@@ -102,17 +140,24 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
           <h3 className="text-[1rem] font-semibold text-slate-100">Continue learning</h3>
         </div>
         <div className="space-y-2.5">
-          {[{ title: 'Arrays & strings', detail: 'Completed 14 practice questions', done: true }, { title: 'Dynamic programming', detail: 'In progress • Topic quiz pending', done: false }, { title: 'Speech drills', detail: 'Unlocked at intermediate level', done: false }].map((item) => (
-            <div key={item.title} className="flex items-start gap-3 rounded-[16px] border border-white/8 bg-slate-950/30 p-3">
-              <div className={`mt-0.5 flex h-6 w-6 items-center justify-center rounded-full ${item.done ? 'bg-emerald-500/15 text-emerald-400' : 'bg-brand-cyan/15 text-brand-cyan'}`}>
-                {item.done ? <CheckCircle2 className="h-3.5 w-3.5" /> : <div className="h-2.5 w-2.5 rounded-full bg-current" />}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-100">{item.title}</p>
-                <p className="text-xs text-slate-500">{item.detail}</p>
-              </div>
+          <div className="flex items-start gap-3 rounded-[16px] border border-white/8 bg-slate-950/30 p-3">
+            <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+              <CheckCircle2 className="h-3.5 w-3.5" />
             </div>
-          ))}
+            <div>
+              <p className="text-sm font-semibold text-slate-100">Strong Skill Target</p>
+              <p className="text-xs text-slate-500">Aptitude Strong Area: {strongTopicName}</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3 rounded-[16px] border border-white/8 bg-slate-950/30 p-3">
+            <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand-cyan/15 text-brand-cyan">
+              <div className="h-2.5 w-2.5 rounded-full bg-current" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-100">Recommended Improvement Area</p>
+              <p className="text-xs text-slate-500">Practice quant exercises in: {weakTopicName}</p>
+            </div>
+          </div>
         </div>
       </motion.section>
 
@@ -173,18 +218,38 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
               <h4 className="text-sm font-semibold">Weak spots</h4>
             </div>
             <div className="space-y-2">
-              <div className="rounded-[16px] border border-red-500/15 bg-red-500/8 p-3 text-sm text-slate-300">Quant speed is still below target.</div>
-              <div className="rounded-[16px] border border-amber-500/15 bg-amber-500/8 p-3 text-sm text-slate-300">Filler words are increasing under pressure.</div>
+              <div className="rounded-[16px] border border-red-500/15 bg-red-500/8 p-3 text-sm text-slate-350">Quant speed in "{weakTopicName}" is still below target.</div>
+              <div className="rounded-[16px] border border-amber-500/15 bg-amber-500/8 p-3 text-sm text-slate-350">Filler words increase slightly during behavioral rounds.</div>
             </div>
             <button onClick={() => onNavigate('analytics')} className="mt-3 flex h-11 w-full items-center justify-center rounded-[16px] border border-white/10 bg-slate-900/70 text-sm font-semibold text-brand-cyan transition-all hover:bg-slate-900">View analytics</button>
           </div>
           <div className="glass-panel p-4">
             <h4 className="mb-2 text-sm font-semibold text-slate-100">Resume status</h4>
-            <p className="mb-4 text-sm leading-6 text-slate-500">Your current ATS score is 68. A few targeted edits can push it into strong recruiter territory.</p>
+            <p className="mb-4 text-sm leading-6 text-slate-500">Your current ATS score is tracked in the database. Optimize draft tags to hit 80+.</p>
             <button onClick={() => onNavigate('resume')} className="flex h-11 w-full items-center justify-center rounded-[16px] bg-emerald-500 text-sm font-semibold text-slate-950 transition-all hover:bg-emerald-400">Optimize resume</button>
           </div>
         </div>
       </motion.section>
+
+      {statsData?.recentActivities && statsData.recentActivities.length > 0 && (
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4.5 w-4.5 text-brand-cyan" />
+            <h3 className="text-[1rem] font-semibold text-slate-100">Recent Workspace Activities</h3>
+          </div>
+          <div className="space-y-2">
+            {statsData.recentActivities.map((act: any, idx: number) => (
+              <div key={idx} className="flex justify-between items-center text-xs p-2.5 bg-slate-950/20 border border-white/5 rounded-xl">
+                <div>
+                  <p className="font-semibold text-slate-300">{act.title}</p>
+                  <p className="text-[10px] text-slate-500">{act.detail}</p>
+                </div>
+                <span className="text-[9px] text-slate-600 font-mono">{new Date(act.date).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        </motion.section>
+      )}
 
       <section className="grid gap-3">
         {quickActions.map((action, index) => {

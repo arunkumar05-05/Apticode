@@ -69,19 +69,28 @@ model User {
   codingAttempts   CodingSubmission[]
   speechSessions   CommunicationSession[]
   mockInterviews   MockInterview[]
+  aptitudeAttempts UserAttempt[]
+  resumes          Resume[]
 }
 
 model Profile {
   id                     String   @id @default(uuid())
   userId                 String   @unique
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName               String
-  college                String
-  branch                 String
-  graduationYear         Int
-  avatarUrl              String?
-  githubUrl              String?
-  linkedinUrl            String?
+  fullName               String?
+  email                  String?
+  phone                  String?
+  college                String?
+  branch                 String?
+  graduationYear         Int?
+  registerNumber         String?
+  skills                 String?
+  bio                    String?
+  github                 String?
+  linkedin               String?
+  portfolio              String?
+  profilePhoto           String?
+  resume                 String?
   placementReadinessIndex Int     @default(0)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
@@ -238,4 +247,28 @@ model InterviewMessage {
   sender      String        // 'INTERVIEWER' | 'USER'
   messageText String
   createdAt   DateTime      @default(now())
+}
+
+model UserAttempt {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicId            String
+  score              Int
+  accuracy           Decimal
+  timeTaken          Int      // in seconds
+  incorrectQuestions String   // JSON string of array
+  topicPerformance   String   // JSON string
+  completedAt        DateTime @default(now())
+}
+
+model Resume {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versionName String
+  contentJson String   // JSON string
+  atsScore    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

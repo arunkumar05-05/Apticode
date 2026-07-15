@@ -33,15 +33,48 @@ interface UserSession {
   name: string;
   email: string;
   role: 'STUDENT' | 'ADMIN';
+  token: string;
   onboardingCompleted?: boolean;
 }
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>('landing');
-  const [user, setUser] = useState<UserSession | null>(null);
+  const [user, setUser] = useState<UserSession | null>(() => {
+    const saved = localStorage.getItem('apticode-user-session');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('[Session] Failed to restore session:', e);
+      }
+    }
+    return null;
+  });
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [xp, setXp] = useState(24500); // start at master level
-  const [level, setLevel] = useState('Master');
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState('Beginner');
+
+  // Load user level/XP from database dashboard stats on mount or user changes
+  React.useEffect(() => {
+    if (!user) return;
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/dashboard`, {
+          headers: {
+            'Authorization': `Bearer ${user.token}`
+          }
+        });
+        const data = await response.json();
+        if (data.status === 'success' && data.stats) {
+          setXp(data.stats.xp);
+          setLevel(data.stats.level);
+        }
+      } catch (err) {
+        console.error('Failed to load user stats:', err);
+      }
+    };
+    fetchStats();
+  }, [user, currentView]); // Refresh on view changes to update level after submissions
 
   // Dynamic Theme Mode with localStorage persistence and system-theme check on first visit
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -128,39 +161,55 @@ export default function App() {
   const [coachInput, setCoachInput] = useState('');
   const [isCoachThinking, setIsCoachThinking] = useState(false);
 
-  const handleSendCoachMessage = (textToSubmit: string) => {
+  const handleSendCoachMessage = async (textToSubmit: string) => {
     if (!textToSubmit.trim() || isCoachThinking) return;
 
-    setCoachMessages(prev => [...prev, { sender: 'user', text: textToSubmit }]);
+    const userMsg = { sender: 'user' as const, text: textToSubmit };
+    const updatedMessages = [...coachMessages, userMsg];
+    setCoachMessages(updatedMessages);
     setCoachInput('');
     setIsCoachThinking(true);
 
-    setTimeout(() => {
-      let replyText = "Based on your current master level metrics:\n\n1. **Aptitude Focus**: You are at 84% accuracy in Quant. Focus on Probability (weak area).\n2. **Google standard prep**: Master 'Permutations' and 'B-Tree' indexing structures.\n3. **Action item**: Complete mock interview chapter 2.";
-
-      if (textToSubmit.toLowerCase().includes('time') || textToSubmit.toLowerCase().includes('work')) {
-        replyText = "**Quant Cheat Sheet (Time & Work):**\n\n- If A completes work in X days: A's 1-day work = 1/X.\n- Combined efficiency: $(1/A + 1/B) = 1/\\text{Total Days}$.\n- Try solving MCQ Question 2 in the Aptitude dashboard.";
-      } else if (textToSubmit.toLowerCase().includes('python') || textToSubmit.toLowerCase().includes('code')) {
-        replyText = "**AI Code Optimization Tip:**\n\n- Replace Nested `for` loops $O(N^2)$ with a hash map lookups mapping $O(N)$.\n- Review custom test cases inside Coding Arena.";
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/ai/coach`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({
+          email: user?.email || 'student@college.edu',
+          message: textToSubmit,
+          history: updatedMessages.slice(-5)
+        })
+      });
+      const data = await response.json();
+      if (data.status === 'success' && data.reply) {
+        setCoachMessages(prev => [...prev, { sender: 'coach', text: data.reply }]);
+      } else {
+        throw new Error(data.message || 'Failed to get response');
       }
+    } catch (err: any) {
+      console.warn('[AI Coach] API error. Falling back to local responder.', err.message);
+      setTimeout(() => {
+        let replyText = "Based on your current master level metrics:\n\n1. **Aptitude Focus**: You are at 84% accuracy in Quant. Focus on Probability (weak area).\n2. **Google standard prep**: Master 'Permutations' and 'B-Tree' indexing structures.\n3. **Action item**: Complete mock interview chapter 2.";
 
-      setCoachMessages(prev => [...prev, { sender: 'coach', text: replyText }]);
+        if (textToSubmit.toLowerCase().includes('time') || textToSubmit.toLowerCase().includes('work')) {
+          replyText = "**Quant Cheat Sheet (Time & Work):**\n\n- If A completes work in X days: A's 1-day work = 1/X.\n- Combined efficiency: $(1/A + 1/B) = 1/\\text{Total Days}$.\n- Try solving MCQ Question 2 in the Aptitude dashboard.";
+        } else if (textToSubmit.toLowerCase().includes('python') || textToSubmit.toLowerCase().includes('code')) {
+          replyText = "**AI Code Optimization Tip:**\n\n- Replace Nested `for` loops $O(N^2)$ with a hash map lookups mapping $O(N)$.\n- Review custom test cases inside Coding Arena.";
+        }
+
+        setCoachMessages(prev => [...prev, { sender: 'coach', text: replyText }]);
+      }, 1000);
+    } finally {
       setIsCoachThinking(false);
-    }, 1000);
+    }
   };
 
   const handleSpendXp = (amount: number): boolean => {
     if (xp >= amount) {
-      setXp(prev => {
-        const newXp = prev - amount;
-        if (newXp < 1000) setLevel('Beginner');
-        else if (newXp < 2500) setLevel('Intermediate');
-        else if (newXp < 5000) setLevel('Advanced');
-        else if (newXp < 10000) setLevel('Expert');
-        else if (newXp < 20000) setLevel('Master');
-        else setLevel('Placement Ready');
-        return newXp;
-      });
+      setXp(prev => prev - amount);
       return true;
     }
     return false;
@@ -168,6 +217,7 @@ export default function App() {
 
   const handleLogout = () => {
     auth.signOut().catch(err => console.error('[Auth] signOut error:', err));
+    localStorage.removeItem('apticode-user-session');
     setUser(null);
     setCurrentView('landing');
   };
@@ -185,6 +235,7 @@ export default function App() {
       <AuthView
         onAuthenticate={(session) => {
           setUser(session);
+          localStorage.setItem('apticode-user-session', JSON.stringify(session));
         }}
         onBack={() => setCurrentView('landing')}
       />

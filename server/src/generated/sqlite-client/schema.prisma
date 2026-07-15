@@ -1,0 +1,233 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/sqlite-client"
+}
+
+model User {
+  id               String                 @id @default(uuid())
+  email            String                 @unique
+  passwordHash     String?
+  firebaseUid      String?                @unique
+  authProvider     String?
+  fullName         String?
+  role             String                 @default("STUDENT")
+  level            Int                    @default(1)
+  xp               Int                    @default(0)
+  isEmailVerified  Boolean                @default(false)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  profile          Profile?
+  refreshTokens    RefreshToken[]
+  bookmarks        UserBookmark[]
+  topicProgress    UserTopicProgress[]
+  codingAttempts   CodingSubmission[]
+  speechSessions   CommunicationSession[]
+  mockInterviews   MockInterview[]
+  aptitudeAttempts UserAttempt[]
+  resumes          Resume[]
+}
+
+model Profile {
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName                String?
+  email                   String?
+  phone                   String?
+  college                 String?
+  branch                  String?
+  graduationYear          Int?
+  registerNumber          String?
+  skills                  String?
+  bio                     String?
+  github                  String?
+  linkedin                String?
+  portfolio               String?
+  profilePhoto            String?
+  resume                  String?
+  placementReadinessIndex Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AptitudeTopic {
+  id           String              @id @default(uuid())
+  name         String              @unique
+  description  String?
+  category     String
+  createdAt    DateTime            @default(now())
+  videos       AptitudeVideo[]
+  notes        AptitudeNotes?
+  questions    AptitudeQuestion[]
+  userProgress UserTopicProgress[]
+}
+
+model AptitudeVideo {
+  id             String        @id @default(uuid())
+  topicId        String
+  topic          AptitudeTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  title          String
+  url            String
+  duration       Int
+  youtubeVideoId String
+  createdAt      DateTime      @default(now())
+}
+
+model AptitudeNotes {
+  id        String        @id @default(uuid())
+  topicId   String        @unique
+  topic     AptitudeTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model AptitudeQuestion {
+  id            String         @id @default(uuid())
+  topicId       String
+  topic         AptitudeTopic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  questionText  String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctOption String // 'A', 'B', 'C', 'D'
+  explanation   String?
+  difficulty    String         @default("MEDIUM")
+  createdAt     DateTime       @default(now())
+  bookmarks     UserBookmark[]
+}
+
+model UserBookmark {
+  id         String           @id @default(uuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId String
+  question   AptitudeQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt  DateTime         @default(now())
+
+  @@unique([userId, questionId])
+}
+
+model UserTopicProgress {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicId         String
+  topic           AptitudeTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  videosCompleted Boolean       @default(false)
+  notesCompleted  Boolean       @default(false)
+  quizScore       Decimal?
+  completedAt     DateTime?
+
+  @@unique([userId, topicId])
+}
+
+model CodingProblem {
+  id            String             @id @default(uuid())
+  title         String             @unique
+  description   String
+  timeLimitMs   Int                @default(2000)
+  memoryLimitKb Int                @default(262144)
+  difficulty    String             @default("MEDIUM")
+  editorial     String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  testcases     CodingTestcase[]
+  attempts      CodingSubmission[]
+}
+
+model CodingTestcase {
+  id             String        @id @default(uuid())
+  problemId      String
+  problem        CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  inputData      String
+  expectedOutput String
+  isHidden       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+}
+
+model CodingSubmission {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problemId   String
+  problem     CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  code        String
+  status      String        @default("PENDING")
+  executionMs Int?
+  memoryKb    Int?
+  createdAt   DateTime      @default(now())
+}
+
+model CommunicationSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionType  String
+  transcript   String
+  wpm          Int
+  grammarScore Int
+  fluencyScore Int
+  confidence   Int
+  createdAt    DateTime @default(now())
+}
+
+model MockInterview {
+  id             String             @id @default(uuid())
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviewType  String
+  overallScore   Int
+  technicalScore Int
+  softSkillScore Int
+  createdAt      DateTime           @default(now())
+  messages       InterviewMessage[]
+}
+
+model InterviewMessage {
+  id          String        @id @default(uuid())
+  interviewId String
+  interview   MockInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  sender      String // 'INTERVIEWER' | 'USER'
+  messageText String
+  createdAt   DateTime      @default(now())
+}
+
+model UserAttempt {
+  id                 String   @id @default(uuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicId            String
+  score              Int
+  accuracy           Decimal
+  timeTaken          Int // in seconds
+  incorrectQuestions String // JSON string of array
+  topicPerformance   String // JSON string
+  completedAt        DateTime @default(now())
+}
+
+model Resume {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  versionName String
+  contentJson String // JSON string
+  atsScore    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
