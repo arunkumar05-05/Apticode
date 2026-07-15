@@ -10,7 +10,21 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 app.use(cors({
-  origin: ['http://localhost:5173'],
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (
+      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.endsWith('vercel.app') ||
+      origin.includes('apticode')
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
 
