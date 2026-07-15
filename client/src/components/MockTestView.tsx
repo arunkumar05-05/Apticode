@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Play, AlertCircle, CheckCircle2, RefreshCw, Award, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
-import { auth, db } from '../firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 interface TestQuestion {
   questionText: string;
@@ -33,28 +31,20 @@ const mockQuestions: TestQuestion[] = [
 
 export default function MockTestView() {
   const [testState, setTestState] = useState<'SETUP' | 'ACTIVE' | 'SUMMARY'>('SETUP');
-  
-  // Setup config
   const [testType, setTestType] = useState<'TOPIC' | 'COMPANY' | 'FULL'>('TOPIC');
   const [negativeMarking, setNegativeMarking] = useState<boolean>(true);
 
-  // Active Test State
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
-  const [timeLeft, setTimeLeft] = useState<number>(180); // 3 minutes total
+  const [timeLeft, setTimeLeft] = useState<number>(180); 
 
-  // Results State
   const [score, setScore] = useState<number>(0);
   const [correctCount, setCorrectCount] = useState<number>(0);
   const [incorrectCount, setIncorrectCount] = useState<number>(0);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
-  // Active timer
   useEffect(() => {
     if (testState !== 'ACTIVE' || timeLeft <= 0) return;
-    if (timeLeft === 0) {
-      handleSubmitTest();
-      return;
-    }
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -71,7 +61,7 @@ export default function MockTestView() {
   const handleStartTest = () => {
     setCurrentIdx(0);
     setSelectedAnswers({});
-    setTimeLeft(180); // 3 minutes
+    setTimeLeft(180); 
     setTestState('ACTIVE');
   };
 
@@ -79,8 +69,16 @@ export default function MockTestView() {
     setSelectedAnswers((prev) => ({ ...prev, [currentIdx]: optionIdx }));
   };
 
+  const getHeaders = () => {
+    const saved = localStorage.getItem('apticode-user-session');
+    const token = saved ? JSON.parse(saved).token : '';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+
   const handleSubmitTest = async () => {
-    // Calculate Score
     let correct = 0;
     let incorrect = 0;
     mockQuestions.forEach((q, idx) => {
@@ -102,31 +100,25 @@ export default function MockTestView() {
     setIncorrectCount(incorrect);
     setTestState('SUMMARY');
 
-    // Save test scorecard to Firestore
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      try {
-        const docRef = doc(db, 'users', currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        let history = [];
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (Array.isArray(data.testHistory)) {
-            history = data.testHistory;
-          }
-        }
-        const newRecord = {
-          date: new Date().toLocaleDateString(),
-          type: testType,
+    // Save test scorecard to backend database
+    try {
+      setSubmitting(true);
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs/progress`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify({
+          topicId: `mock_test_${testType.toLowerCase()}`,
           score: finalScore,
-          correct,
-          incorrect,
-          totalQuestions: mockQuestions.length
-        };
-        await setDoc(docRef, { testHistory: [newRecord, ...history] }, { merge: true });
-      } catch (err) {
-        console.error('Failed to sync scorecard:', err);
-      }
+          accuracy: correct + incorrect > 0 ? Math.round((correct / (correct + incorrect)) * 100) : 100,
+          timeTaken: 180 - timeLeft,
+          incorrectQuestions: [],
+          topicPerformance: { correct, incorrect }
+        })
+      });
+    } catch (err) {
+      console.error('[Mock Test] Failed to save database scorecard:', err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -148,113 +140,102 @@ export default function MockTestView() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Test Category</label>
-              <div className="grid md:grid-cols-3 gap-3 mt-2">
-                {[
-                  { id: 'TOPIC', title: 'Quantitative / Logical Topic Test', desc: 'Focus on individual math subtopics.' },
-                  { id: 'COMPANY', title: 'Company Mock Challenge', desc: 'Breakdowns matching recruiter patterns.' },
-                  { id: 'FULL', title: 'Full Roster Placement Test', desc: 'Mixed aptitude and reasoning modules.' }
-                ].map((type) => (
-                  <button
-                    key={type.id}
-                    onClick={() => setTestType(type.id as any)}
-                    className={`p-4 rounded-xl border text-left text-xs transition-all flex flex-col space-y-1.5 ${
-                      testType === type.id
-                        ? 'border-brand-purple bg-brand-purple/10 text-slate-200'
-                        : 'border-white/5 bg-slate-950/20 text-slate-400 hover:border-slate-800'
-                    }`}
-                  >
-                    <span className="font-extrabold">{type.title}</span>
-                    <span className="text-[10px] text-slate-550 leading-relaxed">{type.desc}</span>
-                  </button>
-                ))}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Test Scope</label>
+                <select
+                  value={testType}
+                  onChange={(e) => setTestType(e.target.value as any)}
+                  className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3 text-xs font-semibold text-slate-350 outline-none"
+                >
+                  <option value="TOPIC">Topic-wise mock (Quantitative focus)</option>
+                  <option value="COMPANY">Company specific test (Google standard)</option>
+                  <option value="FULL">Full mock length test</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Marking Scheme</label>
+                <select
+                  value={negativeMarking ? 'yes' : 'no'}
+                  onChange={(e) => setNegativeMarking(e.target.value === 'yes')}
+                  className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3 text-xs font-semibold text-slate-350 outline-none"
+                >
+                  <option value="yes">Negative marking (+4, -1 schema)</option>
+                  <option value="no">Normal marking (+4, 0 schema)</option>
+                </select>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-950/40 border border-white/5 space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Options & Penalty Rules</h4>
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-450 font-semibold">Enable Negative Marking (Right: +4 | Wrong: -1)</span>
-                <input
-                  type="checkbox"
-                  checked={negativeMarking}
-                  onChange={(e) => setNegativeMarking(e.target.checked)}
-                  className="w-4 h-4 rounded accent-brand-purple cursor-pointer outline-none"
-                />
-              </div>
-            </div>
+            <button
+              onClick={handleStartTest}
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-brand-purple to-brand-cyan text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-brand-purple/10 cursor-pointer"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              <span>Launch Mock Test</span>
+            </button>
           </div>
-
-          <button
-            onClick={handleStartTest}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.98] cursor-pointer"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            <span>Initialize Exam Session</span>
-          </button>
         </div>
       )}
 
       {/* ACTIVE TEST VIEW */}
       {testState === 'ACTIVE' && (
         <div className="space-y-6">
-          <div className="flex justify-between items-center border-b border-white/5 pb-4">
-            <span className="text-xs font-extrabold text-slate-400 font-mono">Question {currentIdx + 1} of {mockQuestions.length}</span>
-            <span className="flex items-center space-x-1.5 font-mono text-brand-cyan bg-slate-950/40 border border-white/5 px-3 py-1.5 rounded-lg">
-              <Clock className="w-4 h-4 animate-pulse" />
+          <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-xl border border-white/5 text-xs font-mono">
+            <span className="text-slate-400">Question {currentIdx + 1} of {mockQuestions.length}</span>
+            <div className="flex items-center space-x-2 font-bold text-brand-cyan">
+              <Clock className="w-4 h-4 text-slate-400" />
               <span>{formatTime(timeLeft)}</span>
-            </span>
+            </div>
           </div>
 
-          <p className="text-base font-semibold leading-relaxed text-slate-200">
-            {mockQuestions[currentIdx].questionText}
-          </p>
+          <div className="p-6 bg-slate-950/20 rounded-xl border border-white/5 space-y-6">
+            <p className="text-sm md:text-base font-semibold leading-relaxed text-slate-200">
+              {mockQuestions[currentIdx].questionText}
+            </p>
 
-          <div className="grid gap-3 pt-2">
-            {mockQuestions[currentIdx].options.map((option, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleAnswerSelect(idx)}
-                className={`p-4 rounded-xl border text-left text-xs font-semibold transition-all ${
-                  selectedAnswers[currentIdx] === idx
-                    ? 'bg-brand-purple/10 border-brand-purple text-brand-purple font-bold'
-                    : 'bg-slate-950/20 border-white/5 text-slate-450 hover:border-slate-800'
-                }`}
-              >
-                <span className="font-bold mr-2 text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-500 font-mono">
-                  {String.fromCharCode(65 + idx)}
-                </span>
-                {option}
-              </button>
-            ))}
+            <div className="grid gap-3">
+              {mockQuestions[currentIdx].options.map((opt, oIdx) => {
+                const isSelected = selectedAnswers[currentIdx] === oIdx;
+                return (
+                  <button
+                    key={oIdx}
+                    onClick={() => handleAnswerSelect(oIdx)}
+                    className={`w-full p-4 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
+                      isSelected 
+                        ? 'border-brand-purple bg-brand-purple/10 text-brand-purple'
+                        : 'border-white/5 bg-slate-950/20 text-slate-400 hover:bg-slate-900/40'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Navigation Controls */}
-          <div className="flex justify-between items-center pt-4 border-t border-white/5">
+          <div className="flex justify-between items-center gap-4">
             <button
-              onClick={() => setCurrentIdx((p) => Math.max(0, p - 1))}
+              onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
               disabled={currentIdx === 0}
-              className="px-4 py-2.5 rounded-lg bg-slate-950 border border-white/10 text-xs font-bold text-slate-400 flex items-center space-x-1 disabled:opacity-40 transition-colors"
+              className="px-4 py-2.5 rounded-lg border border-slate-800 text-[10px] text-slate-400 font-bold hover:text-slate-200 cursor-pointer disabled:opacity-30"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
-              <span>Prev</span>
+              Previous
             </button>
 
-            {currentIdx === mockQuestions.length - 1 ? (
+            {currentIdx < mockQuestions.length - 1 ? (
               <button
-                onClick={handleSubmitTest}
-                className="px-6 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-bold text-slate-950 flex items-center space-x-1 transition-colors"
+                onClick={() => setCurrentIdx(prev => prev + 1)}
+                className="px-6 py-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] text-brand-cyan font-bold hover:bg-slate-850 cursor-pointer"
               >
-                <span>Submit Exam</span>
+                Next Question
               </button>
             ) : (
               <button
-                onClick={() => setCurrentIdx((p) => Math.min(mockQuestions.length - 1, p + 1))}
-                className="px-4 py-2.5 rounded-lg bg-slate-950 border border-white/10 text-xs font-bold text-slate-400 flex items-center space-x-1 transition-colors"
+                onClick={handleSubmitTest}
+                className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-brand-purple to-brand-cyan text-white text-[10px] font-bold shadow-md cursor-pointer"
               >
-                <span>Next</span>
-                <ChevronRight className="w-3.5 h-3.5" />
+                Submit Mock Test
               </button>
             )}
           </div>
@@ -264,55 +245,50 @@ export default function MockTestView() {
       {/* SUMMARY RESULT VIEW */}
       {testState === 'SUMMARY' && (
         <div className="space-y-6">
-          <div className="border-b border-white/5 pb-4 text-center">
-            <Award className="w-12 h-12 text-brand-cyan mx-auto mb-2" />
-            <h2 className="text-2xl font-extrabold text-slate-200">Exam Results Summary</h2>
-            <p className="text-xs text-slate-500 font-mono mt-1">Roster scorecard has been compiled</p>
-          </div>
+          <div className="p-6 bg-slate-950/40 rounded-xl border border-white/5 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 flex items-center justify-center text-xl font-black text-brand-cyan mx-auto">
+              {score}
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-200">Mock Test Report Card</h3>
+              <p className="text-[10px] text-slate-500 font-mono mt-1">Successfully synced with the database</p>
+            </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 text-center space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Final Score</span>
-              <p className="text-3xl font-extrabold text-brand-cyan font-mono">{score}</p>
-            </div>
-            <div className="p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-center space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Correct Answers</span>
-              <p className="text-3xl font-extrabold text-emerald-400 font-mono">+{correctCount}</p>
-            </div>
-            <div className="p-4 bg-red-500/5 rounded-xl border border-red-500/10 text-center space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Incorrect Answers</span>
-              <p className="text-3xl font-extrabold text-red-400 font-mono">-{incorrectCount}</p>
+            <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto text-xs font-mono pt-2">
+              <div className="bg-slate-900/50 p-2.5 rounded">Correct: {correctCount}</div>
+              <div className="bg-slate-900/50 p-2.5 rounded text-red-400">Wrong: {incorrectCount}</div>
+              <div className="bg-slate-900/50 p-2.5 rounded text-brand-purple">Accuracy: {
+                correctCount + incorrectCount > 0 
+                  ? Math.round((correctCount / (correctCount + incorrectCount)) * 100) 
+                  : 100
+              }%</div>
             </div>
           </div>
 
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Solutions Review</h3>
+            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest font-mono">Detailed Explanations</h4>
             <div className="space-y-3">
-              {mockQuestions.map((q, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-white/5 bg-slate-950/20 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-mono">
-                    <span className="font-semibold text-slate-200">Question {idx + 1}</span>
-                    <span className={`font-bold ${
-                      selectedAnswers[idx] === q.correctIndex ? 'text-emerald-400' : 'text-red-400'
-                    }`}>
-                      {selectedAnswers[idx] === q.correctIndex ? '✓ Correct' : '✗ Incorrect / Unanswered'}
-                    </span>
+              {mockQuestions.map((q, idx) => {
+                const ans = selectedAnswers[idx];
+                const correct = ans === q.correctIndex;
+                return (
+                  <div key={idx} className="p-4 bg-slate-950/20 rounded-xl border border-white/5 space-y-2 text-xs">
+                    <p className="font-extrabold text-slate-350">{idx + 1}. {q.questionText}</p>
+                    <p className={`text-[10px] font-mono ${correct ? 'text-emerald-400' : 'text-red-400'}`}>
+                      Your choice: {ans !== undefined ? q.options[ans] : 'Skipped'} • {correct ? 'Correct' : 'Incorrect'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 leading-relaxed font-sans">{q.explanation}</p>
                   </div>
-                  <p className="text-xs text-slate-350">{q.questionText}</p>
-                  <div className="text-[11px] bg-slate-950/60 p-3 rounded-lg border border-white/5 font-mono text-slate-400">
-                    <strong className="text-brand-cyan">Solution Explanation:</strong> {q.explanation}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
           <button
             onClick={() => setTestState('SETUP')}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-brand-cyan hover:bg-slate-850 transition-colors cursor-pointer"
+            className="w-full py-3 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-xs font-bold text-brand-cyan cursor-pointer transition-colors"
           >
-            <RefreshCw className="w-4 h-4" />
-            <span>Retake Another Mock Test</span>
+            Start Another Simulation
           </button>
         </div>
       )}
