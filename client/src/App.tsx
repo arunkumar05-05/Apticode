@@ -68,6 +68,9 @@ export default function App() {
         if (data.status === 'success' && data.stats) {
           setXp(data.stats.xp);
           setLevel(data.stats.level);
+          if (data.stats.fullName && data.stats.fullName !== user.name) {
+            setUser(prev => prev ? { ...prev, name: data.stats.fullName } : null);
+          }
         }
       } catch (err) {
         console.error('Failed to load user stats:', err);

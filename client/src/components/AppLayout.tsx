@@ -21,6 +21,52 @@ interface AppLayoutProps {
   setAiCoachOpen: (open: boolean) => void;
 }
 
+function getAvatarInitial(name?: string, email?: string): string {
+  let raw = name || '';
+  if (!raw || raw.includes('@')) {
+    raw = email ? email.split('@')[0] : 'User';
+  }
+  let cleaned = raw.replace(/^[0-9]+[a-zA-Z]*/, '').trim();
+  if (!cleaned) {
+    cleaned = raw.replace(/^[0-9]+/, '').trim();
+  }
+  if (!cleaned) {
+    cleaned = raw;
+  }
+  const match = cleaned.match(/[a-zA-Z]/);
+  if (match) {
+    return match[0].toUpperCase();
+  }
+  return raw.charAt(0).toUpperCase() || 'A';
+}
+
+function formatHumanName(rawName?: string, email?: string): string {
+  let name = rawName?.trim();
+  if (!name || name === 'New Candidate' || name.includes('@')) {
+    if (email) {
+      name = email.split('@')[0];
+    }
+  }
+
+  if (!name) return 'Candidate';
+
+  let cleaned = name.replace(/^[0-9]{2}(it|cs|cse|ece|eee|mech|civil|ai|ds)?/i, '');
+  if (!cleaned) cleaned = name;
+
+  cleaned = cleaned.replace(/[._-]/g, ' ');
+  cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
+
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length > 0) {
+    const formatted = words
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ');
+    if (formatted.length >= 2) return formatted;
+  }
+
+  return name.charAt(0).toUpperCase() + name.slice(1);
+}
+
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['STUDENT'] },
   { id: 'aptitude', label: 'Aptitude Prep', icon: BookOpen, roles: ['STUDENT'] },
@@ -110,11 +156,11 @@ export default function AppLayout({
         <div className="space-y-3 border-t border-white/10 pt-4">
           <div className={`flex items-center rounded-[16px] border border-white/10 bg-slate-950/30 p-2 ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-sm font-semibold text-white">
-              {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'RS'}
+              {getAvatarInitial(user?.name, user?.email)}
             </div>
             {sidebarOpen && (
               <div>
-                <p className="text-sm font-semibold text-slate-100">{user ? user.name : 'Rahul Sharma'}</p>
+                <p className="text-sm font-semibold text-slate-100">{formatHumanName(user?.name, user?.email)}</p>
                 <p className="text-[11px] text-slate-500">{user?.role === 'ADMIN' ? 'Administrator' : `Level: ${level}`}</p>
               </div>
             )}
@@ -155,8 +201,8 @@ export default function AppLayout({
                 {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-400" />}
               </button>
               <button onClick={() => setCurrentView('profile')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Profile">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-[10px] font-semibold text-white">
-                  {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'RS'}
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-xs font-semibold text-white">
+                  {getAvatarInitial(user?.name, user?.email)}
                 </div>
               </button>
             </div>
