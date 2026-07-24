@@ -52,11 +52,7 @@ export async function saveAptitudeAttempt(userId: string, data: any) {
   await db.user.update({
     where: { id: userId },
     data: {
-      xp: { increment: xpGained },
-      level: {
-        // level shifts dynamically in middleware or service
-        set: undefined // Keep db trigger or let user controller update level
-      }
+      xp: { increment: xpGained }
     }
   });
 

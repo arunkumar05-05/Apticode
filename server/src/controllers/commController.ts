@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
-import * as commService from '../services/commService';
+import * as commService from '../services/commService'
 
 export async function evaluate(req: AuthenticatedRequest, res: Response) {
   try {

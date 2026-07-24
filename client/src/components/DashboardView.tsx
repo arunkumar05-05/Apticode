@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Zap, Play, CheckCircle2, Code, MessageSquare, BookOpen, Star, AlertCircle, Compass, Sparkles, Brain, ArrowRight } from 'lucide-react';
 

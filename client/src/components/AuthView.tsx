@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
 import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
 
 const getFirebaseErrorMessage = (error: any, defaultFallback: string): string => {
   const code = error?.code || error?.message;
@@ -135,18 +135,20 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
           }
 
           const idToken = await user.getIdToken();
+          const signupName = fullName.trim() || localStorage.getItem(`signup_fullname_${email.trim()}`) || user.displayName || '';
           const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/firebase-verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken, role, email: email.trim() })
+            body: JSON.stringify({ idToken, role, email: email.trim(), fullName: signupName })
           });
           result = await response.json();
         } else {
           // Sandbox Mode (or fallback mode)
+          const signupName = fullName.trim() || localStorage.getItem(`signup_fullname_${email.trim()}`) || '';
           const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email.trim(), password })
+            body: JSON.stringify({ email: email.trim(), password, fullName: signupName })
           });
           result = await response.json();
         }
@@ -178,6 +180,8 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         setValidationError('Password must be at least 6 characters long and contain both letters and numbers/special characters.');
         return;
       }
+
+      localStorage.setItem(`signup_fullname_${email.trim()}`, fullName.trim());
 
       if (!hasConfig) {
         // Sandbox Sign Up Fallback: Create account directly on backend database!
@@ -211,6 +215,14 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
           email.trim(),
           password
         );
+
+        if (fullName.trim()) {
+          try {
+            await updateProfile(userCredential.user, { displayName: fullName.trim() });
+          } catch (e) {
+            console.warn('[Firebase] Failed to set displayName:', e);
+          }
+        }
 
         await sendEmailVerification(userCredential.user, {
           url: `${window.location.origin}/signin`,

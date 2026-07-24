@@ -29,14 +29,18 @@ export async function firebaseVerify(req: Request, res: Response) {
 
   try {
     let email = req.body.email || '';
-    let name = req.body.fullName || email.split('@')[0] || 'Rahul Sharma';
+    let name = req.body.fullName || req.body.name || '';
     let firebaseUid = 'sandbox-uid-' + Date.now();
 
     if (firebaseAdmin) {
       const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
       firebaseUid = decodedToken.uid;
       email = decodedToken.email || email;
-      name = decodedToken.name || email.split('@')[0];
+      name = req.body.fullName || decodedToken.name || name || email.split('@')[0];
+    }
+
+    if (!name) {
+      name = email.split('@')[0];
     }
 
     const user = await authService.createOrUpdateFirebaseUser(firebaseUid, email, name, role);
@@ -47,7 +51,7 @@ export async function firebaseVerify(req: Request, res: Response) {
       token,
       user: {
         id: user.id,
-        name: user.fullName || user.email.split('@')[0],
+        name: user.fullName || user.profile?.fullName || user.email.split('@')[0],
         email: user.email,
         role: user.role
       }

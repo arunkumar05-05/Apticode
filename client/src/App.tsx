@@ -318,7 +318,7 @@ export default function App() {
                       }`}
                   >
                     <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider font-mono">
-                      {msg.sender === 'user' ? 'Rahul' : 'AI Placement Coach'}
+                      {msg.sender === 'user' ? (user?.name || user?.email?.split('@')[0] || 'User') : 'AI Placement Coach'}
                     </span>
                     <div className={`p-3 rounded-xl text-xs leading-relaxed max-w-[85%] whitespace-pre-line ${msg.sender === 'user'
                         ? 'bg-brand-purple/20 border border-brand-purple/30 text-slate-200 rounded-tr-none'

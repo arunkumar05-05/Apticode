@@ -64,8 +64,8 @@ export async function createOrUpdateFirebaseUser(uid: string, email: string, nam
           create: {
             fullName: name,
             email,
-            college: 'AptiCode College',
-            branch: 'Computer Science',
+            college: 'Mailam Engineering College',
+            branch: 'Information Technology',
             graduationYear: 2026
           }
         }
@@ -73,15 +73,23 @@ export async function createOrUpdateFirebaseUser(uid: string, email: string, nam
       include: { profile: true }
     });
   } else {
-    if (!user.firebaseUid || !user.authProvider) {
-      user = await db.user.update({
-        where: { id: user.id },
-        data: {
-          firebaseUid: uid,
-          authProvider: 'firebase-email',
-          fullName: user.fullName || name
-        },
-        include: { profile: true }
+    const isNewNameProvided = name && name !== email.split('@')[0];
+    const finalName = isNewNameProvided ? name : (user.fullName || name);
+
+    user = await db.user.update({
+      where: { id: user.id },
+      data: {
+        firebaseUid: uid,
+        authProvider: 'firebase-email',
+        fullName: finalName
+      },
+      include: { profile: true }
+    });
+
+    if (user.profile) {
+      await db.profile.update({
+        where: { id: user.profile.id },
+        data: { fullName: finalName }
       });
     }
   }
