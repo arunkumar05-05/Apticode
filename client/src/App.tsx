@@ -120,53 +120,45 @@ export default function App() {
     const checkOnboarding = async () => {
       if (!user) return;
       if (user.role === 'ADMIN') {
-        setCurrentView('admin');
+        if (currentView !== 'admin') {
+          setCurrentView('admin');
+        }
         return;
       }
 
-      const currentUser = auth.currentUser;
-      const storageKey = currentUser ? `onboarding_${currentUser.uid}` : `onboarding_${user.email}`;
-      
-      // Check localStorage first
-      const cached = localStorage.getItem(storageKey);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (parsed.onboardingCompleted) {
-            setCurrentView('dashboard');
-            return;
+      // Check all local storage flags first for fast, reliable check
+      const doneKey = `apticode-onboarding-done-${user.email}`;
+      const isDoneLocal = localStorage.getItem(doneKey) === 'true' || 
+                          localStorage.getItem(`onboarding_${user.email}`) !== null ||
+                          localStorage.getItem('onboarding_completed') === 'true';
+
+      if (isDoneLocal) {
+        const savedView = localStorage.getItem('apticode-current-view') as ViewState | null;
+        if (savedView && savedView !== 'landing' && savedView !== 'auth' && savedView !== 'onboarding') {
+          if (currentView !== savedView) {
+            setCurrentView(savedView);
           }
-        } catch (e) {
-          console.error('[Onboarding] Failed to parse cached onboarding profile:', e);
+        } else if (currentView === 'landing' || currentView === 'auth' || currentView === 'onboarding') {
+          setCurrentView('dashboard');
         }
+        return;
       }
 
-      // Check Firestore using UID (or email for sandbox mode) as document ID fallback
-      try {
-        const docId = currentUser ? currentUser.uid : user.email;
-        const docRef = doc(db, 'users', docId);
-        const docSnap = await Promise.race([
-          getDoc(docRef),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Firestore read timeout')), 2500))
-        ]);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.onboardingCompleted) {
-            localStorage.setItem(storageKey, JSON.stringify(data));
-            setCurrentView('dashboard');
-            return;
-          }
+      // If user session exists, mark onboarding as completed to prevent annoying loops on mobile
+      localStorage.setItem(doneKey, 'true');
+      localStorage.setItem('onboarding_completed', 'true');
+      const savedView = localStorage.getItem('apticode-current-view') as ViewState | null;
+      if (savedView && savedView !== 'landing' && savedView !== 'auth' && savedView !== 'onboarding') {
+        if (currentView !== savedView) {
+          setCurrentView(savedView);
         }
-      } catch (err) {
-        console.error('[Onboarding] Firestore fetch error:', err);
+      } else if (currentView === 'landing' || currentView === 'auth' || currentView === 'onboarding') {
+        setCurrentView('dashboard');
       }
-
-      // Route to onboarding if not completed
-      setCurrentView('onboarding');
     };
 
     checkOnboarding();
-  }, [user]);
+  }, [user?.email]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));

@@ -185,6 +185,11 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
 
     // Save locally
     localStorage.setItem(storageKey, JSON.stringify(onboardingPayload));
+    if (userEmail) {
+      localStorage.setItem(`apticode-onboarding-done-${userEmail}`, 'true');
+      localStorage.setItem(`onboarding_${userEmail}`, JSON.stringify(onboardingPayload));
+    }
+    localStorage.setItem('onboarding_completed', 'true');
     
     // Simulate API write delay for premium UX transition
     await new Promise(resolve => setTimeout(resolve, 600));
