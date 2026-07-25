@@ -2,29 +2,14 @@ import { db } from '../prisma/db';
 
 export function formatHumanName(rawName?: string, email?: string): string {
   let name = rawName?.trim();
-  if (!name || name === 'New Candidate' || name.includes('@')) {
-    if (email) {
-      name = email.split('@')[0];
-    }
+  if (name && name !== 'New Candidate' && name !== 'Candidate' && !name.includes('@')) {
+    return name;
   }
-
-  if (!name) return 'Candidate';
-
-  let cleaned = name.replace(/^[0-9]{2}(it|cs|cse|ece|eee|mech|civil|ai|ds)?/i, '');
-  if (!cleaned) cleaned = name;
-
-  cleaned = cleaned.replace(/[._-]/g, ' ');
-  cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
-
-  const words = cleaned.split(/\s+/).filter(Boolean);
-  if (words.length > 0) {
-    const formatted = words
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ');
-    if (formatted.length >= 2) return formatted;
+  if (email) {
+    const handle = email.split('@')[0];
+    return handle.charAt(0).toUpperCase() + handle.slice(1);
   }
-
-  return name.charAt(0).toUpperCase() + name.slice(1);
+  return 'Candidate';
 }
 
 export async function getUserProfile(userId: string) {

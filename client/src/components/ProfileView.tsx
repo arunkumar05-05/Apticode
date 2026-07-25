@@ -153,7 +153,7 @@ export default function ProfileView() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    
+
     // Save to local storage for instant mobile persistence
     const formattedData: ProfileData = {
       fullName: formatHumanName(editData.fullName, editData.email),
@@ -225,7 +225,7 @@ export default function ProfileView() {
 
   return (
     <div className="grid md:grid-cols-3 gap-8 pb-12 text-left">
-      
+
       {/* Left Column: Personal info & Preferences card */}
       <div className="md:col-span-1 space-y-6">
         <div className="glass-panel p-6 flex flex-col items-center text-center space-y-4">
@@ -291,7 +291,7 @@ export default function ProfileView() {
 
       {/* Right Column: Edit Form or Achievements & History */}
       <div className="md:col-span-2 space-y-6">
-        
+
         {isEditing ? (
           <div className="glass-panel p-6 space-y-4">
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest font-mono border-b border-white/5 pb-2">Modify Database Profile Fields</h3>
@@ -422,9 +422,8 @@ export default function ProfileView() {
                   return (
                     <div
                       key={idx}
-                      className={`p-4 rounded-xl border flex items-start space-x-3 transition-opacity ${
-                        badge.unlocked ? 'border-white/5 bg-slate-950/30' : 'border-white/5 opacity-40'
-                      }`}
+                      className={`p-4 rounded-xl border flex items-start space-x-3 transition-opacity ${badge.unlocked ? 'border-white/5 bg-slate-950/30' : 'border-white/5 opacity-40'
+                        }`}
                     >
                       <div className={`p-2 rounded-lg border ${badge.unlocked ? badge.color : 'text-slate-500 bg-slate-900/50'}`}>
                         <Icon className="w-5 h-5" />
