@@ -9,9 +9,9 @@ interface LandingViewProps {
 export default function LandingView({ onEnterApp }: LandingViewProps) {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[var(--bg-base)] text-slate-100 selection:bg-brand-cyan/30">
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-white/70 px-4 py-3 backdrop-blur-xl dark:bg-slate-950/70 sm:px-6 lg:px-8">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/70 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-8">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-3" onClick={onEnterApp}>
+          <div className="flex items-center gap-3 cursor-pointer" onClick={onEnterApp}>
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan shadow-lg shadow-brand-purple/20">
               <img src="/favicon.svg" alt="AptiCode Logo" className="h-6 w-6" />
             </div>
@@ -49,7 +49,7 @@ export default function LandingView({ onEnterApp }: LandingViewProps) {
           </div>
         </motion.section>
 
-        <section className="rounded-[24px] border border-white/10 bg-white/5 p-4 shadow-[0_10px_35px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-5">
+        <section id="features" className="rounded-[24px] border border-white/10 bg-slate-950/40 p-4 shadow-xl backdrop-blur-sm sm:p-5">
           <div className="mb-4 flex items-center gap-2">
             <Terminal className="h-4.5 w-4.5 text-brand-cyan" />
             <h2 className="text-[1rem] font-semibold text-slate-100">What you can do in one place</h2>
