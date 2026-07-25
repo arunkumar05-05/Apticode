@@ -83,6 +83,9 @@ export default function AptitudeView() {
         // Enforce fallback lists if topics don't have questions loaded
         const verified = data.topics.map((t: any) => ({
           ...t,
+          questions: (t.questions && Array.isArray(t.questions) && t.questions.length > 0)
+            ? t.questions
+            : (fallbackTopics.find(ft => ft.id === t.id)?.questions || fallbackTopics[0].questions),
           videos: t.videos || [
             { title: `${t.name} Core Explainer`, duration: '14:20' },
             { title: `Timed Practice Shortcuts`, duration: '10:50' }
@@ -90,7 +93,7 @@ export default function AptitudeView() {
           notes: t.notes || `### Study Notes for ${t.name}\n\nReview formulas and timed shortcuts to score higher in academic recruitment drives.`
         }));
         setTopicsData(verified);
-        const matched = verified.find((t: any) => t.category === selectedCategory);
+        const matched = verified.find((t: any) => t.category === selectedCategory) || verified[0];
         if (matched) {
           setActiveTopic(matched);
         }
@@ -113,7 +116,7 @@ export default function AptitudeView() {
 
   useEffect(() => {
     if (topicsData.length > 0) {
-      const matched = topicsData.find((t) => t.category === selectedCategory);
+      const matched = topicsData.find((t) => t.category === selectedCategory) || topicsData[0];
       if (matched) {
         setActiveTopic(matched);
         setSelectedAnswer(null);
@@ -149,7 +152,10 @@ export default function AptitudeView() {
     );
   }
 
-  const currentQuestion = activeTopic.questions.find((q) => q.difficulty === activeDifficulty) || activeTopic.questions[0];
+  const questionsList = (activeTopic && Array.isArray(activeTopic.questions) && activeTopic.questions.length > 0) 
+    ? activeTopic.questions 
+    : fallbackTopics[0].questions;
+  const currentQuestion = questionsList.find((q) => q.difficulty === activeDifficulty) || questionsList[0] || fallbackTopics[0].questions[0];
 
   const handleTopicSelect = (topic: Topic) => {
     setActiveTopic(topic);
