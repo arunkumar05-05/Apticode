@@ -39,7 +39,6 @@ interface UserSession {
 }
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewState>('landing');
   const [user, setUser] = useState<UserSession | null>(() => {
     const saved = localStorage.getItem('apticode-user-session');
     if (saved) {
@@ -51,6 +50,23 @@ export default function App() {
     }
     return null;
   });
+
+  const [currentViewState, setCurrentViewState] = useState<ViewState>(() => {
+    const savedView = localStorage.getItem('apticode-current-view') as ViewState | null;
+    const savedUser = localStorage.getItem('apticode-user-session');
+    if (savedUser && savedView && savedView !== 'landing' && savedView !== 'auth') {
+      return savedView;
+    }
+    return savedUser ? 'dashboard' : 'landing';
+  });
+
+  const setCurrentView = (view: ViewState) => {
+    setCurrentViewState(view);
+    localStorage.setItem('apticode-current-view', view);
+  };
+
+  const currentView = currentViewState;
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [xp, setXp] = useState(0);
   const [level, setLevel] = useState('Beginner');
@@ -69,8 +85,10 @@ export default function App() {
         if (data.status === 'success' && data.stats) {
           setXp(data.stats.xp);
           setLevel(data.stats.level);
-          if (data.stats.fullName && data.stats.fullName !== user.name) {
-            setUser(prev => prev ? { ...prev, name: data.stats.fullName } : null);
+          if (data.stats.fullName && data.stats.fullName !== 'New Candidate' && data.stats.fullName !== 'Candidate' && data.stats.fullName !== user.name) {
+            const updatedUser = { ...user, name: data.stats.fullName };
+            setUser(updatedUser);
+            localStorage.setItem('apticode-user-session', JSON.stringify(updatedUser));
           }
         }
       } catch (err) {
@@ -78,7 +96,7 @@ export default function App() {
       }
     };
     fetchStats();
-  }, [user, currentView]); // Refresh on view changes to update level after submissions
+  }, [user?.email, currentView]); // Refresh on view changes to update level after submissions
 
   // Dark Mode default across all mobile & desktop devices with optional localStorage toggle
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -219,6 +237,7 @@ export default function App() {
   const handleLogout = () => {
     auth.signOut().catch(err => console.error('[Auth] signOut error:', err));
     localStorage.removeItem('apticode-user-session');
+    localStorage.removeItem('apticode-current-view');
     setUser(null);
     setCurrentView('landing');
   };
@@ -237,6 +256,7 @@ export default function App() {
         onAuthenticate={(session) => {
           setUser(session);
           localStorage.setItem('apticode-user-session', JSON.stringify(session));
+          setCurrentView('dashboard');
         }}
         onBack={() => setCurrentView('landing')}
       />
