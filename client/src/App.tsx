@@ -79,13 +79,10 @@ export default function App() {
     fetchStats();
   }, [user, currentView]); // Refresh on view changes to update level after submissions
 
-  // Dynamic Theme Mode with localStorage persistence and system-theme check on first visit
+  // Dark Mode default across all mobile & desktop devices with optional localStorage toggle
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const saved = localStorage.getItem('apticode-theme');
     if (saved === 'dark' || saved === 'light') return saved;
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-      return 'light';
-    }
     return 'dark';
   });
 
