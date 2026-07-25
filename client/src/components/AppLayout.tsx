@@ -173,11 +173,11 @@ export default function AppLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="sticky top-0 z-30 border-b border-white/10 bg-white/70 px-3 py-3 backdrop-blur-xl dark:bg-slate-950/70 sm:px-5 lg:px-8">
+        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/90 px-3 py-3 backdrop-blur-xl sm:px-5 lg:px-8">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2">
               {!sidebarOpen && (
-                <button onClick={() => setSidebarOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 dark:bg-slate-900 dark:text-slate-300" aria-label="Open navigation">
+                <button onClick={() => setSidebarOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Open navigation">
                   <Menu className="h-5 w-5" />
                 </button>
               )}
@@ -193,14 +193,14 @@ export default function AppLayout({
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setNotificationsOpen((v) => !v)} className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Notifications">
+              <button onClick={() => setNotificationsOpen((v) => !v)} className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Notifications">
                 <Bell className="h-5 w-5" />
                 {hasUnread && <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500" />}
               </button>
-              <button onClick={toggleTheme} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Toggle theme">
+              <button onClick={toggleTheme} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Toggle theme">
                 {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-400" />}
               </button>
-              <button onClick={() => setCurrentView('profile')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-100 text-slate-600 transition-all hover:-translate-y-0.5 dark:bg-slate-900 dark:text-slate-300" aria-label="Profile">
+              <button onClick={() => setCurrentView('profile')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Profile">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-xs font-semibold text-white">
                   {getAvatarInitial(user?.name, user?.email)}
                 </div>
@@ -209,7 +209,7 @@ export default function AppLayout({
           </div>
 
           {notificationsOpen && (
-            <div className="mx-auto mt-3 max-w-7xl rounded-[20px] border border-white/10 bg-slate-950/90 p-3 shadow-2xl">
+            <div className="mx-auto mt-3 max-w-7xl rounded-[20px] border border-white/10 bg-slate-950/95 p-3 shadow-2xl">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
                 <span className="text-[11px] text-brand-cyan">{notifications.filter((n) => !n.read).length} new</span>
@@ -229,38 +229,12 @@ export default function AppLayout({
           )}
         </motion.header>
 
-        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-4 pb-24 sm:px-5 lg:px-8 lg:py-6 lg:pb-8">
+        <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-4 pb-8 sm:px-5 lg:px-8 lg:py-6">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="w-full">
             {children}
           </motion.div>
         </main>
       </div>
-
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-white/80 px-2 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:bg-slate-950/80 md:hidden">
-        <div className="mx-auto flex max-w-5xl items-center justify-around gap-1">
-          {navItems.filter((item) => (item.roles as readonly string[]).includes(user?.role || 'STUDENT') && ['dashboard', 'aptitude', 'coding', 'interview', 'resume', 'profile'].some((id) => id === item.id)).map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setCurrentView(item.id);
-                  setSidebarOpen(false);
-                }}
-                className={`flex min-h-[52px] flex-1 flex-col items-center justify-center rounded-[14px] px-1 py-1 text-[9px] font-bold transition-all active:scale-95 ${isActive ? 'bg-brand-purple/15 text-slate-100' : 'text-slate-500 hover:text-slate-300'}`}
-              >
-                <div className={`mb-0.5 flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-gradient-to-br from-brand-purple to-brand-cyan text-white shadow-md shadow-brand-purple/20' : 'bg-slate-100 text-slate-500 dark:bg-slate-900'}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-                <span className="truncate max-w-[56px] text-center font-mono">
-                  {item.label === 'AI Resume Audit' ? 'Resume' : item.label === 'Mock Interviews' ? 'Interview' : item.label === 'Coding Arena' ? 'Coding' : item.label === 'Aptitude Prep' ? 'Aptitude' : item.label === 'My Profile' ? 'Profile' : item.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
     </div>
   );
 }
