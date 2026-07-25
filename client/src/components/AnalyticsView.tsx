@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, TrendingUp, BarChart2, Star, Target, Compass, RefreshCw } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 export default function AnalyticsView() {
   const [data, setData] = useState<any>(null);
@@ -17,7 +18,7 @@ export default function AnalyticsView() {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/analytics`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/analytics`, {
           headers: getHeaders()
         });
         const resJson = await response.json();

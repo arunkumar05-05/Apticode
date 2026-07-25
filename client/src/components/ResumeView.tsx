@@ -3,6 +3,7 @@ import {
   FileText, Sparkles, CheckCircle2, AlertCircle, RefreshCw, Plus, Trash2,
   Mail, Phone, MapPin, BookOpen, Award
 } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface PersonalDetails {
   name: string;
@@ -48,7 +49,7 @@ export default function ResumeView() {
   const loadResumeData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/resume`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/resume`, {
         headers: getHeaders()
       });
       const data = await response.json();
@@ -82,7 +83,7 @@ export default function ResumeView() {
     const timer = setTimeout(async () => {
       try {
         setIsSaving(true);
-        await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/resume`, {
+        await fetch(`${getApiBaseUrl()}/api/resume`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({
@@ -107,7 +108,7 @@ export default function ResumeView() {
   const handleAuditResume = async () => {
     try {
       setIsAuditing(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/resume/audit`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/resume/audit`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ personal, skills, projectText })
@@ -146,7 +147,7 @@ export default function ResumeView() {
     // Find version details
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/resume`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/resume`, {
         headers: getHeaders()
       });
       const data = await response.json();

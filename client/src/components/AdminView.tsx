@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { getApiBaseUrl } from '../config/api';
 
 interface StudentRecord {
   id: string;
@@ -96,7 +97,7 @@ export default function AdminView() {
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/challenges`);
+        const response = await fetch(`${getApiBaseUrl()}/api/challenges`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
           setActiveProblemsList(result.data);
@@ -108,7 +109,7 @@ export default function AdminView() {
 
     const fetchMcqs = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs`);
+        const response = await fetch(`${getApiBaseUrl()}/api/mcqs`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
           const mapped = result.data.map((q: any) => ({
@@ -225,7 +226,7 @@ export default function AdminView() {
     if (!newMcq.questionText.trim()) return;
 
     const payload = {
-      text: newMcq.questionText,
+      questionText: newMcq.questionText,
       options: [newMcq.optionA || 'Choice A', newMcq.optionB || 'Choice B', newMcq.optionC || 'Choice C', newMcq.optionD || 'Choice D'],
       correctIndex: newMcq.correctOption === 'A' ? 0 : newMcq.correctOption === 'B' ? 1 : newMcq.correctOption === 'C' ? 2 : 3,
       answer: newMcq.correctOption,
@@ -234,7 +235,7 @@ export default function AdminView() {
     };
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/mcqs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

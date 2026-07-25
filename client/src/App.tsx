@@ -18,6 +18,7 @@ import AppLayout from './components/AppLayout';
 import CompanyPrepView from './components/CompanyPrepView';
 import MockTestView from './components/MockTestView';
 import ProfileView from './components/ProfileView';
+import { getApiBaseUrl } from './config/api';
 import { auth, db } from './firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -59,7 +60,7 @@ export default function App() {
     if (!user) return;
     const fetchStats = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/dashboard`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
           headers: {
             'Authorization': `Bearer ${user.token}`
           }
@@ -73,7 +74,7 @@ export default function App() {
           }
         }
       } catch (err) {
-        console.error('Failed to load user stats:', err);
+        console.warn('Dashboard fetch offline fallback active.');
       }
     };
     fetchStats();

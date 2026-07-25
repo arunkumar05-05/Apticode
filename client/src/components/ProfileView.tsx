@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Award, ClipboardList, Code, Bookmark, ShieldAlert, Sparkles, Download, GraduationCap, RefreshCw } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface ProfileData {
   fullName: string;
@@ -68,7 +69,7 @@ export default function ProfileView() {
     try {
       setLoading(true);
       // 1. Load profile
-      const profRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/profile`, {
+      const profRes = await fetch(`${getApiBaseUrl()}/api/profile`, {
         headers: getHeaders()
       });
       const profData = await profRes.json();
@@ -96,7 +97,7 @@ export default function ProfileView() {
       }
 
       // 2. Load aptitude history
-      const aptRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs/progress`, {
+      const aptRes = await fetch(`${getApiBaseUrl()}/api/mcqs/progress`, {
         headers: getHeaders()
       });
       const aptData = await aptRes.json();
@@ -105,7 +106,7 @@ export default function ProfileView() {
       }
 
       // 3. Load coding history to get count
-      const codeRes = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/coding/submissions`, {
+      const codeRes = await fetch(`${getApiBaseUrl()}/api/coding/submissions`, {
         headers: getHeaders()
       });
       const codeData = await codeRes.json();
@@ -127,7 +128,7 @@ export default function ProfileView() {
     e.preventDefault();
     try {
       setSaving(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/profile`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/profile`, {
         method: 'PUT',
         headers: getHeaders(),
         body: JSON.stringify(editData)

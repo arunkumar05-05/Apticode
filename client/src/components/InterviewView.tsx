@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Sparkles, MessageCircle, HelpCircle, Award, Volume2, User, ChevronRight, Play, AwardIcon, CheckSquare, Mic, MicOff, RefreshCw } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface Question {
   q: string;
@@ -38,7 +39,7 @@ export default function InterviewView() {
   const loadHistory = async () => {
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/interview/history`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/interview/history`, {
         headers: getHeaders()
       });
       const data = await response.json();
@@ -128,7 +129,7 @@ export default function InterviewView() {
   const handleStartInterview = async () => {
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/interview/start`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/interview/start`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({ type: interviewType, company: targetCompany })
@@ -173,7 +174,7 @@ export default function InterviewView() {
       // Submit dialogue report
       try {
         setIsAiReplying(true);
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/interview/submit`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/interview/submit`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({

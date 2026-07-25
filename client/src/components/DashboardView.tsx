@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Zap, Play, CheckCircle2, Code, MessageSquare, BookOpen, Star, AlertCircle, Compass, Sparkles, Brain, ArrowRight } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface RewardItem {
   id: string;
@@ -33,7 +34,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
       try {
         const saved = localStorage.getItem('apticode-user-session');
         const token = saved ? JSON.parse(saved).token : '';
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/dashboard`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

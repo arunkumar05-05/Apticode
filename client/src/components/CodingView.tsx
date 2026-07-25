@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, CheckCircle2, ChevronRight, Terminal, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { getApiBaseUrl } from '../config/api';
 
 interface Problem {
   id: string;
@@ -147,7 +148,7 @@ export default function CodingView() {
 
       let fetchedHistory: any[] = [];
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/coding/submissions?email=${currentUser.email}`);
+        const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions?email=${currentUser.email}`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
           fetchedHistory = result.data;
@@ -216,7 +217,7 @@ export default function CodingView() {
     const userEmail = currentUser?.email || 'student@college.edu';
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/coding/submissions`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

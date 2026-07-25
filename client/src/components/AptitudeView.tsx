@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlayCircle, FileText, CheckCircle2, ChevronRight, HelpCircle, Sparkles, BookOpen, Clock, Bookmark, AlertCircle, RefreshCw, HelpCircle as HintIcon } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface Question {
   id: string;
@@ -75,7 +76,7 @@ export default function AptitudeView() {
   const loadTopics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/topics`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/topics`, {
         headers: getHeaders()
       });
       const data = await response.json();
@@ -173,7 +174,7 @@ export default function AptitudeView() {
   };
 
   const handleDifficultyChange = (diff: 'EASY' | 'MEDIUM' | 'HARD') => {
-    const hasDiff = activeTopic.questions.some(q => q.difficulty === diff);
+    const hasDiff = questionsList.some(q => q.difficulty === diff);
     if (!hasDiff) {
       alert(`No question available for ${diff} difficulty in this topic yet.`);
       return;
@@ -204,18 +205,18 @@ export default function AptitudeView() {
     setTimerActive(false);
 
     const isCorrect = selectedAnswer === currentQuestion.correctIndex;
-    const score = isCorrect ? 100 : 0;
+    const scoreVal = isCorrect ? 100 : 0;
     const accuracy = isCorrect ? 100 : 0;
     const timeTaken = 120 - timeLeft;
 
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs/progress`, {
+      await fetch(`${getApiBaseUrl()}/api/mcqs/progress`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({
           topicId: activeTopic.id,
-          score,
+          score: scoreVal,
           accuracy,
           timeTaken,
           incorrectQuestions: isCorrect ? [] : [currentQuestion.id],

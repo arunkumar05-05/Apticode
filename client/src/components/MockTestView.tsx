@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Play, AlertCircle, CheckCircle2, RefreshCw, Award, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface TestQuestion {
   questionText: string;
@@ -103,7 +104,7 @@ export default function MockTestView() {
     // Save test scorecard to backend database
     try {
       setSubmitting(true);
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/mcqs/progress`, {
+      await fetch(`${getApiBaseUrl()}/api/mcqs/progress`, {
         method: 'POST',
         headers: getHeaders(),
         body: JSON.stringify({

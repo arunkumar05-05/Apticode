@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, Trophy, User, Zap, RefreshCw } from 'lucide-react';
+import { getApiBaseUrl } from '../config/api';
 
 interface LeaderboardItem {
   rank: number;
@@ -22,7 +23,7 @@ export default function LeaderboardView() {
         setLoading(true);
         const saved = localStorage.getItem('apticode-user-session');
         const token = saved ? JSON.parse(saved).token : '';
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/leaderboard`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/leaderboard`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

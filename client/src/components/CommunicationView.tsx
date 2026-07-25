@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, RefreshCw, Star, AlertTriangle, CheckCircle, Volume2, Sparkles, MessageCircle, BookOpen } from 'lucide-react';
 import { auth } from '../firebase';
+import { getApiBaseUrl } from '../config/api';
 
 interface GrammarQuestion {
   id: number;
@@ -53,7 +54,7 @@ export default function CommunicationView() {
   const fetchHistory = async () => {
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/communication/history`, {
+      const response = await fetch(`${getApiBaseUrl()}/api/communication/history`, {
         headers: getHeaders()
       });
       const data = await response.json();
@@ -186,7 +187,7 @@ export default function CommunicationView() {
       const pronScore = activeMode === 'reading' ? computePronunciationScore(transcript, readingPrompt) : 90;
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/communication/eval`, {
+        const response = await fetch(`${getApiBaseUrl()}/api/communication/eval`, {
           method: 'POST',
           headers: getHeaders(),
           body: JSON.stringify({
