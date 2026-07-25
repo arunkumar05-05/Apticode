@@ -238,7 +238,7 @@ export default function AppLayout({
 
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-white/80 px-2 pb-[max(0.7rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl dark:bg-slate-950/80 md:hidden">
         <div className="mx-auto flex max-w-5xl items-center justify-around gap-1">
-          {navItems.filter((item) => (item.roles as readonly string[]).includes(user?.role || 'STUDENT') && ['dashboard', 'coding', 'interview', 'resume', 'leaderboard'].some((id) => id === item.id)).map((item) => {
+          {navItems.filter((item) => (item.roles as readonly string[]).includes(user?.role || 'STUDENT') && ['dashboard', 'aptitude', 'coding', 'interview', 'resume', 'profile'].some((id) => id === item.id)).map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
             return (
@@ -248,12 +248,14 @@ export default function AppLayout({
                   setCurrentView(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`flex min-h-[56px] flex-1 flex-col items-center justify-center rounded-[16px] px-2 py-1.5 text-[10px] font-semibold transition-all active:scale-95 ${isActive ? 'bg-brand-purple/10 text-slate-100' : 'text-slate-500'}`}
+                className={`flex min-h-[52px] flex-1 flex-col items-center justify-center rounded-[14px] px-1 py-1 text-[9px] font-bold transition-all active:scale-95 ${isActive ? 'bg-brand-purple/15 text-slate-100' : 'text-slate-500 hover:text-slate-300'}`}
               >
-                <div className={`mb-1 flex h-9 w-9 items-center justify-center rounded-full ${isActive ? 'bg-gradient-to-br from-brand-purple to-brand-cyan text-white shadow-lg shadow-brand-purple/20' : 'bg-slate-100 text-slate-500 dark:bg-slate-900'}`}>
-                  <Icon className="h-4.5 w-4.5" />
+                <div className={`mb-0.5 flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-gradient-to-br from-brand-purple to-brand-cyan text-white shadow-md shadow-brand-purple/20' : 'bg-slate-100 text-slate-500 dark:bg-slate-900'}`}>
+                  <Icon className="h-3.5 w-3.5" />
                 </div>
-                <span>{item.label === 'AI Resume Audit' ? 'Resume' : item.label === 'Mock Interviews' ? 'Interview' : item.label === 'Coding Arena' ? 'Practice' : item.label}</span>
+                <span className="truncate max-w-[56px] text-center font-mono">
+                  {item.label === 'AI Resume Audit' ? 'Resume' : item.label === 'Mock Interviews' ? 'Interview' : item.label === 'Coding Arena' ? 'Coding' : item.label === 'Aptitude Prep' ? 'Aptitude' : item.label === 'My Profile' ? 'Profile' : item.label}
+                </span>
               </button>
             );
           })}

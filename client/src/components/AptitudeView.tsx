@@ -258,45 +258,83 @@ export default function AptitudeView() {
   return (
     <div className="grid md:grid-cols-4 gap-8 pb-12 text-left">
       {/* Sidebar: Categories and Topics */}
-      <div className="md:col-span-1 space-y-6">
-        <div className="glass-panel p-4 flex flex-col space-y-2">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Category Selection</h3>
-          {(['QUANTITATIVE', 'LOGICAL', 'VERBAL'] as const).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                selectedCategory === cat 
-                  ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' 
-                  : 'text-slate-400 hover:bg-slate-900/40'
-              }`}
-            >
-              {cat.charAt(0) + cat.slice(1).toLowerCase()} Focus
-            </button>
-          ))}
-        </div>
+      <div className="md:col-span-1 space-y-4">
+        {/* Mobile Horizontal Carousel */}
+        <div className="md:hidden flex flex-col space-y-3 glass-panel p-3">
+          <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hidden">
+            {(['QUANTITATIVE', 'LOGICAL', 'VERBAL'] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all shrink-0 cursor-pointer ${
+                  selectedCategory === cat 
+                    ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20 border border-brand-purple/40' 
+                    : 'bg-slate-950/40 text-slate-400 border border-white/5 hover:bg-slate-900'
+                }`}
+              >
+                {cat.charAt(0) + cat.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
 
-        {/* Topics List */}
-        <div className="glass-panel p-4 space-y-2">
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Topics</h3>
-          {categoryTopics.length === 0 ? (
-            <p className="text-[10px] text-slate-600 px-2 italic">No topics available in this category.</p>
-          ) : (
-            categoryTopics.map((topic) => (
+          <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hidden border-t border-white/5 pt-2">
+            {categoryTopics.map((topic) => (
               <button
                 key={topic.id}
                 onClick={() => handleTopicSelect(topic)}
-                className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                className={`whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 cursor-pointer transition-all ${
                   activeTopic.id === topic.id 
-                    ? 'bg-slate-950/60 border border-brand-cyan/20 text-brand-cyan' 
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-slate-900 border border-brand-cyan/40 text-brand-cyan shadow-sm' 
+                    : 'bg-slate-950/20 border border-white/5 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span>{topic.name}</span>
-                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                {topic.name}
               </button>
-            ))
-          )}
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden md:flex flex-col space-y-6">
+          <div className="glass-panel p-4 flex flex-col space-y-2">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Category Selection</h3>
+            {(['QUANTITATIVE', 'LOGICAL', 'VERBAL'] as const).map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  selectedCategory === cat 
+                    ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' 
+                    : 'text-slate-400 hover:bg-slate-900/40'
+                }`}
+              >
+                {cat.charAt(0) + cat.slice(1).toLowerCase()} Focus
+              </button>
+            ))}
+          </div>
+
+          {/* Topics List */}
+          <div className="glass-panel p-4 space-y-2">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Topics</h3>
+            {categoryTopics.length === 0 ? (
+              <p className="text-[10px] text-slate-600 px-2 italic">No topics available in this category.</p>
+            ) : (
+              categoryTopics.map((topic) => (
+                <button
+                  key={topic.id}
+                  onClick={() => handleTopicSelect(topic)}
+                  className={`w-full text-left px-3 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                    activeTopic.id === topic.id 
+                      ? 'bg-slate-950/60 border border-brand-cyan/20 text-brand-cyan' 
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span>{topic.name}</span>
+                  <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+                </button>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

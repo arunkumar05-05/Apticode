@@ -123,6 +123,7 @@ export default function CodingView() {
   const [editorCode, setEditorCode] = useState<string>(problemsList[0].starterCodes.python);
   const [workspaceTab, setWorkspaceTab] = useState<'editor' | 'editorial' | 'history'>('editor');
   const [consoleTab, setConsoleTab] = useState<'console' | 'debug'>('console');
+  const [mobileViewTab, setMobileViewTab] = useState<'problems' | 'desc' | 'editor'>('editor');
   
   const [isRunning, setIsRunning] = useState(false);
   const [runStatus, setRunStatus] = useState<'IDLE' | 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR'>('IDLE');
@@ -320,93 +321,123 @@ export default function CodingView() {
   };
 
   return (
-    <div className="grid md:grid-cols-4 gap-8 pb-12 md:h-[calc(100vh-140px)] md:min-h-[500px] h-auto text-left">
-      {/* Sidebar: Problems list */}
-      <div className="md:col-span-1 glass-panel p-4 flex flex-col space-y-3 overflow-y-auto">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 font-mono">Coding Problems</h3>
-        <div className="space-y-2">
-          {problemsList.map((prob) => (
-            <button
-              key={prob.id}
-              onClick={() => {
-                setActiveProblem(prob);
-                setWorkspaceTab('editor');
-              }}
-              className={`w-full text-left p-3.5 rounded-lg border text-xs flex flex-col space-y-1.5 transition-all ${
-                activeProblem.id === prob.id
-                  ? 'bg-slate-900 border-brand-purple/40 text-slate-100 shadow-md'
-                  : 'border-transparent text-slate-400 hover:bg-slate-950/40'
-              }`}
-            >
-              <div className="flex justify-between items-center w-full">
-                <span className="font-extrabold">{prob.title}</span>
-                <span className={`text-[9px] font-extrabold ${
-                  prob.difficulty === 'EASY' ? 'text-emerald-400' : prob.difficulty === 'MEDIUM' ? 'text-amber-400' : 'text-red-400'
-                }`}>
-                  {prob.difficulty}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 font-mono">{prob.category}</span>
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col space-y-4 pb-12 text-left">
+      {/* Mobile Tab Switcher */}
+      <div className="md:hidden flex rounded-xl bg-slate-950/60 p-1 border border-white/10 font-mono text-xs shadow-lg">
+        <button
+          onClick={() => setMobileViewTab('problems')}
+          className={`flex-1 py-2 text-center rounded-lg font-extrabold transition-all cursor-pointer ${
+            mobileViewTab === 'problems' ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          Problems ({problemsList.length})
+        </button>
+        <button
+          onClick={() => setMobileViewTab('desc')}
+          className={`flex-1 py-2 text-center rounded-lg font-extrabold transition-all cursor-pointer ${
+            mobileViewTab === 'desc' ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          Problem Info
+        </button>
+        <button
+          onClick={() => setMobileViewTab('editor')}
+          className={`flex-1 py-2 text-center rounded-lg font-extrabold transition-all cursor-pointer ${
+            mobileViewTab === 'editor' ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' : 'text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          Code Editor
+        </button>
       </div>
 
-      {/* Main workspace arena */}
-      <div className="md:col-span-3 grid md:grid-cols-2 gap-6 h-full min-h-0">
-        
-        {/* Left Pane: Description & Information */}
-        <div className="glass-panel p-6 overflow-y-auto space-y-6 flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-extrabold text-slate-200">{activeProblem.title}</h2>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={toggleBookmark}
-                  className={`p-2 rounded-lg border transition-colors flex items-center justify-center ${
-                    bookmarkedIds.includes(activeProblem.id)
-                      ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                      : 'border-white/5 bg-slate-950/20 text-slate-500 hover:text-slate-350'
-                  }`}
-                  title="Bookmark problem"
-                >
-                  <Bookmark className="w-4 h-4 fill-current" />
-                </button>
-                <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${
-                  activeProblem.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : activeProblem.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-                }`}>
-                  {activeProblem.difficulty}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-xs leading-relaxed text-slate-300 whitespace-pre-line font-sans">
-              {activeProblem.description}
-            </p>
-
-            <div className="space-y-2">
-              <h4 className="text-[10px] font-bold text-slate-550 uppercase tracking-widest font-mono">Constraints</h4>
-              <ul className="list-disc pl-4 space-y-1 text-xs text-slate-400 font-mono">
-                {activeProblem.constraints.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="text-[10px] font-bold text-slate-550 uppercase tracking-widest font-mono">Examples & Test Cases</h4>
-              {activeProblem.testcases.map((tc, idx) => (
-                <div key={idx} className="p-3 bg-slate-950/40 rounded-xl border border-white/5 font-mono text-[11px] space-y-1">
-                  <p className="text-slate-500"><strong className="text-slate-400">Input:</strong> {tc.input}</p>
-                  <p className="text-slate-500"><strong className="text-slate-400">Output:</strong> {tc.expected}</p>
+      <div className="grid md:grid-cols-4 gap-6 md:h-[calc(100vh-140px)] md:min-h-[500px] h-auto">
+        {/* Sidebar: Problems list */}
+        <div className={`md:col-span-1 glass-panel p-4 flex flex-col space-y-3 overflow-y-auto ${mobileViewTab === 'problems' ? 'flex' : 'hidden md:flex'}`}>
+          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 font-mono">Coding Problems</h3>
+          <div className="space-y-2">
+            {problemsList.map((prob) => (
+              <button
+                key={prob.id}
+                onClick={() => {
+                  setActiveProblem(prob);
+                  setWorkspaceTab('editor');
+                  setMobileViewTab('editor');
+                }}
+                className={`w-full text-left p-3.5 rounded-lg border text-xs flex flex-col space-y-1.5 transition-all cursor-pointer ${
+                  activeProblem.id === prob.id
+                    ? 'bg-slate-900 border-brand-purple/40 text-slate-100 shadow-md'
+                    : 'border-transparent text-slate-400 hover:bg-slate-950/40'
+                }`}
+              >
+                <div className="flex justify-between items-center w-full">
+                  <span className="font-extrabold">{prob.title}</span>
+                  <span className={`text-[9px] font-extrabold ${
+                    prob.difficulty === 'EASY' ? 'text-emerald-400' : prob.difficulty === 'MEDIUM' ? 'text-amber-400' : 'text-red-400'
+                  }`}>
+                    {prob.difficulty}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <span className="text-[10px] text-slate-500 font-mono">{prob.category}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Right Pane: Code Editor & Auxiliary Panels */}
-        <div className="flex flex-col justify-between h-full min-h-0 bg-slate-950/20 rounded-[20px] border border-white/5 overflow-hidden">
+        {/* Main workspace arena */}
+        <div className="md:col-span-3 grid md:grid-cols-2 gap-6 h-full min-h-0">
+          
+          {/* Left Pane: Description & Information */}
+          <div className={`glass-panel p-6 overflow-y-auto space-y-6 flex flex-col justify-between ${mobileViewTab === 'desc' ? 'flex' : 'hidden md:flex'}`}>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-extrabold text-slate-200">{activeProblem.title}</h2>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={toggleBookmark}
+                    className={`p-2 rounded-lg border transition-colors flex items-center justify-center ${
+                      bookmarkedIds.includes(activeProblem.id)
+                        ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
+                        : 'border-white/5 bg-slate-950/20 text-slate-500 hover:text-slate-350'
+                    }`}
+                    title="Bookmark problem"
+                  >
+                    <Bookmark className="w-4 h-4 fill-current" />
+                  </button>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${
+                    activeProblem.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : activeProblem.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                  }`}>
+                    {activeProblem.difficulty}
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs leading-relaxed text-slate-300 whitespace-pre-line font-sans">
+                {activeProblem.description}
+              </p>
+
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold text-slate-550 uppercase tracking-widest font-mono">Constraints</h4>
+                <ul className="list-disc pl-4 space-y-1 text-xs text-slate-400 font-mono">
+                  {activeProblem.constraints.map((c, i) => (
+                    <li key={i}>{c}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-bold text-slate-550 uppercase tracking-widest font-mono">Examples & Test Cases</h4>
+                {activeProblem.testcases.map((tc, idx) => (
+                  <div key={idx} className="p-3 bg-slate-950/40 rounded-xl border border-white/5 font-mono text-[11px] space-y-1">
+                    <p className="text-slate-500"><strong className="text-slate-400">Input:</strong> {tc.input}</p>
+                    <p className="text-slate-500"><strong className="text-slate-400">Output:</strong> {tc.expected}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Pane: Code Editor & Auxiliary Panels */}
+          <div className={`flex-col justify-between h-full min-h-0 bg-slate-950/20 rounded-[20px] border border-white/5 overflow-hidden ${mobileViewTab === 'editor' ? 'flex' : 'hidden md:flex'}`}>
           
           {/* Header Workspace tabs */}
           <div className="flex border-b border-white/5 bg-slate-950/40 p-1">
@@ -599,6 +630,7 @@ export default function CodingView() {
 
         </div>
       </div>
+    </div>
     </div>
   );
 }
