@@ -281,7 +281,7 @@ export default function App() {
       theme={theme}
       setAiCoachOpen={setAiCoachOpen}
     >
-       {currentView === 'dashboard' && <DashboardView onNavigate={handleNavigation} xp={xp} level={level} spendXp={handleSpendXp} openAiCoach={() => setAiCoachOpen(true)} />}
+       {currentView === 'dashboard' && <DashboardView onNavigate={handleNavigation} xp={xp} level={level} spendXp={handleSpendXp} openAiCoach={() => setAiCoachOpen(true)} user={user} />}
       {currentView === 'aptitude' && <AptitudeView />}
       {currentView === 'coding' && <CodingView />}
       {currentView === 'company' && <CompanyPrepView />}

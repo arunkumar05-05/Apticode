@@ -22,49 +22,29 @@ interface AppLayoutProps {
 }
 
 function getAvatarInitial(name?: string, email?: string): string {
-  let raw = name || '';
-  if (!raw || raw.includes('@')) {
-    raw = email ? email.split('@')[0] : 'User';
+  let raw = name?.trim() || '';
+  if (!raw || raw === 'New Candidate' || raw.includes('@')) {
+    const saved = email ? localStorage.getItem(`apticode_user_name_${email.trim()}`) || localStorage.getItem(`signup_fullname_${email.trim()}`) : null;
+    raw = saved || (email ? email.split('@')[0] : 'User');
   }
-  let cleaned = raw.replace(/^[0-9]+[a-zA-Z]*/, '').trim();
-  if (!cleaned) {
-    cleaned = raw.replace(/^[0-9]+/, '').trim();
-  }
-  if (!cleaned) {
-    cleaned = raw;
-  }
-  const match = cleaned.match(/[a-zA-Z]/);
-  if (match) {
-    return match[0].toUpperCase();
-  }
-  return raw.charAt(0).toUpperCase() || 'A';
+  const match = raw.match(/[a-zA-Z]/);
+  return match ? match[0].toUpperCase() : 'A';
 }
 
 function formatHumanName(rawName?: string, email?: string): string {
   let name = rawName?.trim();
-  if (!name || name === 'New Candidate' || name.includes('@')) {
-    if (email) {
-      name = email.split('@')[0];
+  if (name && name !== 'New Candidate' && name !== 'Candidate' && !name.includes('@')) {
+    return name;
+  }
+  if (email) {
+    const savedSignupName = localStorage.getItem(`signup_fullname_${email.trim()}`) || localStorage.getItem(`apticode_user_name_${email.trim()}`);
+    if (savedSignupName && savedSignupName.trim()) {
+      return savedSignupName.trim();
     }
+    const handle = email.split('@')[0];
+    return handle.charAt(0).toUpperCase() + handle.slice(1);
   }
-
-  if (!name) return 'Candidate';
-
-  let cleaned = name.replace(/^[0-9]{2}(it|cs|cse|ece|eee|mech|civil|ai|ds)?/i, '');
-  if (!cleaned) cleaned = name;
-
-  cleaned = cleaned.replace(/[._-]/g, ' ');
-  cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
-
-  const words = cleaned.split(/\s+/).filter(Boolean);
-  if (words.length > 0) {
-    const formatted = words
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ');
-    if (formatted.length >= 2) return formatted;
-  }
-
-  return name.charAt(0).toUpperCase() + name.slice(1);
+  return 'Candidate';
 }
 
 const navItems = [

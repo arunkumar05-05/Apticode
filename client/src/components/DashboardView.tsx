@@ -22,9 +22,10 @@ interface DashboardViewProps {
   level: string;
   spendXp: (amount: number) => boolean;
   openAiCoach?: () => void;
+  user?: any;
 }
 
-export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCoach }: DashboardViewProps) {
+export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCoach, user }: DashboardViewProps) {
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -89,6 +90,11 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   const weakTopicName = statsData?.weakTopics?.[0] || 'Probability';
   const strongTopicName = statsData?.strongTopics?.[0] || 'Time & Work';
 
+  const userEmail = user?.email || statsData?.email || '';
+  const savedName = userEmail ? localStorage.getItem(`apticode_user_name_${userEmail.trim()}`) || localStorage.getItem(`signup_fullname_${userEmail.trim()}`) : null;
+  const rawName = user?.name || statsData?.fullName || savedName;
+  const displayName = rawName && rawName !== 'New Candidate' && !rawName.includes('@') ? rawName : (userEmail ? userEmail.split('@')[0] : 'Candidate');
+
   return (
     <div className="space-y-4 pb-24 text-left">
       <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="relative overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/90 to-brand-purple/15 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
@@ -99,7 +105,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
             Premium academic account
           </div>
           <div className="space-y-2">
-            <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-semibold tracking-tight text-white">Welcome back, {statsData?.fullName || 'Rahul'}</h2>
+            <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-semibold tracking-tight text-white">Welcome back, {displayName}</h2>
             <p className="max-w-xl text-sm leading-6 text-slate-400">You are ranked #{statsData?.leaderboardRank || 1} in your cohort. Keep the momentum going with one focused session today.</p>
           </div>
           <div className="rounded-[20px] border border-white/10 bg-slate-950/60 p-3">
