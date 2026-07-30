@@ -19,8 +19,7 @@ import CompanyPrepView from './components/CompanyPrepView';
 import MockTestView from './components/MockTestView';
 import ProfileView from './components/ProfileView';
 import { getApiBaseUrl } from './config/api';
-import { auth, db } from './firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { supabase } from './supabase';
 
 
 
@@ -227,7 +226,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    auth.signOut().catch(err => console.error('[Auth] signOut error:', err));
+    supabase.auth.signOut().catch(err => console.error('[Auth] signOut error:', err));
     localStorage.removeItem('apticode-user-session');
     localStorage.removeItem('apticode-current-view');
     setUser(null);

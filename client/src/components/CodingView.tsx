@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, CheckCircle2, ChevronRight, Terminal, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
-import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { getApiBaseUrl } from '../config/api';
 
 interface Problem {

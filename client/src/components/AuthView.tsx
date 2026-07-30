@@ -1,32 +1,21 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
-import { auth } from '../firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, updateProfile } from 'firebase/auth';
+import { supabase, isSupabaseConfigured } from '../supabase';
 import { getApiBaseUrl } from '../config/api';
 
-const getFirebaseErrorMessage = (error: any, defaultFallback: string): string => {
-  const code = error?.code || error?.message;
-  switch (code) {
-    case 'auth/operation-not-allowed':
-      return 'Email/password accounts are not enabled. Please enable this option in the Firebase Console.';
-    case 'auth/invalid-email':
-      return 'The email address is invalid. Please check the format.';
-    case 'auth/network-request-failed':
-      return 'A network error occurred. Please check your internet connection and try again.';
-    case 'auth/email-already-in-use':
-      return 'This email address is already registered.';
-    case 'auth/weak-password':
-      return 'The password is too weak. It must be at least 6 characters.';
-    case 'auth/invalid-credential':
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-      return 'Invalid email or password. Please try again.';
-    case 'auth/too-many-requests':
-      return 'Too many attempts. Your account has been temporarily locked due to repeated failed requests. Please wait a few minutes and try again.';
-    default:
-      return error?.message || defaultFallback;
+const getSupabaseErrorMessage = (error: any, defaultFallback: string): string => {
+  const message = error?.message || '';
+  if (message.includes('Invalid login credentials')) {
+    return 'Invalid email or password. Please try again.';
   }
+  if (message.includes('User already registered')) {
+    return 'This email address is already registered.';
+  }
+  if (message.includes('Email not confirmed')) {
+    return 'Your email address is not verified. Please check your inbox.';
+  }
+  return message || defaultFallback;
 };
 
 interface AuthViewProps {
@@ -82,20 +71,18 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       setValidationError('Please input a valid college email address.');
       return;
     }
-    if (!password.trim()) {
-      setValidationError('Please enter your password first.');
-      return;
-    }
     
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      await sendEmailVerification(userCredential.user);
-      setResendCooldown(60); // 60-second cooldown between resend attempts
+      if (isSupabaseConfigured) {
+        const { error } = await supabase.auth.resend({ type: 'signup', email: email.trim() });
+        if (error) throw error;
+      }
+      setResendCooldown(60);
       setValidationError('Verification link resent! Please check your inbox. You can resend again in 60 seconds.');
     } catch (err: any) {
       console.error(err);
-      setValidationError(getFirebaseErrorMessage(err, 'Failed to resend verification link.'));
+      setValidationError(getSupabaseErrorMessage(err, 'Failed to resend verification link.'));
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +90,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return; // Prevent duplicate submissions
+    if (isLoading) return;
     setValidationError('');
 
     if (!email.trim()) {
@@ -119,33 +106,34 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
       return;
     }
 
-    const hasConfig = import.meta.env.VITE_FIREBASE_API_KEY && !import.meta.env.VITE_FIREBASE_API_KEY.includes('PLACEHOLDER');
-
     if (authTab === 'signin') {
       setIsLoading(true);
       try {
         let result: any = null;
-        if (hasConfig) {
-          const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-          const user = userCredential.user;
+        if (isSupabaseConfigured) {
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password: password
+          });
 
-          if (!user.emailVerified && !import.meta.env.DEV) {
-            setValidationError('Your email address is not verified. Please check your inbox or click "Resend verification link" below.');
+          if (error) {
+            setValidationError(getSupabaseErrorMessage(error, 'Sign in failed.'));
             setIsLoading(false);
             return;
           }
 
-          const idToken = await user.getIdToken();
+          const accessToken = data.session?.access_token || 'supabase-token';
           const apiBase = getApiBaseUrl();
-          const signupName = fullName.trim() || localStorage.getItem(`signup_fullname_${email.trim()}`) || user.displayName || '';
-          const response = await fetch(`${apiBase}/api/auth/firebase-verify`, {
+          const signupName = fullName.trim() || localStorage.getItem(`signup_fullname_${email.trim()}`) || data.user?.user_metadata?.full_name || '';
+          
+          const response = await fetch(`${apiBase}/api/auth/supabase-verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken, role, email: email.trim(), fullName: signupName })
+            body: JSON.stringify({ accessToken, role, email: email.trim(), fullName: signupName })
           });
           result = await response.json();
         } else {
-          // Sandbox Mode (or fallback mode)
+          // Sandbox / Local fallback mode
           const apiBase = getApiBaseUrl();
           const signupName = fullName.trim() || localStorage.getItem(`signup_fullname_${email.trim()}`) || '';
           const response = await fetch(`${apiBase}/api/auth/login`, {
@@ -169,7 +157,6 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
         }
       } catch (err: any) {
         console.warn('Auth Server Fetch Warning:', err);
-        // Mobile / Offline Fallback Auth: Allow seamless authentication without raw fetch error alert
         const fallbackName = fullName.trim() || localStorage.getItem(`signup_fullname_${email.trim()}`) || email.split('@')[0];
         onAuthenticate({
           name: fallbackName,
@@ -194,8 +181,8 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
 
       localStorage.setItem(`signup_fullname_${email.trim()}`, fullName.trim());
 
-      if (!hasConfig) {
-        // Sandbox Sign Up Fallback: Create account directly on backend database!
+      if (!isSupabaseConfigured) {
+        // Sandbox Sign Up Fallback
         setIsLoading(true);
         try {
           const apiBase = getApiBaseUrl();
@@ -223,31 +210,29 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
 
       setIsLoading(true);
       try {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email.trim(),
-          password
-        );
-
-        if (fullName.trim()) {
-          try {
-            await updateProfile(userCredential.user, { displayName: fullName.trim() });
-          } catch (e) {
-            console.warn('[Firebase] Failed to set displayName:', e);
+        const { error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password,
+          options: {
+            data: {
+              full_name: fullName.trim(),
+              role: role
+            }
           }
-        }
-
-        await sendEmailVerification(userCredential.user, {
-          url: `${window.location.origin}/signin`,
-          handleCodeInApp: false,
         });
 
+        if (error) {
+          setValidationError(getSupabaseErrorMessage(error, 'Failed to create user.'));
+          setIsLoading(false);
+          return;
+        }
+
         setVerificationEmailSent(true);
-        alert(`Registration initialized! A verification email link has been sent to ${email}. Please verify your email before logging in.`);
+        alert(`Registration initialized! A confirmation link has been sent to ${email}. Please check your email before logging in.`);
         setAuthTab('signin');
       } catch (error: any) {
-        console.error('Signup error:', error.code);
-        setValidationError(getFirebaseErrorMessage(error, 'Failed to create user.'));
+        console.error('Signup error:', error);
+        setValidationError(getSupabaseErrorMessage(error, 'Failed to create user.'));
       } finally {
         setIsLoading(false);
       }

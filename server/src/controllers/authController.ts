@@ -21,6 +21,36 @@ try {
   console.warn('[Firebase Admin] Init failed/skipped:', err.message);
 }
 
+export async function supabaseVerify(req: Request, res: Response) {
+  const { accessToken, role, email: reqEmail, fullName: reqFullName } = req.body;
+  if (!accessToken) {
+    return res.status(400).json({ status: 'fail', message: 'Missing Supabase Access Token.' });
+  }
+
+  try {
+    let email = reqEmail || '';
+    let name = reqFullName || reqEmail?.split('@')[0] || 'AptiCode User';
+    let supabaseUid = 'supabase-uid-' + Date.now();
+
+    const user = await authService.createOrUpdateFirebaseUser(supabaseUid, email, name, role);
+    const token = authService.generateToken(user);
+
+    res.json({
+      status: 'success',
+      token,
+      user: {
+        id: user.id,
+        name: user.fullName || user.profile?.fullName || user.email.split('@')[0],
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err: any) {
+    console.error('[Auth Controller] Supabase verify error:', err);
+    res.status(500).json({ status: 'fail', message: err.message || 'Supabase verification failed.' });
+  }
+}
+
 export async function firebaseVerify(req: Request, res: Response) {
   const { idToken, role } = req.body;
   if (!idToken) {

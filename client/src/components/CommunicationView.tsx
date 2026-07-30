@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, RefreshCw, Star, AlertTriangle, CheckCircle, Volume2, Sparkles, MessageCircle, BookOpen } from 'lucide-react';
-import { auth } from '../firebase';
+import { supabase } from '../supabase';
 import { getApiBaseUrl } from '../config/api';
 
 interface GrammarQuestion {

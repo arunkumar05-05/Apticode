@@ -5,8 +5,7 @@ import {
   Target, Cpu, Compass, BookOpen, Layers, Zap, Flame,
   BarChart3, Star, Sparkles, X, Code, Users
 } from 'lucide-react';
-import { auth, db } from '../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { supabase } from '../supabase';
 interface OnboardingViewProps {
   onComplete: (data: {
     goal: string[];

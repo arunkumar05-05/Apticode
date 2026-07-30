@@ -17,6 +17,7 @@ const router = Router();
 // Auth routes (public)
 router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
+router.post('/auth/supabase-verify', authController.supabaseVerify);
 router.post('/auth/firebase-verify', authController.firebaseVerify);
 
 // Protect all following routes with JWT token checks

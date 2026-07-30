@@ -4,8 +4,7 @@ import {
   BarChart2, Clock, Sparkles, HelpCircle, Code, BookOpen, AlertCircle, 
   TrendingUp, Award, Layers, Volume2, Bookmark, CheckCircle 
 } from 'lucide-react';
-import { db } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { supabase } from '../supabase';
 import { getApiBaseUrl } from '../config/api';
 
 interface StudentRecord {
@@ -127,43 +126,41 @@ export default function AdminView() {
 
     const fetchFirestoreStudents = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
-        const list: StudentRecord[] = [];
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          list.push({
-            id: docSnap.id,
-            name: data.fullName || docSnap.id.split('@')[0],
-            email: data.email || docSnap.id,
-            branch: data.branch || 'CSE',
-            xp: data.xp || 2000,
-            level: data.level || 'Beginner',
+        const { data, error } = await supabase.from('users').select('*');
+        if (data && data.length > 0) {
+          const list: StudentRecord[] = data.map((item: any) => ({
+            id: item.id || item.email,
+            name: item.fullName || item.email.split('@')[0],
+            email: item.email,
+            branch: item.branch || 'CSE',
+            xp: item.xp || 2000,
+            level: item.level || 'Beginner',
             status: 'ACTIVE',
-            college: data.college || 'AptiCode College',
-            department: data.branch || 'Computer Science',
-            yearOfStudy: data.year || '3rd Year',
-            regDate: data.createdAt?.split('T')[0] || '2026-07-14',
+            college: item.college || 'AptiCode College',
+            department: item.branch || 'Computer Science',
+            yearOfStudy: item.year || '3rd Year',
+            regDate: item.createdAt?.split('T')[0] || '2026-07-14',
             lastLogin: 'Active recently',
-            readinessScore: data.readinessScore || 70,
+            readinessScore: item.readinessScore || 70,
             isAtRisk: false,
-            mcqCorrect: data.mcqCorrect || 10,
-            mcqIncorrect: data.mcqIncorrect || 2,
-            strongTopics: data.strongTopics || ['Time & Work'],
-            weakTopics: data.weakTopics || [],
-            grammarScore: data.grammarScore || 80,
-            fluencyScore: data.fluencyScore || 75,
-            wpm: data.wpm || 110
-          });
-        });
+            mcqCorrect: item.mcqCorrect || 10,
+            mcqIncorrect: item.mcqIncorrect || 2,
+            strongTopics: item.strongTopics || ['Time & Work'],
+            weakTopics: item.weakTopics || [],
+            grammarScore: item.grammarScore || 80,
+            fluencyScore: item.fluencyScore || 75,
+            wpm: item.wpm || 110
+          }));
 
-        if (list.length > 0) {
-          setStudents((prev) => {
-            const filteredPrev = prev.filter(p => !list.some(l => l.email === p.email));
-            return [...filteredPrev, ...list];
-          });
+          if (list.length > 0) {
+            setStudents((prev) => {
+              const filteredPrev = prev.filter(p => !list.some(l => l.email === p.email));
+              return [...filteredPrev, ...list];
+            });
+          }
         }
       } catch (err) {
-        console.warn('Failed to load registered student profiles from Firestore:', err);
+        console.warn('Failed to load registered student profiles:', err);
       }
     };
 
