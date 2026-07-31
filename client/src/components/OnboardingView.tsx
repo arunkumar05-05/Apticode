@@ -152,10 +152,19 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
 
   const saveOnboarding = async () => {
     setSaving(true);
+    const gradYearNum = year?.includes('Third') ? 2026 : (year?.includes('Final') ? 2025 : 2027);
+    const generatedBio = `Targeting ${goal.join(', ') || 'Software Engineering'} placement roles. Preferred Companies: ${companies.join(', ') || 'Dream Companies'}. Coding level: ${codingLevel || 'Intermediate'}.`;
+
     const onboardingPayload = {
+      email: userEmail,
+      college: 'AptiCode College',
+      branch: branch || 'Computer Science',
+      department: branch || 'Computer Science',
+      graduationYear: gradYearNum,
+      skills: companies.join(', '),
+      bio: generatedBio,
       goal,
       year,
-      branch,
       codingLevel,
       companies,
       studyGoal,
@@ -179,11 +188,15 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
               'Authorization': `Bearer ${session.token}`
             },
             body: JSON.stringify({
-              branch,
-              department: branch,
-              graduationYear: year?.includes('Third') ? 2026 : 2025,
-              isOnboarded: true,
-              skills: companies.join(', ')
+              fullName: session.name || undefined,
+              email: session.email || userEmail,
+              college: 'AptiCode College',
+              branch: branch || 'Computer Science',
+              department: branch || 'Computer Science',
+              graduationYear: gradYearNum,
+              skills: companies.join(', '),
+              bio: generatedBio,
+              isOnboarded: true
             })
           });
         }
