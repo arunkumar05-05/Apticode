@@ -42,7 +42,8 @@ export async function supabaseVerify(req: Request, res: Response) {
         id: user.id,
         name: user.fullName || user.profile?.fullName || user.email.split('@')[0],
         email: user.email,
-        role: user.role
+        role: user.role,
+        isOnboarded: Boolean(user.isOnboarded)
       }
     });
   } catch (err: any) {
@@ -83,7 +84,8 @@ export async function firebaseVerify(req: Request, res: Response) {
         id: user.id,
         name: user.fullName || user.profile?.fullName || user.email.split('@')[0],
         email: user.email,
-        role: user.role
+        role: user.role,
+        isOnboarded: Boolean(user.isOnboarded)
       }
     });
   } catch (err: any) {
@@ -132,7 +134,8 @@ export async function login(req: Request, res: Response) {
         id: user.id,
         name: user.fullName || user.email.split('@')[0],
         email: user.email,
-        role: user.role
+        role: user.role,
+        isOnboarded: Boolean(user.isOnboarded)
       }
     });
   } catch (err: any) {
@@ -163,7 +166,8 @@ export async function register(req: Request, res: Response) {
         id: user.id,
         name: user.fullName,
         email: user.email,
-        role: user.role
+        role: user.role,
+        isOnboarded: Boolean(user.isOnboarded)
       }
     });
   } catch (err: any) {

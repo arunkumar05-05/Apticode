@@ -159,38 +159,47 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
       codingLevel,
       companies,
       studyGoal,
+      isOnboarded: true,
       onboardingCompleted: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
 
-    const currentUser = auth.currentUser;
-    const docId = currentUser ? currentUser.uid : userEmail;
-    const storageKey = currentUser ? `onboarding_${currentUser.uid}` : (userEmail ? `onboarding_${userEmail}` : 'onboarding_sandbox');
-
-    // Save to Firestore using UID (or email-based document ID for sandbox) with timeout fallback
+    // Save to backend database API
     try {
-      if (docId) {
-        const docRef = doc(db, 'users', docId);
-        await Promise.race([
-          setDoc(docRef, onboardingPayload, { merge: true }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timeout')), 2500))
-        ]);
-        console.log('[Onboarding] Profile written to Firestore successfully.');
+      const sessionStr = localStorage.getItem('apticode-user-session');
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        if (session.token) {
+          const apiBase = getApiBaseUrl();
+          await fetch(`${apiBase}/api/profile`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.token}`
+            },
+            body: JSON.stringify({
+              branch,
+              department: branch,
+              graduationYear: year?.includes('Third') ? 2026 : 2025,
+              isOnboarded: true,
+              skills: companies.join(', ')
+            })
+          });
+        }
       }
     } catch (err) {
-      console.error('[Onboarding] Firestore write failed. Falling back to local storage:', err);
+      console.warn('[Onboarding] API sync error:', err);
     }
 
     // Save locally
+    const storageKey = userEmail ? `onboarding_${userEmail}` : 'onboarding_sandbox';
     localStorage.setItem(storageKey, JSON.stringify(onboardingPayload));
     if (userEmail) {
       localStorage.setItem(`apticode-onboarding-done-${userEmail}`, 'true');
-      localStorage.setItem(`onboarding_${userEmail}`, JSON.stringify(onboardingPayload));
     }
     localStorage.setItem('onboarding_completed', 'true');
     
-    // Simulate API write delay for premium UX transition
     await new Promise(resolve => setTimeout(resolve, 600));
     
     setSaving(false);

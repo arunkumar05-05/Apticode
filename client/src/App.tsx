@@ -34,6 +34,7 @@ interface UserSession {
   email: string;
   role: 'STUDENT' | 'ADMIN';
   token: string;
+  isOnboarded?: boolean;
   onboardingCompleted?: boolean;
 }
 
@@ -52,11 +53,24 @@ export default function App() {
 
   const [currentViewState, setCurrentViewState] = useState<ViewState>(() => {
     const savedView = localStorage.getItem('apticode-current-view') as ViewState | null;
-    const savedUser = localStorage.getItem('apticode-user-session');
-    if (savedUser && savedView && savedView !== 'landing' && savedView !== 'auth') {
-      return savedView;
+    const savedUserStr = localStorage.getItem('apticode-user-session');
+    if (savedUserStr) {
+      try {
+        const u = JSON.parse(savedUserStr);
+        if (u.role === 'ADMIN') return 'admin';
+        if (!u.isOnboarded && !u.onboardingCompleted) {
+          const doneKey = `apticode-onboarding-done-${u.email}`;
+          if (localStorage.getItem(doneKey) !== 'true') {
+            return 'onboarding';
+          }
+        }
+      } catch (e) {}
+      if (savedView && savedView !== 'landing' && savedView !== 'auth') {
+        return savedView;
+      }
+      return 'dashboard';
     }
-    return savedUser ? 'dashboard' : 'landing';
+    return 'landing';
   });
 
   const setCurrentView = (view: ViewState) => {
@@ -125,13 +139,15 @@ export default function App() {
         return;
       }
 
-      // Check all local storage flags first for fast, reliable check
       const doneKey = `apticode-onboarding-done-${user.email}`;
-      const isDoneLocal = localStorage.getItem(doneKey) === 'true' || 
-                          localStorage.getItem(`onboarding_${user.email}`) !== null ||
-                          localStorage.getItem('onboarding_completed') === 'true';
+      const isDone = user.isOnboarded || user.onboardingCompleted || localStorage.getItem(doneKey) === 'true';
 
-      if (isDoneLocal) {
+      if (!isDone) {
+        // If onboarding is incomplete, force the onboarding view even if tab was closed
+        if (currentView !== 'onboarding') {
+          setCurrentView('onboarding');
+        }
+      } else {
         const savedView = localStorage.getItem('apticode-current-view') as ViewState | null;
         if (savedView && savedView !== 'landing' && savedView !== 'auth' && savedView !== 'onboarding') {
           if (currentView !== savedView) {
@@ -140,24 +156,11 @@ export default function App() {
         } else if (currentView === 'landing' || currentView === 'auth' || currentView === 'onboarding') {
           setCurrentView('dashboard');
         }
-        return;
-      }
-
-      // If user session exists, mark onboarding as completed to prevent annoying loops on mobile
-      localStorage.setItem(doneKey, 'true');
-      localStorage.setItem('onboarding_completed', 'true');
-      const savedView = localStorage.getItem('apticode-current-view') as ViewState | null;
-      if (savedView && savedView !== 'landing' && savedView !== 'auth' && savedView !== 'onboarding') {
-        if (currentView !== savedView) {
-          setCurrentView(savedView);
-        }
-      } else if (currentView === 'landing' || currentView === 'auth' || currentView === 'onboarding') {
-        setCurrentView('dashboard');
       }
     };
 
     checkOnboarding();
-  }, [user?.email]);
+  }, [user?.email, user?.isOnboarded]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
@@ -247,7 +250,18 @@ export default function App() {
         onAuthenticate={(session) => {
           setUser(session);
           localStorage.setItem('apticode-user-session', JSON.stringify(session));
-          setCurrentView('dashboard');
+          if (session.role === 'ADMIN') {
+            setCurrentView('admin');
+          } else if (!session.isOnboarded && !session.onboardingCompleted) {
+            const doneKey = `apticode-onboarding-done-${session.email}`;
+            if (localStorage.getItem(doneKey) !== 'true') {
+              setCurrentView('onboarding');
+            } else {
+              setCurrentView('dashboard');
+            }
+          } else {
+            setCurrentView('dashboard');
+          }
         }}
         onBack={() => setCurrentView('landing')}
       />
@@ -258,8 +272,13 @@ export default function App() {
     return (
       <OnboardingView
         userEmail={user?.email || ''}
-        onComplete={(data) => {
-          setUser(prev => prev ? { ...prev, onboardingCompleted: true } : null);
+        onComplete={() => {
+          if (user) {
+            const updatedUser = { ...user, isOnboarded: true, onboardingCompleted: true };
+            setUser(updatedUser);
+            localStorage.setItem('apticode-user-session', JSON.stringify(updatedUser));
+            localStorage.setItem(`apticode-onboarding-done-${user.email}`, 'true');
+          }
           setCurrentView('dashboard');
         }}
       />

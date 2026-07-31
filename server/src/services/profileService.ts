@@ -74,15 +74,15 @@ export async function updateUserProfile(userId: string, data: any) {
 
   const targetName = fullName ? formatHumanName(fullName, email) : undefined;
 
-  if (targetName) {
-    try {
-      await db.user.update({
-        where: { id: userId },
-        data: { fullName: targetName }
-      });
-    } catch (e) {
-      // ignore
-    }
+  try {
+    const updateData: any = { isOnboarded: true };
+    if (targetName) updateData.fullName = targetName;
+    await db.user.update({
+      where: { id: userId },
+      data: updateData
+    });
+  } catch (e) {
+    // ignore
   }
 
   return await db.profile.upsert({
