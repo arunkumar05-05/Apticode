@@ -66,26 +66,42 @@ export default function ProfileView() {
   };
 
   const loadProfileAndHistory = async () => {
+    const savedSession = localStorage.getItem('apticode-user-session');
+    let sessionUser: any = null;
+    if (savedSession) {
+      try { sessionUser = JSON.parse(savedSession); } catch (e) {}
+    }
+    const currentEmail = sessionUser?.email || '';
+    const currentName = sessionUser?.name || '';
+
     try {
       setLoading(true);
-      // 1. Load profile
+      // 1. Load profile from API
       const profRes = await fetch(`${getApiBaseUrl()}/api/profile`, {
         headers: getHeaders()
       });
       const profData = await profRes.json();
       if (profData.status === 'success' && profData.profile) {
         const raw = profData.profile || {};
+        
+        // Merge onboarding data saved locally if profile fields are sparse
+        const onboardingSaved = localStorage.getItem(`onboarding_${currentEmail}`);
+        let obData: any = {};
+        if (onboardingSaved) {
+          try { obData = JSON.parse(onboardingSaved); } catch (e) {}
+        }
+
         const parsed: ProfileData = {
-          fullName: formatHumanName(raw.fullName, raw.email),
-          email: raw.email || '',
+          fullName: formatHumanName(raw.fullName || currentName, raw.email || currentEmail),
+          email: raw.email || currentEmail,
           phone: raw.phone || '',
-          college: raw.college || '',
-          branch: raw.branch || raw.department || '',
-          department: raw.department || raw.branch || '',
-          graduationYear: raw.graduationYear ? Number(raw.graduationYear) : 2026,
+          college: raw.college || 'AptiCode College',
+          branch: raw.branch || raw.department || obData.branch || 'Computer Science',
+          department: raw.department || raw.branch || obData.branch || 'Computer Science',
+          graduationYear: raw.graduationYear ? Number(raw.graduationYear) : (obData.year?.includes('Third') ? 2026 : 2025),
           registerNumber: raw.registerNumber || '',
-          skills: raw.skills || '',
-          bio: raw.bio || '',
+          skills: raw.skills || obData.companies?.join(', ') || '',
+          bio: raw.bio || `Targeting ${obData.goal?.join(', ') || 'software engineering'} roles`,
           github: raw.github || '',
           linkedin: raw.linkedin || '',
           portfolio: raw.portfolio || '',
@@ -98,7 +114,7 @@ export default function ProfileView() {
           localStorage.setItem(`apticode-user-profile-${parsed.email}`, JSON.stringify(parsed));
         }
       } else {
-        const emailKey = profile?.email || 'user';
+        const emailKey = currentEmail || 'user';
         const localSaved = localStorage.getItem(`apticode-user-profile-${emailKey}`);
         if (localSaved) {
           const parsed = JSON.parse(localSaved);
@@ -116,11 +132,9 @@ export default function ProfileView() {
         if (aptData.status === 'success' && Array.isArray(aptData.history)) {
           setTestHistory(aptData.history);
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
 
-      // 3. Load coding history to get count
+      // 3. Load coding history
       try {
         const codeRes = await fetch(`${getApiBaseUrl()}/api/coding/submissions`, {
           headers: getHeaders()
@@ -129,12 +143,10 @@ export default function ProfileView() {
         if (codeData.status === 'success' && Array.isArray(codeData.history)) {
           setSubmissionsCount(codeData.history.length);
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
     } catch (err) {
-      console.warn('[Profile View] Failed to load from backend, using local profile session:', err);
-      const emailKey = profile?.email || 'user';
+      console.warn('[Profile View] Loaded local session fallback:', err);
+      const emailKey = currentEmail || 'user';
       const localSaved = localStorage.getItem(`apticode-user-profile-${emailKey}`);
       if (localSaved) {
         const parsed = JSON.parse(localSaved);

@@ -27,8 +27,8 @@ export async function getUserProfile(userId: string) {
           userId,
           fullName: formattedName,
           email: user.email,
-          college: 'Mailam Engineering College',
-          branch: 'Information Technology',
+          college: '',
+          branch: '',
           graduationYear: 2026
         }
       });
@@ -38,8 +38,8 @@ export async function getUserProfile(userId: string) {
         userId,
         fullName: formattedName,
         email: 'student@college.edu',
-        college: 'Mailam Engineering College',
-        branch: 'Information Technology',
+        college: '',
+        branch: '',
         graduationYear: 2026,
         placementReadinessIndex: 70
       };
