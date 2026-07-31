@@ -93,13 +93,29 @@ export default function AdminView() {
     { id: '2', text: 'Two dice are thrown simultaneously. Sum prime probability...', answer: 'A', topic: 'Probability' }
   ]);
 
+  const getHeaders = () => {
+    const saved = localStorage.getItem('apticode-user-session');
+    const token = saved ? JSON.parse(saved).token : '';
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  };
+
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/challenges`);
+        const response = await fetch(`${getApiBaseUrl()}/api/coding/challenges`, {
+          headers: getHeaders()
+        });
         const result = await response.json();
-        if (result.status === 'success' && Array.isArray(result.data)) {
-          setActiveProblemsList(result.data);
+        if (result.status === 'success' && Array.isArray(result.challenges)) {
+          setActiveProblemsList(result.challenges.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            difficulty: p.difficulty,
+            solvedCount: p.solvedCount || 10
+          })));
         }
       } catch (err) {
         console.warn('Backend server offline. Utilizing default mock database challenges.');
@@ -108,16 +124,25 @@ export default function AdminView() {
 
     const fetchMcqs = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/mcqs`);
+        const response = await fetch(`${getApiBaseUrl()}/api/topics`, {
+          headers: getHeaders()
+        });
         const result = await response.json();
-        if (result.status === 'success' && Array.isArray(result.data)) {
-          const mapped = result.data.map((q: any) => ({
-            id: q.id,
-            text: q.text,
-            answer: q.answer,
-            topic: q.topic
-          }));
-          setActiveMcqList(mapped);
+        if (result.status === 'success' && Array.isArray(result.topics)) {
+          const mapped: any[] = [];
+          result.topics.forEach((t: any) => {
+            if (Array.isArray(t.questions)) {
+              t.questions.forEach((q: any) => {
+                mapped.push({
+                  id: q.id,
+                  text: q.questionText || q.text,
+                  answer: q.correctOption || q.answer,
+                  topic: t.name
+                });
+              });
+            }
+          });
+          if (mapped.length > 0) setActiveMcqList(mapped);
         }
       } catch (err) {
         console.warn('Backend server offline. Utilizing local mock MCQ active list.');
@@ -126,35 +151,38 @@ export default function AdminView() {
 
     const fetchFirestoreStudents = async () => {
       try {
-        const { data, error } = await supabase.from('users').select('*');
-        if (data && data.length > 0) {
-          const list: StudentRecord[] = data.map((item: any) => ({
-            id: item.id || item.email,
-            name: item.fullName || item.email.split('@')[0],
-            email: item.email,
-            branch: item.branch || 'CSE',
-            xp: item.xp || 2000,
+        const response = await fetch(`${getApiBaseUrl()}/api/leaderboard`, {
+          headers: getHeaders()
+        });
+        const result = await response.json();
+        if (result.status === 'success' && Array.isArray(result.leaderboard)) {
+          const list: StudentRecord[] = result.leaderboard.map((item: any) => ({
+            id: item.userId || item.name,
+            name: item.name,
+            email: `${item.name.toLowerCase().replace(/\s+/g, '.')}@college.edu`,
+            branch: 'Computer Science',
+            xp: item.totalScore || 2000,
             level: item.level || 'Beginner',
             status: 'ACTIVE',
             college: item.college || 'AptiCode College',
-            department: item.branch || 'Computer Science',
-            yearOfStudy: item.year || '3rd Year',
-            regDate: item.createdAt?.split('T')[0] || '2026-07-14',
+            department: 'Computer Science',
+            yearOfStudy: '3rd Year',
+            regDate: '2026-07-14',
             lastLogin: 'Active recently',
-            readinessScore: item.readinessScore || 70,
+            readinessScore: 75,
             isAtRisk: false,
-            mcqCorrect: item.mcqCorrect || 10,
-            mcqIncorrect: item.mcqIncorrect || 2,
-            strongTopics: item.strongTopics || ['Time & Work'],
-            weakTopics: item.weakTopics || [],
-            grammarScore: item.grammarScore || 80,
-            fluencyScore: item.fluencyScore || 75,
-            wpm: item.wpm || 110
+            mcqCorrect: item.averageScore || 10,
+            mcqIncorrect: 2,
+            strongTopics: ['Time & Work'],
+            weakTopics: [],
+            grammarScore: 80,
+            fluencyScore: 75,
+            wpm: 110
           }));
 
           if (list.length > 0) {
             setStudents((prev) => {
-              const filteredPrev = prev.filter(p => !list.some(l => l.email === p.email));
+              const filteredPrev = prev.filter(p => !list.some(l => l.name === p.name));
               return [...filteredPrev, ...list];
             });
           }
