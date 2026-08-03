@@ -292,41 +292,18 @@ export default function AdminView() {
         }
       ]);
       alert('MCQ Question successfully published and made live for students.');
-    }  setNewMcq({
-          questionText: '',
-          optionA: '',
-          optionB: '',
-          optionC: '',
-          optionD: '',
-          correctOption: 'A',
-          explanation: ''
-        });
-        return;
-      }
-    } catch (err) {
-      console.warn('Backend server offline. Appending MCQ locally.');
+    } finally {
+      setNewMcq({
+        questionText: '',
+        optionA: '',
+        optionB: '',
+        optionC: '',
+        optionD: '',
+        correctOption: 'A',
+        explanation: ''
+      });
     }
-
-    // Local Mock Fallback
-    setActiveMcqList(prev => [
-      ...prev,
-      {
-        id: String(prev.length + 1),
-        text: newMcq.questionText.slice(0, 50) + '...',
-        answer: newMcq.correctOption,
-        topic: 'Quantitative Aptitude'
-      }
-    ]);
-
-    setNewMcq({
-      questionText: '',
-      optionA: '',
-      optionB: '',
-      optionC: '',
-      optionD: '',
-      correctOption: 'A',
-      explanation: ''
-    });
+  };
 
     alert('MCQ Question successfully updated and published to students.');
   };
