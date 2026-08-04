@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Building2, Award, Users, BookOpen, Code, Calendar, ChevronRight, CheckCircle2, DollarSign } from 'lucide-react';
+import { ChevronRight, CheckCircle2, DollarSign } from 'lucide-react';
+import Scene3D from './three/LazyScene3D';
+import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
 interface CompanyConfig {
   name: string;
@@ -70,97 +72,106 @@ export default function CompanyPrepView() {
   const [activeCompany, setActiveCompany] = useState<CompanyConfig>(companiesData[0]);
 
   return (
-    <div className="grid md:grid-cols-4 gap-8 pb-12 text-left">
-      {/* Sidebar: Companies List */}
-      <div className="md:col-span-1 glass-panel p-4 flex flex-col space-y-3">
-        <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 font-mono">Company Guides</h3>
-        <div className="space-y-1">
-          {companiesData.map((comp) => (
-            <button
-              key={comp.name}
-              onClick={() => setActiveCompany(comp)}
-              className={`w-full text-left p-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
-                activeCompany.name === comp.name
-                  ? 'bg-slate-900 border-brand-purple/30 text-brand-purple'
-                  : 'border-transparent text-slate-400 hover:bg-slate-900/40'
-              }`}
-            >
-              <span>{comp.name.split(' (')[0]}</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          ))}
+    <div className="relative overflow-hidden">
+      <LiquidBackdrop />
+
+      <div className="grid md:grid-cols-4 gap-8 pb-12 text-left">
+        {/* Vault constellation band */}
+        <div className="hidden md:col-span-4 lg:block lc-glass relative overflow-hidden pointer-events-none">
+          <Scene3D variant="vault" className="h-40 lg:h-56" interactive={false} />
         </div>
-      </div>
 
-      {/* Workspace Area */}
-      <div className="md:col-span-3 space-y-6">
-        <div className="glass-panel p-6 space-y-6">
-          <div className="flex flex-wrap items-center justify-between border-b border-white/5 pb-4 gap-4">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-200">{activeCompany.name}</h2>
-              <p className="text-xs text-slate-500 font-mono mt-1">Recruitment roadmap & test breakdown</p>
-            </div>
-            <div className="flex items-center space-x-1.5 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-emerald-400 text-xs font-bold font-mono">
-              <DollarSign className="w-4 h-4" />
-              <span>{activeCompany.salaryRange}</span>
-            </div>
+        {/* Sidebar: Companies List */}
+        <div className="md:col-span-1 lc-glass p-4 flex flex-col space-y-3">
+          <h3 className="text-xs font-bold text-lc-text-muted uppercase tracking-wider px-2 font-mono">Company Guides</h3>
+          <div className="space-y-1">
+            {companiesData.map((comp) => (
+              <button
+                key={comp.name}
+                onClick={() => setActiveCompany(comp)}
+                className={`w-full text-left p-3 rounded-lg text-xs font-bold flex items-center justify-between border transition-all ${
+                  activeCompany.name === comp.name
+                    ? 'bg-gradient-to-r from-lc-violet/20 to-lc-cyan/15 border-lc-violet/30 text-lc-violet'
+                    : 'border-transparent text-lc-text-muted hover:bg-lc-glass-raised'
+                }`}
+              >
+                <span>{comp.name.split(' (')[0]}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            ))}
           </div>
+        </div>
 
-          {/* Rounds */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Selection Rounds</h4>
-            <div className="grid md:grid-cols-3 gap-3">
-              {activeCompany.rounds.map((r, i) => (
-                <div key={i} className="p-4 rounded-xl bg-slate-950/40 border border-white/5 flex items-start space-x-2 text-xs">
-                  <span className="font-bold text-brand-cyan font-mono">0{i+1}.</span>
-                  <span className="text-slate-300 font-semibold">{r}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Pattern */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Exam Pattern Breakdown</h4>
-            <p className="text-xs leading-relaxed text-slate-400 bg-slate-950/20 p-4 rounded-xl border border-white/5">
-              {activeCompany.pattern}
-            </p>
-          </div>
-
-          {/* Sample Questions */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-brand-purple uppercase tracking-widest font-mono">Frequently Asked Aptitude</h4>
-              <div className="p-4 bg-slate-950/50 rounded-xl border border-brand-purple/10 text-xs font-mono whitespace-pre-wrap leading-relaxed text-slate-350">
-                {activeCompany.aptitudeSample}
+        {/* Workspace Area */}
+        <div className="md:col-span-3 space-y-6">
+          <div className="lc-glass p-6 space-y-6">
+            <div className="flex flex-wrap items-center justify-between border-b border-lc-glass-border pb-4 gap-4">
+              <div>
+                <h2 className="text-2xl font-extrabold text-lc-text">{activeCompany.name}</h2>
+                <p className="text-xs text-lc-text-muted font-mono mt-1">Recruitment roadmap & test breakdown</p>
+              </div>
+              <div className="flex items-center space-x-1.5 lc-neo lc-neo-pill bg-lc-emerald/10 border border-lc-emerald/20 px-3 py-1.5 text-lc-emerald text-xs font-bold font-mono">
+                <DollarSign className="w-4 h-4" />
+                <span>{activeCompany.salaryRange}</span>
               </div>
             </div>
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-brand-cyan uppercase tracking-widest font-mono">Standard Coding Question</h4>
-              <div className="p-4 bg-slate-950/50 rounded-xl border border-brand-cyan/10 text-xs font-mono whitespace-pre-wrap leading-relaxed text-slate-350">
-                {activeCompany.codingSample}
+
+            {/* Rounds */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-lc-text-muted uppercase tracking-widest font-mono">Selection Rounds</h4>
+              <div className="grid md:grid-cols-3 gap-3">
+                {activeCompany.rounds.map((r, i) => (
+                  <div key={i} className="p-4 rounded-xl lc-glass-raised border-lc-glass-border flex items-start space-x-2 text-xs">
+                    <span className="font-bold text-lc-cyan font-mono">0{i+1}.</span>
+                    <span className="text-lc-text font-semibold">{r}</span>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Roadmap */}
-          <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest font-mono">Suggested Preparation Steps</h4>
-            <div className="space-y-2.5">
-              {activeCompany.roadmap.map((step, idx) => (
-                <div key={idx} className="flex items-start gap-3 rounded-[16px] border border-white/8 bg-slate-950/30 p-3.5 text-xs">
-                  <div className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand-purple/15 text-brand-purple">
-                    <CheckCircle2 className="h-3 w-3" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-slate-200">Step {idx + 1}</p>
-                    <p className="text-slate-500 mt-0.5">{step}</p>
-                  </div>
-                </div>
-              ))}
+            {/* Pattern */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-lc-text-muted uppercase tracking-widest font-mono">Exam Pattern Breakdown</h4>
+              <p className="text-xs leading-relaxed text-lc-text-muted lc-glass-raised p-4 rounded-xl border-lc-glass-border">
+                {activeCompany.pattern}
+              </p>
             </div>
-          </div>
 
+            {/* Sample Questions */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-lc-violet uppercase tracking-widest font-mono">Frequently Asked Aptitude</h4>
+                <div className="p-4 lc-glass-raised rounded-xl border-lc-violet/20 text-xs font-mono whitespace-pre-wrap leading-relaxed text-lc-text">
+                  {activeCompany.aptitudeSample}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-lc-cyan uppercase tracking-widest font-mono">Standard Coding Question</h4>
+                <div className="p-4 lc-glass-raised rounded-xl border-lc-cyan/20 text-xs font-mono whitespace-pre-wrap leading-relaxed text-lc-text">
+                  {activeCompany.codingSample}
+                </div>
+              </div>
+            </div>
+
+            {/* Roadmap */}
+            <div className="space-y-3 pt-2">
+              <h4 className="text-xs font-bold text-lc-text-muted uppercase tracking-widest font-mono">Suggested Preparation Steps</h4>
+              <div className="space-y-2.5">
+                {activeCompany.roadmap.map((step, idx) => (
+                  <div key={idx} className="lc-glass flex items-start gap-3 p-3.5 text-xs">
+                    <div className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-lc-violet/15 text-lc-violet">
+                      <CheckCircle2 className="h-3 w-3" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-lc-text">Step {idx + 1}</p>
+                      <p className="text-lc-text-muted mt-0.5">{step}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     </div>

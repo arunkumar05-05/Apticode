@@ -80,6 +80,8 @@ const defaultSeedTopics = [
   }
 ];
 
+export { defaultSeedTopics };
+
 export async function getTopics() {
   try {
     const dbTopics = await db.aptitudeTopic.findMany({
@@ -91,8 +93,9 @@ export async function getTopics() {
         ...t,
         questions: (t.questions && t.questions.length > 0) ? t.questions.map((q: any) => ({
           ...q,
-          options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
-        })) : (defaultSeedTopics.find(st => st.id === t.id)?.questions || defaultSeedTopics[0].questions)
+          options: [q.optionA, q.optionB, q.optionC, q.optionD],
+          correctIndex: ['A', 'B', 'C', 'D'].indexOf(q.correctOption)
+        })) : []
       }));
     }
   } catch (err: any) {

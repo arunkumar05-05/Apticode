@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Sparkles, AlertCircle, CheckCircle2, ChevronRight, Terminal, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
-import { supabase } from '../supabase';
+import { Play, Sparkles, AlertCircle, CheckCircle2, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
 import { getApiBaseUrl } from '../config/api';
+import Scene3D from './three/LazyScene3D';
+import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
 interface Problem {
   id: string;
@@ -117,6 +118,17 @@ const problemsList: Problem[] = [
   }
 ];
 
+function getCurrentUserEmail(): string {
+  try {
+    const saved = localStorage.getItem('apticode-user-session');
+    if (saved) {
+      const u = JSON.parse(saved);
+      if (u && u.email) return u.email;
+    }
+  } catch { /* ignore */ }
+  return 'student@college.edu';
+}
+
 export default function CodingView() {
   const [activeProblem, setActiveProblem] = useState<Problem>(problemsList[0]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('python');
@@ -142,35 +154,29 @@ export default function CodingView() {
   // Load Bookmarks & History
   useEffect(() => {
     const loadUserData = async () => {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
+      const userEmail = getCurrentUserEmail();
 
-      let fetchedHistory: any[] = [];
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions?email=${currentUser.email}`);
+        const savedBookmarks = localStorage.getItem(`apticode_bookmarks_${userEmail}`);
+        if (savedBookmarks) {
+          try { setBookmarkedIds(JSON.parse(savedBookmarks)); } catch { /* ignore */ }
+        }
+      } catch (err) {
+        console.error('Failed to load bookmarks:', err);
+      }
+
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions?email=${userEmail}`);
         const result = await response.json();
         if (result.status === 'success' && Array.isArray(result.data)) {
-          fetchedHistory = result.data;
           setSubmissionHistory(result.data);
         }
       } catch (err: any) {
         console.warn('[Coding] Failed to load submissions from backend API, using client state:', err.message);
-      }
-
-      try {
-        const docRef = doc(db, 'users', currentUser.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (Array.isArray(data.bookmarkedCoding)) {
-            setBookmarkedIds(data.bookmarkedCoding);
-          }
-          if (fetchedHistory.length === 0 && Array.isArray(data.codingSubmissions)) {
-            setSubmissionHistory(data.codingSubmissions);
-          }
+        const savedHistory = localStorage.getItem(`apticode_submissions_${userEmail}`);
+        if (savedHistory) {
+          try { setSubmissionHistory(JSON.parse(savedHistory)); } catch { /* ignore */ }
         }
-      } catch (err) {
-        console.error('Failed to load coding details:', err);
       }
     };
     loadUserData();
@@ -178,9 +184,11 @@ export default function CodingView() {
 
   // Update editor code when active problem or language shifts
   useEffect(() => {
-    setEditorCode(activeProblem.starterCodes[selectedLanguage] || '');
+    const starter = activeProblem.starterCodes[selectedLanguage] ?? '';
+    setEditorCode(starter);
     setRunStatus('IDLE');
     setDebugReport('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProblem.id, selectedLanguage]);
 
   const handleLanguageChange = (lang: string) => {
@@ -197,14 +205,10 @@ export default function CodingView() {
     }
     setBookmarkedIds(updated);
 
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      try {
-        const docRef = doc(db, 'users', currentUser.uid);
-        await setDoc(docRef, { bookmarkedCoding: updated }, { merge: true });
-      } catch (err) {
-        console.error('Failed to sync bookmarks:', err);
-      }
+    try {
+      localStorage.setItem(`apticode_bookmarks_${getCurrentUserEmail()}`, JSON.stringify(updated));
+    } catch (err) {
+      console.error('Failed to sync bookmarks:', err);
     }
   };
 
@@ -212,8 +216,7 @@ export default function CodingView() {
     setIsRunning(true);
     setConsoleTab('console');
     
-    const currentUser = auth.currentUser;
-    const userEmail = currentUser?.email || 'student@college.edu';
+    const userEmail = getCurrentUserEmail();
 
     try {
       const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions`, {
@@ -245,13 +248,10 @@ export default function CodingView() {
         const updatedHistory = [newSubmission, ...submissionHistory];
         setSubmissionHistory(updatedHistory);
 
-        if (currentUser) {
-          try {
-            const docRef = doc(db, 'users', currentUser.uid);
-            await setDoc(docRef, { codingSubmissions: updatedHistory }, { merge: true });
-          } catch (err) {
-            console.error('Failed to save submission history backup:', err);
-          }
+        try {
+          localStorage.setItem(`apticode_submissions_${userEmail}`, JSON.stringify(updatedHistory));
+        } catch (err) {
+          console.error('Failed to save submission history backup:', err);
         }
       } else {
         throw new Error(result.message || 'Compiler failed');
@@ -282,13 +282,10 @@ export default function CodingView() {
         const updatedHistory = [newSubmission, ...submissionHistory];
         setSubmissionHistory(updatedHistory);
 
-        if (currentUser) {
-          try {
-            const docRef = doc(db, 'users', currentUser.uid);
-            await setDoc(docRef, { codingSubmissions: updatedHistory }, { merge: true });
-          } catch (e) {
-            console.error(e);
-          }
+        try {
+          localStorage.setItem(`apticode_submissions_${userEmail}`, JSON.stringify(updatedHistory));
+        } catch (e) {
+          console.error(e);
         }
       }, 1500);
     }
@@ -321,13 +318,20 @@ export default function CodingView() {
   };
 
   return (
-    <div className="flex flex-col space-y-4 pb-12 text-left">
+    <div className="relative overflow-hidden flex flex-col space-y-4 pb-12 text-left">
+      <LiquidBackdrop />
+
+      {/* Shards constellation band */}
+      <div className="relative overflow-hidden pointer-events-none lc-glass">
+        <Scene3D variant="shards" className="h-20 sm:h-24" interactive={false} />
+      </div>
+
       {/* Mobile Tab Switcher */}
-      <div className="md:hidden flex rounded-xl bg-slate-950/60 p-1 border border-white/10 font-mono text-xs shadow-lg">
+      <div className="md:hidden flex rounded-xl lc-neo p-1 border-lc-glass-border font-mono text-xs">
         <button
           onClick={() => setMobileViewTab('problems')}
           className={`flex-1 py-2 text-center rounded-lg font-extrabold transition-all cursor-pointer ${
-            mobileViewTab === 'problems' ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' : 'text-slate-500 hover:text-slate-300'
+            mobileViewTab === 'problems' ? 'bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text' : 'text-lc-text-muted hover:text-lc-text'
           }`}
         >
           Problems ({problemsList.length})
@@ -335,7 +339,7 @@ export default function CodingView() {
         <button
           onClick={() => setMobileViewTab('desc')}
           className={`flex-1 py-2 text-center rounded-lg font-extrabold transition-all cursor-pointer ${
-            mobileViewTab === 'desc' ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' : 'text-slate-500 hover:text-slate-300'
+            mobileViewTab === 'desc' ? 'bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text' : 'text-lc-text-muted hover:text-lc-text'
           }`}
         >
           Problem Info
@@ -343,7 +347,7 @@ export default function CodingView() {
         <button
           onClick={() => setMobileViewTab('editor')}
           className={`flex-1 py-2 text-center rounded-lg font-extrabold transition-all cursor-pointer ${
-            mobileViewTab === 'editor' ? 'bg-brand-purple text-white shadow-md shadow-brand-purple/20' : 'text-slate-500 hover:text-slate-300'
+            mobileViewTab === 'editor' ? 'bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text' : 'text-lc-text-muted hover:text-lc-text'
           }`}
         >
           Code Editor
@@ -352,8 +356,8 @@ export default function CodingView() {
 
       <div className="grid md:grid-cols-4 gap-6 md:h-[calc(100vh-140px)] md:min-h-[500px] h-auto">
         {/* Sidebar: Problems list */}
-        <div className={`md:col-span-1 glass-panel p-4 flex flex-col space-y-3 overflow-y-auto ${mobileViewTab === 'problems' ? 'flex' : 'hidden md:flex'}`}>
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider px-2 font-mono">Coding Problems</h3>
+        <div className={`md:col-span-1 lc-glass p-4 flex flex-col space-y-3 overflow-y-auto ${mobileViewTab === 'problems' ? 'flex' : 'hidden md:flex'}`}>
+          <h3 className="text-xs font-bold text-lc-text-muted uppercase tracking-wider px-2 font-mono">Coding Problems</h3>
           <div className="space-y-2">
             {problemsList.map((prob) => (
               <button
@@ -365,19 +369,19 @@ export default function CodingView() {
                 }}
                 className={`w-full text-left p-3.5 rounded-lg border text-xs flex flex-col space-y-1.5 transition-all cursor-pointer ${
                   activeProblem.id === prob.id
-                    ? 'bg-slate-900 border-brand-purple/40 text-slate-100 shadow-md'
-                    : 'border-transparent text-slate-400 hover:bg-slate-950/40'
+                    ? 'bg-gradient-to-r from-lc-violet/20 to-lc-cyan/15 border-lc-violet/30 text-lc-text'
+                    : 'border-transparent text-lc-text-muted hover:bg-lc-glass-raised'
                 }`}
               >
                 <div className="flex justify-between items-center w-full">
                   <span className="font-extrabold">{prob.title}</span>
                   <span className={`text-[9px] font-extrabold ${
-                    prob.difficulty === 'EASY' ? 'text-emerald-400' : prob.difficulty === 'MEDIUM' ? 'text-amber-400' : 'text-red-400'
+                    prob.difficulty === 'EASY' ? 'text-lc-emerald' : prob.difficulty === 'MEDIUM' ? 'text-lc-amber' : 'text-lc-rose'
                   }`}>
                     {prob.difficulty}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-mono">{prob.category}</span>
+                <span className="text-[10px] text-lc-text-muted font-mono">{prob.category}</span>
               </button>
             ))}
           </div>
@@ -387,37 +391,37 @@ export default function CodingView() {
         <div className="md:col-span-3 grid md:grid-cols-2 gap-6 h-full min-h-0">
           
           {/* Left Pane: Description & Information */}
-          <div className={`glass-panel p-6 overflow-y-auto space-y-6 flex flex-col justify-between ${mobileViewTab === 'desc' ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`lc-glass p-6 overflow-y-auto space-y-6 flex flex-col justify-between ${mobileViewTab === 'desc' ? 'flex' : 'hidden md:flex'}`}>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h2 className="text-xl font-extrabold text-slate-200">{activeProblem.title}</h2>
+                <h2 className="text-xl font-extrabold text-lc-text">{activeProblem.title}</h2>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={toggleBookmark}
                     className={`p-2 rounded-lg border transition-colors flex items-center justify-center ${
                       bookmarkedIds.includes(activeProblem.id)
-                        ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
-                        : 'border-white/5 bg-slate-950/20 text-slate-500 hover:text-slate-350'
+                        ? 'border-lc-amber/30 bg-lc-amber/10 text-lc-amber'
+                        : 'border-lc-glass-border bg-lc-glass-raised text-lc-text-muted hover:text-lc-text'
                     }`}
                     title="Bookmark problem"
                   >
                     <Bookmark className="w-4 h-4 fill-current" />
                   </button>
                   <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${
-                    activeProblem.difficulty === 'EASY' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : activeProblem.difficulty === 'MEDIUM' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
+                    activeProblem.difficulty === 'EASY' ? 'bg-lc-emerald/10 text-lc-emerald border-lc-emerald/20' : activeProblem.difficulty === 'MEDIUM' ? 'bg-lc-amber/10 text-lc-amber border-lc-amber/20' : 'bg-lc-rose/10 text-lc-rose border-lc-rose/20'
                   }`}>
                     {activeProblem.difficulty}
                   </span>
                 </div>
               </div>
 
-              <p className="text-xs leading-relaxed text-slate-300 whitespace-pre-line font-sans">
+              <p className="text-xs leading-relaxed text-lc-text whitespace-pre-line font-sans">
                 {activeProblem.description}
               </p>
 
               <div className="space-y-2">
-                <h4 className="text-[10px] font-bold text-slate-550 uppercase tracking-widest font-mono">Constraints</h4>
-                <ul className="list-disc pl-4 space-y-1 text-xs text-slate-400 font-mono">
+                <h4 className="text-[10px] font-bold text-lc-text-muted uppercase tracking-widest font-mono">Constraints</h4>
+                <ul className="list-disc pl-4 space-y-1 text-xs text-lc-text-muted font-mono">
                   {activeProblem.constraints.map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
@@ -425,11 +429,11 @@ export default function CodingView() {
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-[10px] font-bold text-slate-550 uppercase tracking-widest font-mono">Examples & Test Cases</h4>
+                <h4 className="text-[10px] font-bold text-lc-text-muted uppercase tracking-widest font-mono">Examples & Test Cases</h4>
                 {activeProblem.testcases.map((tc, idx) => (
-                  <div key={idx} className="p-3 bg-slate-950/40 rounded-xl border border-white/5 font-mono text-[11px] space-y-1">
-                    <p className="text-slate-500"><strong className="text-slate-400">Input:</strong> {tc.input}</p>
-                    <p className="text-slate-500"><strong className="text-slate-400">Output:</strong> {tc.expected}</p>
+                  <div key={idx} className="p-3 lc-glass-raised rounded-xl border-lc-glass-border font-mono text-[11px] space-y-1">
+                    <p className="text-lc-text-muted"><strong className="text-lc-text">Input:</strong> {tc.input}</p>
+                    <p className="text-lc-text-muted"><strong className="text-lc-text">Output:</strong> {tc.expected}</p>
                   </div>
                 ))}
               </div>
@@ -437,14 +441,14 @@ export default function CodingView() {
           </div>
 
           {/* Right Pane: Code Editor & Auxiliary Panels */}
-          <div className={`flex-col justify-between h-full min-h-0 bg-slate-950/20 rounded-[20px] border border-white/5 overflow-hidden ${mobileViewTab === 'editor' ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`flex-col justify-between h-full min-h-0 lc-glass overflow-hidden ${mobileViewTab === 'editor' ? 'flex' : 'hidden md:flex'}`}>
           
           {/* Header Workspace tabs */}
-          <div className="flex border-b border-white/5 bg-slate-950/40 p-1">
+          <div className="flex border-b border-lc-glass-border bg-lc-glass-raised p-1">
             <button
               onClick={() => setWorkspaceTab('editor')}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-3 text-[11px] font-bold transition-all ${
-                workspaceTab === 'editor' ? 'bg-slate-900 border border-white/5 rounded-lg text-brand-cyan' : 'text-slate-500'
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-3 text-[11px] font-bold transition-all rounded-lg ${
+                workspaceTab === 'editor' ? 'bg-gradient-to-r from-lc-violet/25 to-lc-cyan/25 text-lc-text' : 'text-lc-text-muted hover:text-lc-text'
               }`}
             >
               <Code2 className="w-3.5 h-3.5" />
@@ -452,8 +456,8 @@ export default function CodingView() {
             </button>
             <button
               onClick={() => setWorkspaceTab('editorial')}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-3 text-[11px] font-bold transition-all ${
-                workspaceTab === 'editorial' ? 'bg-slate-900 border border-white/5 rounded-lg text-brand-cyan' : 'text-slate-500'
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-3 text-[11px] font-bold transition-all rounded-lg ${
+                workspaceTab === 'editorial' ? 'bg-gradient-to-r from-lc-violet/25 to-lc-cyan/25 text-lc-text' : 'text-lc-text-muted hover:text-lc-text'
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -461,8 +465,8 @@ export default function CodingView() {
             </button>
             <button
               onClick={() => setWorkspaceTab('history')}
-              className={`flex-1 flex items-center justify-center space-x-1.5 py-3 text-[11px] font-bold transition-all ${
-                workspaceTab === 'history' ? 'bg-slate-900 border border-white/5 rounded-lg text-brand-cyan' : 'text-slate-500'
+              className={`flex-1 flex items-center justify-center space-x-1.5 py-3 text-[11px] font-bold transition-all rounded-lg ${
+                workspaceTab === 'history' ? 'bg-gradient-to-r from-lc-violet/25 to-lc-cyan/25 text-lc-text' : 'text-lc-text-muted hover:text-lc-text'
               }`}
             >
               <History className="w-3.5 h-3.5" />
@@ -475,12 +479,12 @@ export default function CodingView() {
             <div className="flex-1 flex flex-col justify-between min-h-0 p-4 space-y-4">
               
               {/* Language Selector */}
-              <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest font-mono">Language</span>
+              <div className="flex items-center justify-between border-b border-lc-glass-border pb-2">
+                <span className="text-[10px] font-bold text-lc-text-muted uppercase tracking-widest font-mono">Language</span>
                 <select
                   value={selectedLanguage}
                   onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-xs text-brand-cyan font-mono outline-none"
+                  className="lc-neo rounded-lg px-2.5 py-1 text-xs text-lc-cyan font-mono outline-none focus:ring-2 focus:ring-lc-cyan/40"
                 >
                   <option value="python">Python 3</option>
                   <option value="javascript">JavaScript (ES6)</option>
@@ -495,65 +499,65 @@ export default function CodingView() {
                 <textarea
                   value={editorCode}
                   onChange={(e) => setEditorCode(e.target.value)}
-                  className="w-full h-full bg-slate-950/80 border border-white/5 rounded-xl p-4 font-mono text-xs text-slate-200 leading-relaxed outline-none resize-none placeholder:text-slate-650"
+                  className="w-full h-full bg-lc-void/40 border border-lc-glass-border rounded-xl p-4 font-mono text-xs text-lc-text leading-relaxed outline-none resize-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40"
                   spellCheck="false"
                 />
               </div>
 
               {/* Console drawer */}
-              <div className="glass-panel p-3 border-white/5 overflow-hidden flex flex-col justify-between h-[150px]">
-                <div className="flex border-b border-white/5 bg-slate-950/20 p-0.5 rounded-lg">
+              <div className="lc-glass p-3 overflow-hidden flex flex-col justify-between h-[150px]">
+                <div className="flex border-b border-lc-glass-border bg-lc-glass-raised p-0.5 rounded-lg">
                   <button
                     onClick={() => setConsoleTab('console')}
-                    className={`flex-1 py-1 text-[10px] font-extrabold uppercase font-mono transition-all ${
-                      consoleTab === 'console' ? 'bg-slate-900 rounded-md text-brand-cyan' : 'text-slate-550'
+                    className={`flex-1 py-1 text-[10px] font-extrabold uppercase font-mono transition-all rounded-md ${
+                      consoleTab === 'console' ? 'bg-gradient-to-r from-lc-violet/25 to-lc-cyan/25 text-lc-cyan' : 'text-lc-text-muted hover:text-lc-text'
                     }`}
                   >
                     Console Output
                   </button>
                   <button
                     onClick={() => setConsoleTab('debug')}
-                    className={`flex-1 py-1 text-[10px] font-extrabold uppercase font-mono transition-all ${
-                      consoleTab === 'debug' ? 'bg-slate-900 rounded-md text-brand-cyan' : 'text-slate-550'
+                    className={`flex-1 py-1 text-[10px] font-extrabold uppercase font-mono transition-all rounded-md ${
+                      consoleTab === 'debug' ? 'bg-gradient-to-r from-lc-violet/25 to-lc-cyan/25 text-lc-cyan' : 'text-lc-text-muted hover:text-lc-text'
                     }`}
                   >
                     AI Diagnostics
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto pt-2 font-mono text-[10px] text-slate-400">
+                <div className="flex-1 overflow-y-auto pt-2 font-mono text-[10px] text-lc-text-muted">
                   {consoleTab === 'console' ? (
                     <div className="space-y-1">
                       {isRunning ? (
-                        <div className="flex items-center space-x-2 text-slate-500">
+                        <div className="flex items-center space-x-2 text-lc-text-muted">
                           <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                           <span>Compiling program in sandbox container...</span>
                         </div>
                       ) : runStatus === 'IDLE' ? (
-                        <span className="text-slate-600">Run code to test your inputs.</span>
+                        <span className="text-lc-text-muted/70">Run code to test your inputs.</span>
                       ) : runStatus === 'SUCCESS' ? (
                         <div className="space-y-1.5">
-                          <p className="text-emerald-400 flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Accepted! All test cases passed.</span></p>
-                          <p className="text-slate-500">Runtime: 12ms | Memory: 8.4MB</p>
+                          <p className="text-lc-emerald flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Accepted! All test cases passed.</span></p>
+                          <p className="text-lc-text-muted">Runtime: 12ms | Memory: 8.4MB</p>
                         </div>
                       ) : (
                         <div className="space-y-1.5">
-                          <p className="text-red-400 flex items-center space-x-1"><AlertCircle className="w-3.5 h-3.5" /> <span>Wrong Answer</span></p>
-                          <p className="text-slate-500">Output mismatches test case 1 expectations.</p>
+                          <p className="text-lc-rose flex items-center space-x-1"><AlertCircle className="w-3.5 h-3.5" /> <span>Wrong Answer</span></p>
+                          <p className="text-lc-text-muted">Output mismatches test case 1 expectations.</p>
                         </div>
                       )}
                     </div>
                   ) : (
                     <div className="whitespace-pre-line leading-relaxed">
                       {isDebugging ? (
-                        <div className="flex items-center space-x-2 text-slate-500">
-                          <Sparkles className="w-3.5 h-3.5 animate-spin text-brand-purple" />
+                        <div className="flex items-center space-x-2 text-lc-text-muted">
+                          <Sparkles className="w-3.5 h-3.5 animate-spin text-lc-violet" />
                           <span>Audit analyzer scanning call stack...</span>
                         </div>
                       ) : debugReport ? (
                         debugReport
                       ) : (
-                        <span className="text-slate-600">Run AI Debugger to locate runtime bottlenecks.</span>
+                        <span className="text-lc-text-muted/70">Run AI Debugger to locate runtime bottlenecks.</span>
                       )}
                     </div>
                   )}
@@ -565,17 +569,17 @@ export default function CodingView() {
                 <button
                   onClick={handleRunCode}
                   disabled={isRunning}
-                  className="flex-1 h-11 bg-gradient-to-r from-brand-purple to-brand-cyan text-white text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 shadow-lg shadow-brand-purple/10 hover:brightness-110 disabled:opacity-50 transition-all cursor-pointer"
+                  className="flex-1 h-11 lc-neo lc-neo-pill bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text text-xs font-bold flex items-center justify-center space-x-1.5 disabled:opacity-50 transition-all cursor-pointer"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" />
+                  <Play className="w-3.5 h-3.5 fill-current" />
                   <span>Run Sandbox</span>
                 </button>
                 <button
                   onClick={handleAIDebug}
                   disabled={isDebugging}
-                  className="px-4 h-11 bg-slate-900 border border-slate-800 text-brand-cyan text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 hover:bg-slate-850 disabled:opacity-50 transition-all cursor-pointer"
+                  className="px-4 h-11 lc-neo border-lc-glass-border text-lc-cyan text-xs font-bold flex items-center justify-center space-x-1.5 hover:bg-lc-glass-raised disabled:opacity-50 transition-all cursor-pointer"
                 >
-                  <Sparkles className="w-3.5 h-3.5 fill-brand-cyan/20" />
+                  <Sparkles className="w-3.5 h-3.5 fill-lc-cyan/20" />
                   <span>AI Debug</span>
                 </button>
               </div>
@@ -585,13 +589,13 @@ export default function CodingView() {
           {/* EDITORIAL TAB CONTENT */}
           {workspaceTab === 'editorial' && (
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              <div className="flex items-center space-x-2 text-brand-cyan border-b border-white/5 pb-2">
+              <div className="flex items-center space-x-2 text-lc-cyan border-b border-lc-glass-border pb-2">
                 <FileText className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider font-mono">Algorithm Editorial Analysis</span>
               </div>
-              <p className="text-xs leading-relaxed text-slate-350">{activeProblem.editorial}</p>
-              <div className="p-4 bg-slate-950/40 rounded-xl border border-white/5 font-mono text-[10px] text-slate-400">
-                <span className="text-brand-purple font-extrabold uppercase text-[9px] block mb-1 font-mono">Complexity targets</span>
+              <p className="text-xs leading-relaxed text-lc-text">{activeProblem.editorial}</p>
+              <div className="p-4 lc-glass-raised rounded-xl border-lc-glass-border font-mono text-[10px] text-lc-text-muted">
+                <span className="text-lc-violet font-extrabold uppercase text-[9px] block mb-1 font-mono">Complexity targets</span>
                 {activeProblem.complexity}
               </div>
             </div>
@@ -600,24 +604,24 @@ export default function CodingView() {
           {/* SUBMISSION HISTORY TAB CONTENT */}
           {workspaceTab === 'history' && (
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
-              <div className="flex items-center space-x-2 text-brand-cyan border-b border-white/5 pb-2">
+              <div className="flex items-center space-x-2 text-lc-cyan border-b border-lc-glass-border pb-2">
                 <History className="w-4 h-4" />
                 <span className="text-xs font-bold uppercase tracking-wider font-mono">Submission Logs</span>
               </div>
               {submissionHistory.length === 0 ? (
-                <div className="text-slate-600 text-xs font-mono text-center py-10">No submissions recorded for this workspace.</div>
+                <div className="text-lc-text-muted/70 text-xs font-mono text-center py-10">No submissions recorded for this workspace.</div>
               ) : (
                 <div className="space-y-2">
                   {submissionHistory
                     .filter(sub => sub.problemTitle === activeProblem.title)
                     .map((sub, idx) => (
-                      <div key={idx} className="p-3 bg-slate-950/30 rounded-lg border border-white/5 flex items-center justify-between text-xs font-mono">
+                      <div key={idx} className="p-3 lc-glass-raised rounded-lg border-lc-glass-border flex items-center justify-between text-xs font-mono">
                         <div>
-                          <p className="font-bold text-slate-300">{sub.language.toUpperCase()}</p>
-                          <p className="text-[10px] text-slate-550">{sub.timestamp}</p>
+                          <p className="font-bold text-lc-text">{sub.language.toUpperCase()}</p>
+                          <p className="text-[10px] text-lc-text-muted">{sub.timestamp}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          sub.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                          sub.status === 'SUCCESS' ? 'bg-lc-emerald/10 text-lc-emerald' : 'bg-lc-rose/10 text-lc-rose'
                         }`}>
                           {sub.status === 'SUCCESS' ? 'Accepted' : 'Wrong Answer'}
                         </span>

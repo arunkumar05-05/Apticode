@@ -1,8 +1,10 @@
 import { db } from '../prisma/db';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomBytes } from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-apticode-token-decryption-key';
+const REFRESH_SECRET = process.env.REFRESH_SECRET || JWT_SECRET;
 
 export async function registerUser(email: string, passwordHash: string | null, fullName: string, role: string) {
   // Create user
@@ -103,4 +105,47 @@ export function generateToken(user: { id: string; email: string; role: string })
     JWT_SECRET,
     { expiresIn: '7d' }
   );
+}
+
+export function generateRefreshToken(user: { id: string }) {
+  const token = randomBytes(64).toString('hex');
+  return token;
+}
+
+export async function saveRefreshToken(userId: string, token: string) {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30); // 30 days
+  return await db.refreshToken.create({
+    data: { userId, token, expiresAt }
+  });
+}
+
+export async function verifyRefreshToken(token: string) {
+  const stored = await db.refreshToken.findUnique({ where: { token } });
+  if (!stored) return null;
+  if (stored.expiresAt < new Date()) {
+    await db.refreshToken.delete({ where: { token } });
+    return null;
+  }
+  return stored;
+}
+
+export async function revokeRefreshToken(token: string) {
+  try {
+    return await db.refreshToken.delete({ where: { token } });
+  } catch {
+    return null;
+  }
+}
+
+export async function revokeAllUserTokens(userId: string) {
+  return await db.refreshToken.deleteMany({ where: { userId } });
+}
+
+export function verifyAccessToken(token: string) {
+  try {
+    return jwt.verify(token, JWT_SECRET) as { userId: string; email: string; role: string };
+  } catch {
+    return null;
+  }
 }

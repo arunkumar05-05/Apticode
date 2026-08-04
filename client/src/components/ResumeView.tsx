@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  FileText, Sparkles, CheckCircle2, AlertCircle, RefreshCw, Plus, Trash2,
-  Mail, Phone, MapPin, BookOpen, Award
+import {
+  FileText, Sparkles, RefreshCw, Plus,
+  Mail, Phone, MapPin
 } from 'lucide-react';
 import { getApiBaseUrl } from '../config/api';
+import { LiquidBackdrop } from './ui/LiquidBackdrop';
+import Scene3D from './three/LazyScene3D';
 
 interface PersonalDetails {
   name: string;
@@ -103,7 +105,7 @@ export default function ResumeView() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [personal, skills, projectText, versionName]);
+  }, [personal, skills, projectText, versionName, loading, atsScore, auditFeedback]);
 
   const handleAuditResume = async () => {
     try {
@@ -174,24 +176,31 @@ export default function ResumeView() {
 
   if (loading) {
     return (
-      <div className="flex h-[400px] flex-col items-center justify-center space-y-3 font-mono text-xs text-slate-500">
-        <RefreshCw className="h-6 w-6 animate-spin text-brand-purple" />
+      <div className="flex h-[400px] flex-col items-center justify-center space-y-3 font-mono text-xs text-lc-text-muted">
+        <RefreshCw className="h-6 w-6 animate-spin text-lc-violet" />
         <span>Loading resume versions canvas...</span>
       </div>
     );
   }
 
   return (
-    <div className="grid lg:grid-cols-12 gap-8 pb-12 items-start h-auto">
-      
+    <div className="relative overflow-hidden grid lg:grid-cols-12 gap-8 pb-12 items-start h-auto">
+      <LiquidBackdrop />
+
+      <div className="relative overflow-hidden pointer-events-none lg:col-span-12">
+        <div className="lc-glass h-44 sm:h-52 lg:h-60 overflow-hidden">
+          <Scene3D variant="papers" className="absolute inset-0" />
+        </div>
+      </div>
+
       {/* Left Column: Form Editor & AI Suggestions Panel */}
       <div className="lg:col-span-5 space-y-6">
         
         {/* Card 1: Version Switcher */}
-        <div className="glass-panel p-5 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800/10 pb-2">
-            <h4 className="text-xs font-extrabold text-brand-purple uppercase">Draft Versions</h4>
-            {isSaving && <span className="text-[10px] text-brand-cyan animate-pulse">Auto-saving...</span>}
+        <div className="lc-glass p-5 space-y-4">
+          <div className="flex items-center justify-between border-b border-lc-glass-border pb-2">
+            <h4 className="text-xs font-extrabold text-lc-violet uppercase">Draft Versions</h4>
+            {isSaving && <span className="text-[10px] text-lc-cyan animate-pulse">Auto-saving...</span>}
           </div>
           <form onSubmit={handleCreateVersion} className="flex gap-2">
             <input
@@ -199,9 +208,9 @@ export default function ResumeView() {
               placeholder="Draft Name..."
               value={newVersionInput}
               onChange={(e) => setNewVersionInput(e.target.value)}
-              className="bg-slate-900/60 border border-slate-850 rounded-lg p-2 text-xs text-slate-200 outline-none flex-1 focus:border-brand-purple/40"
+              className="flex-1 lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40"
             />
-            <button type="submit" className="px-3 rounded-lg bg-brand-purple text-xs font-bold text-white flex items-center justify-center cursor-pointer">
+            <button type="submit" className="px-3 lc-neo bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text text-xs font-bold flex items-center justify-center cursor-pointer">
               <Plus className="w-4 h-4" />
             </button>
           </form>
@@ -212,10 +221,10 @@ export default function ResumeView() {
                 <button
                   key={v.id}
                   onClick={() => handleSwitchVersion(v.versionName)}
-                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-semibold cursor-pointer transition-all ${
+                  className={`px-3 py-1.5 rounded-full border text-[10px] font-semibold cursor-pointer transition-all ${
                     versionName === v.versionName
-                      ? 'border-brand-cyan bg-brand-cyan/10 text-brand-cyan'
-                      : 'border-white/5 bg-slate-950/20 text-slate-400 hover:text-slate-200'
+                      ? 'border-lc-cyan bg-lc-cyan/10 text-lc-cyan'
+                      : 'border-lc-glass-border bg-lc-glass-raised text-lc-text-muted hover:text-lc-text'
                   }`}
                 >
                   {v.versionName} ({v.atsScore} Pts)
@@ -226,66 +235,66 @@ export default function ResumeView() {
         </div>
 
         {/* Card 2: Resume Form */}
-        <div className="glass-panel p-6 space-y-6">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/10 pb-2 flex items-center space-x-2">
-            <FileText className="w-4 h-4 text-brand-purple" />
+        <div className="lc-glass p-6 space-y-6">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-lc-text-muted border-b border-lc-glass-border pb-2 flex items-center space-x-2">
+            <FileText className="w-4 h-4 text-lc-violet" />
             <span>Resume Builder Form ({versionName})</span>
           </h3>
 
           {/* Personal Details */}
           <div className="space-y-3 text-left">
-            <h4 className="text-xs font-extrabold text-brand-purple uppercase">Personal Details</h4>
+            <h4 className="text-xs font-extrabold text-lc-violet uppercase">Personal Details</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col space-y-1">
-                <label className="text-[10px] text-slate-500 font-bold uppercase">Name</label>
+                <label className="text-[10px] text-lc-text-muted font-bold uppercase">Name</label>
                 <input
                   type="text"
                   value={personal.name}
                   onChange={(e) => setPersonal({ ...personal, name: e.target.value })}
                   placeholder="Full Name"
-                  className="bg-slate-900/60 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 outline-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+                  className="lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label className="text-[10px] text-slate-500 font-bold uppercase">Email</label>
+                <label className="text-[10px] text-lc-text-muted font-bold uppercase">Email</label>
                 <input
                   type="email"
                   value={personal.email}
                   onChange={(e) => setPersonal({ ...personal, email: e.target.value })}
                   placeholder="email@example.com"
-                  className="bg-slate-900/60 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 outline-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+                  className="lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
                 />
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="flex flex-col space-y-1">
-                <label className="text-[10px] text-slate-500 font-bold uppercase">Phone</label>
+                <label className="text-[10px] text-lc-text-muted font-bold uppercase">Phone</label>
                 <input
                   type="text"
                   value={personal.phone}
                   onChange={(e) => setPersonal({ ...personal, phone: e.target.value })}
                   placeholder="Phone"
-                  className="bg-slate-900/60 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 outline-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+                  className="lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label className="text-[10px] text-slate-500 font-bold uppercase">GitHub</label>
+                <label className="text-[10px] text-lc-text-muted font-bold uppercase">GitHub</label>
                 <input
                   type="text"
                   value={personal.github}
                   onChange={(e) => setPersonal({ ...personal, github: e.target.value })}
                   placeholder="github.com/profile"
-                  className="bg-slate-900/60 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 outline-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+                  className="lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
                 />
               </div>
               <div className="flex flex-col space-y-1">
-                <label className="text-[10px] text-slate-500 font-bold uppercase">LinkedIn</label>
+                <label className="text-[10px] text-lc-text-muted font-bold uppercase">LinkedIn</label>
                 <input
                   type="text"
                   value={personal.linkedin}
                   onChange={(e) => setPersonal({ ...personal, linkedin: e.target.value })}
                   placeholder="linkedin.com/in/profile"
-                  className="bg-slate-900/60 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 outline-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+                  className="lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
                 />
               </div>
             </div>
@@ -293,47 +302,53 @@ export default function ResumeView() {
 
           {/* Project Section */}
           <div className="space-y-2 text-left">
-            <h4 className="text-xs font-extrabold text-brand-purple uppercase">Technical Experience & Projects</h4>
+            <h4 className="text-xs font-extrabold text-lc-violet uppercase">Technical Experience & Projects</h4>
             <textarea
               value={projectText}
               onChange={(e) => setProjectText(e.target.value)}
-              className="w-full h-28 bg-slate-900/60 border border-slate-850 rounded-lg p-3 text-xs text-slate-200 outline-none resize-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+              className="w-full h-28 lc-neo rounded-2xl p-3 text-xs text-lc-text outline-none resize-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
               placeholder="Describe details, roles, action verbs..."
             />
           </div>
 
           {/* Skills Section */}
           <div className="space-y-2 text-left">
-            <h4 className="text-xs font-extrabold text-brand-purple uppercase">Skills Matrix</h4>
+            <h4 className="text-xs font-extrabold text-lc-violet uppercase">Skills Matrix</h4>
             <input
               type="text"
               value={skills}
               onChange={(e) => setSkills(e.target.value)}
               placeholder="Comma separated skills list..."
-              className="w-full bg-slate-900/60 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 outline-none focus:border-brand-purple/40 focus:bg-slate-950 transition-all"
+              className="w-full lc-neo rounded-full p-2.5 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60 focus:ring-2 focus:ring-lc-cyan/40 transition-all"
             />
           </div>
         </div>
 
         {/* Card 3: AI ATS Audit */}
-        <div className="glass-panel p-6 space-y-6">
-          <div className="flex items-center justify-between border-b border-slate-800/10 pb-4">
+        <div className="lc-glass p-6 space-y-6">
+          <div className="flex items-center justify-between border-b border-lc-glass-border pb-4">
             <div className="text-left">
-              <p className="text-[10px] text-slate-500 font-bold uppercase">ATS Target Alignment</p>
+              <p className="text-[10px] text-lc-text-muted font-bold uppercase">ATS Target Alignment</p>
               <p className={`text-2xl font-black mt-1 ${
-                atsScore >= 75 ? 'text-emerald-400' : 'text-amber-500'
+                atsScore >= 75 ? 'text-lc-emerald' : 'text-lc-amber'
               }`}>{atsScore} / 100</p>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-lc-void/40">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-lc-violet to-lc-cyan"
+                  style={{ width: `${atsScore}%` }}
+                />
+              </div>
             </div>
             <button
               onClick={handleAuditResume}
               disabled={isAuditing}
-              className="p-2.5 rounded-lg bg-slate-900 border border-slate-850 text-brand-cyan hover:bg-slate-850 cursor-pointer transition-all"
+              className="p-2.5 lc-neo text-lc-cyan hover:brightness-110 cursor-pointer transition-all"
               title="Trigger ATS Audit"
             >
               {isAuditing ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
-                <Sparkles className="w-4 h-4 fill-brand-cyan/20" />
+                <Sparkles className="w-4 h-4 fill-lc-cyan/20" />
               )}
             </button>
           </div>
@@ -345,8 +360,8 @@ export default function ResumeView() {
                 key={i} 
                 className={`p-3 rounded-xl text-[11px] leading-relaxed border ${
                   f.startsWith('✅') 
-                    ? 'bg-emerald-500/5 border-emerald-500/10 text-slate-300' 
-                    : 'bg-slate-950/20 border-slate-850/50 text-slate-400'
+                    ? 'bg-lc-emerald/5 border-lc-emerald/10 text-lc-text' 
+                    : 'bg-lc-glass-raised border-lc-glass-border text-lc-text-muted'
                 }`}
               >
                 {f}
@@ -358,7 +373,7 @@ export default function ResumeView() {
           {atsScore < 75 && (
             <button
               onClick={handleApplySuggestions}
-              className="w-full py-2.5 rounded-lg bg-gradient-to-r from-brand-purple to-brand-cyan text-white font-bold text-xs shadow-md shadow-brand-purple/20 transition-all hover:brightness-110 cursor-pointer"
+              className="w-full py-2.5 lc-neo lc-neo-pill bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text font-bold text-xs transition-all hover:brightness-110 cursor-pointer"
             >
               Apply AI Suggestions Instantly
             </button>
@@ -367,24 +382,24 @@ export default function ResumeView() {
       </div>
 
       {/* Right Column: Live A4 PDF Preview Canvas */}
-      <div className="lg:col-span-7 glass-panel p-6 flex flex-col justify-between overflow-hidden">
+      <div className="lg:col-span-7 lc-glass p-6 flex flex-col justify-between overflow-hidden">
         
         {/* Template Selector Top Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-slate-800/10 pb-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-lc-glass-border pb-4 mb-6">
           <div className="text-left">
-            <span className="text-xs font-bold text-slate-400">Live Resume Canvas</span>
-            <p className="text-[10px] text-slate-500">Perfectly rendered ATS outline</p>
+            <span className="text-xs font-bold text-lc-text-muted">Live Resume Canvas</span>
+            <p className="text-[10px] text-lc-text-muted">Perfectly rendered ATS outline</p>
           </div>
           {/* Template buttons */}
-          <div className="flex bg-slate-950/40 p-1 rounded-lg border border-slate-850 self-start sm:self-auto">
+          <div className="flex lc-neo p-1 rounded-full self-start sm:self-auto">
             {(['ats', 'executive', 'modern'] as const).map((temp) => (
               <button
                 key={temp}
                 onClick={() => setActiveTemplate(temp)}
-                className={`px-4 py-1.5 rounded-md text-[9px] font-bold uppercase transition-all cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase transition-all cursor-pointer ${
                   activeTemplate === temp 
-                    ? 'bg-brand-purple text-white shadow' 
-                    : 'text-slate-500 hover:text-slate-350'
+                    ? 'bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text shadow-neo' 
+                    : 'text-lc-text-muted hover:text-lc-text'
                 }`}
               >
                 {temp}
@@ -394,7 +409,7 @@ export default function ResumeView() {
         </div>
 
         {/* A4 Sheet Container */}
-        <div className="flex-1 overflow-y-auto max-h-[850px] p-2 bg-slate-950/20 rounded-xl border border-slate-850/30">
+        <div className="flex-1 overflow-y-auto max-h-[850px] p-2 lc-neo rounded-2xl">
           <div className="w-full bg-white text-slate-900 shadow-2xl border border-slate-200 p-10 mx-auto min-h-[842px] max-w-[595px] aspect-[1/1.414] select-text text-left rounded-sm relative">
             
             {/* Template 1: ATS Template */}
@@ -518,7 +533,7 @@ export default function ResumeView() {
               <div className="font-sans text-[14px] leading-[1.6] text-slate-800 flex gap-6">
                 <div className="w-1/3 bg-slate-100 p-4 -m-10 mr-0 pt-10 min-h-[842px] space-y-6 text-xs border-r border-slate-200">
                   <div className="space-y-2">
-                    <h4 className="font-bold text-[16px] text-brand-purple">{personal.name || 'Name'}</h4>
+                    <h4 className="font-bold text-[16px] text-lc-violet">{personal.name || 'Name'}</h4>
                     <p className="text-slate-600">{personal.email}</p>
                     <p className="text-slate-600">{personal.phone}</p>
                   </div>

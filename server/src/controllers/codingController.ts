@@ -11,6 +11,37 @@ export async function getChallenges(req: AuthenticatedRequest, res: Response) {
   }
 }
 
+export async function createChallenge(req: AuthenticatedRequest, res: Response) {
+  try {
+    const data = req.body;
+    const challenge = await codingService.createChallenge(data);
+    res.status(201).json({ status: 'success', data: challenge });
+  } catch (err: any) {
+    res.status(400).json({ status: 'fail', message: err.message });
+  }
+}
+
+export async function deleteChallenge(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { id } = req.params;
+    await codingService.deleteChallenge(id);
+    res.json({ status: 'success' });
+  } catch (err: any) {
+    res.status(500).json({ status: 'error', message: err.message });
+  }
+}
+
+export async function addTestcase(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const tc = await codingService.addTestcase(id, data);
+    res.status(201).json({ status: 'success', data: tc });
+  } catch (err: any) {
+    res.status(400).json({ status: 'fail', message: err.message });
+  }
+}
+
 export async function submitCode(req: AuthenticatedRequest, res: Response) {
   try {
     const userId = req.user!.userId;

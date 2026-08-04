@@ -15,6 +15,9 @@ export class InMemoryStore {
   interviewMessages: any[] = [];
   userAttempts: any[] = [];
   resumes: any[] = [];
+  xpLogs: any[] = [];
+  leaderboards: any[] = [];
+  notifications: any[] = [];
 
   // Implement generic repositories
   user = this.createRepository('users');
@@ -31,6 +34,9 @@ export class InMemoryStore {
   interviewMessage = this.createRepository('interviewMessages');
   userAttempt = this.createRepository('userAttempts');
   resume = this.createRepository('resumes');
+  xpLog = this.createRepository('xpLogs');
+  leaderboard = this.createRepository('leaderboards');
+  notification = this.createRepository('notifications');
 
   private createRepository(arrayName: string) {
     const getArray = () => (this as any)[arrayName] as any[];

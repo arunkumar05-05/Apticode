@@ -1,0 +1,30 @@
+{
+  "generated": "2026-08-03T10:23:44.000Z",
+  "sections": [
+    {
+      "id": "mockups",
+      "label": "Mockups",
+      "groups": [
+        {
+          "slug": "liquidcore",
+          "files": [
+            { "label": "LiquidCore Showcase", "path": "mockups/liquidcore/index.html" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "design-systems",
+      "label": "Design Systems",
+      "groups": [
+        {
+          "slug": "liquidcore",
+          "files": [
+            { "label": "tokens/colors_and_type.css", "path": "design-systems/liquidcore/tokens/colors_and_type.css" },
+            { "label": "SKILL.md", "path": "design-systems/liquidcore/SKILL.md" }
+          ]
+        }
+      ]
+    }
+  ]
+}

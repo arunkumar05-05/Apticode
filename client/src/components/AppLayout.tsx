@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard, BookOpen, Code, Mic, Brain,
   FileText, Award, BarChart2, Shield, LogOut, Menu, X, Sparkles,
-  Sun, Moon, Search, Bell, ChevronDown, Building2, ClipboardCheck, User
+  Sun, Moon, Search, Bell, Building2, ClipboardCheck, User, Zap, ChevronLeft
 } from 'lucide-react';
+import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -84,30 +85,44 @@ export default function AppLayout({
   ]);
 
   const hasUnread = notifications.some((n) => !n.read);
+  const xpPct = Math.min((xp % 1000) / 10, 100);
+
+  const goTo = (id: string) => {
+    setCurrentView(id);
+    if (window.innerWidth < 768) setSidebarOpen(false);
+  };
 
   return (
-    <div className="flex min-h-screen md:flex-row flex-col bg-[var(--bg-base)] text-slate-100 antialiased">
+    <div className="flex min-h-screen md:flex-row flex-col relative">
+      <LiquidBackdrop />
+
       {sidebarOpen && (
-        <div className="fixed inset-0 z-35 cursor-pointer bg-slate-950/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-35 cursor-pointer bg-lc-void/60 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <aside className={`fixed left-0 top-0 bottom-0 z-40 flex flex-col justify-between border-r border-white/10 bg-slate-900/90 p-4 backdrop-blur-xl transition-all duration-300 md:relative md:w-[280px] md:translate-x-0 ${sidebarOpen ? 'w-[280px] translate-x-0' : '-translate-x-full md:w-[84px]'}`}>
-        <div className="space-y-6">
-          <div className={`flex items-center justify-between border-b border-white/10 pb-4 ${sidebarOpen ? '' : 'justify-center'}`}>
-            <div className="flex cursor-pointer items-center gap-3" onClick={() => setCurrentView(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan shadow-lg shadow-brand-purple/20">
+      <aside className={`fixed left-3 top-3 bottom-3 z-40 flex flex-col justify-between lc-glass p-3 transition-all duration-300 md:relative md:top-0 md:bottom-0 md:left-0 md:rounded-none md:border-y-0 md:border-l-0 ${sidebarOpen ? 'w-[280px]' : '-translate-x-full md:translate-x-0 md:w-[86px]'} ${sidebarOpen ? '' : ''}`}>
+        <div className="space-y-4">
+          <div className={`flex items-center justify-between pb-3 ${sidebarOpen ? '' : 'justify-center'}`}>
+            <div className="flex cursor-pointer items-center gap-2.5" onClick={() => goTo(user?.role === 'ADMIN' ? 'admin' : 'dashboard')}>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-lc-violet to-lc-cyan shadow-neo">
                 <img src="/favicon.svg" alt="AptiCode Logo" className="h-6 w-6" />
               </div>
-              {sidebarOpen && <span className="text-lg font-semibold tracking-tight">Apti<span className="text-brand-cyan">Code</span></span>}
+              {sidebarOpen && (
+                <span className="font-display text-lg font-bold tracking-tight text-lc-text">
+                  Apti<span className="lc-text-gradient">Code</span>
+                </span>
+              )}
             </div>
             {sidebarOpen && (
-              <button onClick={() => setSidebarOpen(false)} className="hidden rounded-xl p-2 text-slate-400 hover:bg-slate-800 hover:text-white md:inline-flex" title="Collapse sidebar">
-                <ChevronDown className="h-4 w-4 -rotate-90" />
+              <button onClick={() => setSidebarOpen(false)} className="lc-neo p-2 text-lc-text-muted hover:text-lc-text" title="Collapse sidebar">
+                <ChevronLeft className="h-4 w-4" />
               </button>
             )}
-            <button className="md:hidden" onClick={() => setSidebarOpen(false)}>
-              <X className="h-5 w-5 text-slate-400" />
-            </button>
+            {!sidebarOpen && (
+              <button className="md:hidden" onClick={() => setSidebarOpen(false)}>
+                <X className="h-5 w-5 text-lc-text-muted" />
+              </button>
+            )}
           </div>
 
           <nav className="space-y-1.5">
@@ -117,15 +132,15 @@ export default function AppLayout({
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    setCurrentView(item.id);
-                    if (window.innerWidth < 768) setSidebarOpen(false);
-                  }}
-                  className={`flex w-full items-center rounded-[14px] px-3 py-3 text-sm font-semibold transition-all ${sidebarOpen ? 'justify-start gap-3' : 'justify-center'} ${isActive ? 'premium-active-nav' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                  onClick={() => goTo(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex w-full items-center rounded-full px-2.5 py-2 text-sm font-semibold transition-all ${sidebarOpen ? 'justify-start gap-2.5' : 'justify-center'} ${isActive
+                    ? 'bg-gradient-to-r from-lc-violet/25 to-lc-cyan/25 text-lc-text shadow-[inset_0_0_0_1px_var(--lc-glass-border)]'
+                    : 'text-lc-text-muted hover:bg-lc-glass-raised hover:text-lc-text'}`}
                 >
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                    <Icon className="h-4.5 w-4.5" />
-                  </div>
+                  <span className={`flex h-8 w-8 items-center justify-center rounded-full ${isActive ? 'bg-gradient-to-br from-lc-violet to-lc-cyan text-lc-text shadow-neo' : 'text-lc-text-muted'}`}>
+                    <Icon className="h-4 w-4" />
+                  </span>
                   {sidebarOpen && <span>{item.label}</span>}
                 </button>
               );
@@ -133,19 +148,50 @@ export default function AppLayout({
           </nav>
         </div>
 
-        <div className="space-y-3 border-t border-white/10 pt-4">
-          <div className={`flex items-center rounded-[16px] border border-white/10 bg-slate-950/30 p-2 ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-sm font-semibold text-white">
+        <div className="space-y-3">
+          <div className={`lc-neo rounded-2xl p-3 ${sidebarOpen ? '' : 'hidden md:flex md:justify-center'}`}>
+            {sidebarOpen ? (
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-lc-text-muted">XP charge</span>
+                  <span className="font-mono text-xs text-lc-cyan">{level}</span>
+                </div>
+                <div className="relative h-2 rounded-full overflow-hidden bg-lc-void/40">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-lc-violet to-lc-cyan"
+                    style={{ width: `${xpPct}%`, boxShadow: '0 0 8px var(--lc-brand-violet)' }}
+                  />
+                </div>
+                <p className="mt-2 font-mono text-[11px] tabular-nums text-lc-text-muted">
+                  {xp.toLocaleString()} XP
+                </p>
+              </div>
+            ) : (
+              <Zap className="h-4 w-4 text-lc-cyan" />
+            )}
+          </div>
+
+          <button
+            onClick={() => setAiCoachOpen(true)}
+            className={`lc-neo lc-neo-pill flex w-full items-center gap-2 px-3 py-2.5 text-sm font-semibold text-lc-text ${sidebarOpen ? 'justify-start' : 'justify-center'}`}
+          >
+            <Sparkles className="h-4 w-4 text-lc-violet" />
+            {sidebarOpen && <span>AI Coach</span>}
+          </button>
+
+          <div className={`flex items-center lc-glass rounded-2xl p-2 ${sidebarOpen ? 'gap-2.5' : 'justify-center'}`}>
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-lc-violet to-lc-cyan text-sm font-semibold text-lc-text">
               {getAvatarInitial(user?.name, user?.email)}
             </div>
             {sidebarOpen && (
-              <div>
-                <p className="text-sm font-semibold text-slate-100">{formatHumanName(user?.name, user?.email)}</p>
-                <p className="text-[11px] text-slate-500">{user?.role === 'ADMIN' ? 'Administrator' : `Level: ${level}`}</p>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-lc-text">{formatHumanName(user?.name, user?.email)}</p>
+                <p className="truncate font-mono text-[10px] text-lc-text-muted">{user?.role === 'ADMIN' ? 'Administrator' : `Level ${level}`}</p>
               </div>
             )}
           </div>
-          <button onClick={handleLogout} className={`flex w-full items-center rounded-[14px] px-3 py-2.5 text-sm font-semibold text-slate-400 transition-all hover:bg-red-500/10 hover:text-red-400 ${sidebarOpen ? 'justify-start gap-2' : 'justify-center'}`}>
+
+          <button onClick={handleLogout} className={`flex w-full items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-lc-rose transition-all hover:bg-lc-rose/10 ${sidebarOpen ? 'justify-start' : 'justify-center'}`}>
             <LogOut className="h-4 w-4" />
             {sidebarOpen && <span>Sign out</span>}
           </button>
@@ -153,35 +199,43 @@ export default function AppLayout({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <motion.header initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/90 px-3 py-3 backdrop-blur-xl sm:px-5 lg:px-8">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
+        <motion.header
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="sticky top-0 z-30 px-3 pt-3 sm:px-5"
+        >
+          <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 lc-glass rounded-2xl px-3 py-2.5 sm:px-4">
             <div className="flex min-w-0 items-center gap-2">
               {!sidebarOpen && (
-                <button onClick={() => setSidebarOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Open navigation">
+                <button onClick={() => setSidebarOpen(true)} className="lc-neo flex h-10 w-10 items-center justify-center text-lc-text" aria-label="Open navigation">
                   <Menu className="h-5 w-5" />
                 </button>
               )}
-              <div className="flex min-w-0 items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-purple to-brand-cyan shadow-lg shadow-brand-purple/20">
-                  <img src="/favicon.svg" alt="AptiCode Logo" className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-slate-100">Apti<span className="text-brand-cyan">Code</span></p>
-                  <p className="truncate text-[10px] uppercase tracking-[0.24em] text-slate-500">Mobile learning hub</p>
-                </div>
+              <div className="hidden md:flex items-center lc-neo rounded-full px-3 py-2.5 text-lc-text-muted focus-within:text-lc-text">
+                <Search className="h-4 w-4 mr-2" />
+                <input
+                  placeholder="Search modules…"
+                  className="bg-transparent outline-none text-sm placeholder:text-lc-text-muted/60"
+                  aria-label="Search"
+                />
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <button onClick={() => setNotificationsOpen((v) => !v)} className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Notifications">
-                <Bell className="h-5 w-5" />
-                {hasUnread && <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500" />}
+              <button onClick={() => setAiCoachOpen(true)} className="lc-neo lc-neo-pill hidden sm:flex h-10 items-center gap-2 px-3.5 text-sm font-semibold text-lc-text">
+                <Sparkles className="h-4 w-4 text-lc-violet" />
+                <span>AI Coach</span>
               </button>
-              <button onClick={toggleTheme} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Toggle theme">
-                {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5 text-indigo-400" />}
+              <button onClick={() => setNotificationsOpen((v) => !v)} className="lc-neo relative flex h-10 w-10 items-center justify-center text-lc-text" aria-label="Notifications">
+                <Bell className="h-4 w-4" />
+                {hasUnread && <span className="absolute right-3 top-3 h-2 w-2 rounded-full bg-lc-rose" />}
               </button>
-              <button onClick={() => setCurrentView('profile')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-900/90 text-slate-200 transition-all hover:border-brand-cyan/40 hover:text-white" aria-label="Profile">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-purple to-brand-cyan text-xs font-semibold text-white">
+              <button onClick={toggleTheme} className="lc-neo flex h-10 w-10 items-center justify-center text-lc-text" aria-label="Toggle theme">
+                {theme === 'dark' ? <Sun className="h-4 w-4 text-lc-amber" /> : <Moon className="h-4 w-4 text-lc-violet" />}
+              </button>
+              <button onClick={() => setCurrentView('profile')} className="lc-neo flex h-10 w-10 items-center justify-center text-lc-text" aria-label="Profile">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-lc-violet to-lc-cyan text-xs font-semibold text-lc-text">
                   {getAvatarInitial(user?.name, user?.email)}
                 </div>
               </button>
@@ -189,19 +243,19 @@ export default function AppLayout({
           </div>
 
           {notificationsOpen && (
-            <div className="mx-auto mt-3 max-w-7xl rounded-[20px] border border-white/10 bg-slate-950/95 p-3 shadow-2xl">
+            <div className="mx-auto mt-2 max-w-7xl lc-glass p-3">
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
-                <span className="text-[11px] text-brand-cyan">{notifications.filter((n) => !n.read).length} new</span>
+                <h3 className="font-display text-sm font-semibold text-lc-text">Notifications</h3>
+                <span className="font-mono text-[11px] text-lc-cyan">{notifications.filter((n) => !n.read).length} new</span>
               </div>
               <div className="space-y-2">
                 {notifications.map((n) => (
-                  <div key={n.id} className={`rounded-[16px] border p-3 ${n.read ? 'border-white/10 bg-slate-900/70' : 'border-brand-purple/20 bg-brand-purple/10'}`}>
+                  <div key={n.id} className={`rounded-2xl border p-3 ${n.read ? 'border-lc-glass-border bg-lc-glass-raised' : 'border-lc-violet/20 bg-lc-violet/10'}`}>
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-semibold text-slate-100">{n.title}</p>
-                      <span className="text-[10px] text-slate-500">{n.time}</span>
+                      <p className="text-sm font-semibold text-lc-text">{n.title}</p>
+                      <span className="font-mono text-[10px] text-lc-text-muted">{n.time}</span>
                     </div>
-                    <p className="mt-1 text-sm text-slate-500">{n.text}</p>
+                    <p className="mt-1 text-sm text-lc-text-muted">{n.text}</p>
                   </div>
                 ))}
               </div>

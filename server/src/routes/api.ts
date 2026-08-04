@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, requireRole } from '../middleware/auth';
 import * as authController from '../controllers/authController';
 import * as coachController from '../controllers/coachController';
 import * as profileController from '../controllers/profileController';
@@ -11,6 +11,8 @@ import * as interviewController from '../controllers/interviewController';
 import * as resumeController from '../controllers/resumeController';
 import * as analyticsController from '../controllers/analyticsController';
 import * as leaderboardController from '../controllers/leaderboardController';
+import * as mcqController from '../controllers/mcqController';
+import * as adminController from '../controllers/adminController';
 
 const router = Router();
 
@@ -19,6 +21,8 @@ router.post('/auth/register', authController.register);
 router.post('/auth/login', authController.login);
 router.post('/auth/supabase-verify', authController.supabaseVerify);
 router.post('/auth/firebase-verify', authController.firebaseVerify);
+router.post('/auth/refresh', authController.refresh);
+router.post('/auth/logout', authController.logout);
 
 // Protect all following routes with JWT token checks
 router.use(authMiddleware as any);
@@ -38,8 +42,16 @@ router.get('/topics', aptitudeController.getTopics as any);
 router.post('/mcqs/progress', aptitudeController.saveAttempt as any);
 router.get('/mcqs/progress', aptitudeController.getHistory as any);
 
+// MCQ Admin (CMS)
+router.post('/mcqs', mcqController.create as any);
+router.get('/mcqs', mcqController.list as any);
+router.delete('/mcqs/:id', mcqController.remove as any);
+
 // Coding Arena
 router.get('/coding/challenges', codingController.getChallenges as any);
+router.post('/coding/challenges', codingController.createChallenge as any);
+router.delete('/coding/challenges/:id', codingController.deleteChallenge as any);
+router.post('/coding/challenges/:id/testcases', codingController.addTestcase as any);
 router.post('/coding/submissions', codingController.submitCode as any);
 router.get('/coding/submissions', codingController.getHistory as any);
 
@@ -62,5 +74,11 @@ router.get('/analytics', analyticsController.getAnalytics as any);
 
 // Leaderboard standings
 router.get('/leaderboard', leaderboardController.getLeaderboard as any);
+
+// Admin routes (protected, role-based)
+router.get('/admin/students', requireRole(['ADMIN']), adminController.getStudents as any);
+router.delete('/admin/students/:id', requireRole(['ADMIN']), adminController.deleteStudent as any);
+router.get('/admin/analytics', requireRole(['ADMIN']), adminController.getAnalytics as any);
+router.get('/admin/reports/placement-readiness', requireRole(['ADMIN']), adminController.getPlacementReport as any);
 
 export default router;

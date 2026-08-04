@@ -26,6 +26,10 @@ export function getActiveDriver() {
   return activeDriver;
 }
 
+export function setActiveDriverForTests(driver: 'pg' | 'sqlite' | 'memory') {
+  activeDriver = driver;
+}
+
 export async function initDatabase() {
   try {
     await pg.$connect();
@@ -51,8 +55,14 @@ function getClient() {
   return memory;
 }
 
+function isConnectionError(error: any) {
+  if (!error) return false;
+  const msg = String(error.message || '').toLowerCase();
+  return /connect econnrefused|connection terminated|econnreset|connection refused|p1001|p1002|p1017|timeout exceeded|is offline|socket hang up|connection pool|econnreset|client_network_offline/i.test(msg);
+}
+
 function handleConnectionFailure(error: any) {
-  console.warn('[Database] Connection error encountered:', error.message);
+  console.warn('[Database] Connection error encountered:', (error && error.message) ? error.message.slice(0, 200) : error);
   if (activeDriver === 'pg') {
     console.warn('[Database] Runtime failover: PG -> SQLite.');
     activeDriver = 'sqlite';
@@ -83,12 +93,15 @@ export const db: any = new Proxy({} as any, {
             }
             return await (client as any)[modelName][methodName](...args);
           } catch (err: any) {
-            handleConnectionFailure(err);
-            const client = getClient();
-            if (activeDriver === 'memory') {
-              return await (memory as any)[modelName][methodName](...args);
+            if (isConnectionError(err)) handleConnectionFailure(err);
+            else console.warn('[Database] Query fallback:', (err && err.message) ? err.message.slice(0, 160) : err);
+            const active = getClient();
+            try {
+              if (active !== sqlite) return await (sqlite as any)[modelName][methodName](...args);
+            } catch (e2: any) {
+              if (isConnectionError(e2)) handleConnectionFailure(e2);
             }
-            return await (client as any)[modelName][methodName](...args);
+            return await (memory as any)[modelName][methodName](...args);
           }
         };
       }

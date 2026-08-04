@@ -72,6 +72,9 @@ model User {
   mockInterviews   MockInterview[]
   aptitudeAttempts UserAttempt[]
   resumes          Resume[]
+  xpLogs           XpLog[]
+  notifications    Notification[]
+  leaderboard      Leaderboard?
 }
 
 model Profile {
@@ -210,6 +213,7 @@ model CodingSubmission {
   problemId   String
   problem     CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   code        String
+  language    String        @default("python")
   status      CompileStatus @default(PENDING)
   executionMs Int?
   memoryKb    Int?
@@ -237,6 +241,7 @@ model MockInterview {
   overallScore  Int
   technicalScore Int
   softSkillScore Int
+  feedbackReport String?
   createdAt     DateTime           @default(now())
   messages      InterviewMessage[]
 }
@@ -272,4 +277,38 @@ model Resume {
   atsScore    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model XpLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Leaderboard {
+  userId   String   @id
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalXp  Int      @default(0)
+  rank     Int?
+  updatedAt DateTime @updatedAt
+
+  @@index([totalXp])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
 }

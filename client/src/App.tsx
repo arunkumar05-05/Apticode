@@ -317,24 +317,24 @@ export default function App() {
         <>
           {/* Backdrop overlay */}
           <div
-            className="fixed inset-0 z-45 bg-slate-950/60 backdrop-blur-sm cursor-pointer animate-fade-in"
+            className="fixed inset-0 z-45 bg-lc-void/60 backdrop-blur-sm cursor-pointer animate-fade-in"
             onClick={() => setAiCoachOpen(false)}
           />
 
-          <aside className="fixed top-0 bottom-0 right-0 z-50 w-85 sm:w-96 bg-slate-900/95 border-l border-white/5 shadow-2xl p-6 flex flex-col justify-between text-left">
+          <aside className="fixed top-0 bottom-0 right-0 z-50 w-85 sm:w-96 bg-lc-glass-raised border-l border-lc-glass-border shadow-2xl p-6 flex flex-col justify-between text-left">
             <div className="space-y-6 flex-1 flex flex-col min-h-0">
               {/* Header */}
-              <div className="flex justify-between items-center pb-3 border-b border-white/5">
+              <div className="flex justify-between items-center pb-3 border-b border-lc-glass-border">
                 <div className="flex items-center space-x-2">
-                  <Sparkles className="w-5 h-5 text-brand-purple" />
+                  <Sparkles className="w-5 h-5 text-lc-violet" />
                   <div>
-                    <h4 className="text-sm font-extrabold text-slate-100">AI Career Co-Pilot</h4>
-                    <p className="text-[9px] text-slate-500 uppercase tracking-wider">Placement Advisor Room</p>
+                    <h4 className="text-sm font-extrabold text-lc-text">AI Career Co-Pilot</h4>
+                    <p className="text-[9px] text-lc-text-muted uppercase tracking-wider">Placement Advisor Room</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setAiCoachOpen(false)}
-                  className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
+                  className="p-1 rounded-lg hover:bg-lc-glass-raised text-lc-text-muted hover:text-lc-text"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -348,28 +348,28 @@ export default function App() {
                     className={`flex flex-col space-y-1 ${msg.sender === 'user' ? 'items-end' : 'items-start'
                       }`}
                   >
-                    <span className="text-[8px] text-slate-500 font-bold uppercase tracking-wider font-mono">
+                    <span className="text-[8px] text-lc-text-muted font-bold uppercase tracking-wider font-mono">
                       {msg.sender === 'user' ? (user?.name || user?.email?.split('@')[0] || 'User') : 'AI Placement Coach'}
                     </span>
                     <div className={`p-3 rounded-xl text-xs leading-relaxed max-w-[85%] whitespace-pre-line ${msg.sender === 'user'
-                        ? 'bg-brand-purple/20 border border-brand-purple/30 text-slate-200 rounded-tr-none'
-                        : 'bg-slate-950/40 border border-white/5 text-slate-300 rounded-tl-none'
+                        ? 'bg-lc-violet/20 border border-lc-violet/30 text-lc-text rounded-tr-none'
+                        : 'bg-lc-void/40 border border-lc-glass-border text-lc-text rounded-tl-none'
                       }`}>
                       {msg.text}
                     </div>
                   </div>
                 ))}
                 {isCoachThinking && (
-                  <div className="flex items-center space-x-2 text-slate-500 font-mono text-[9px]">
-                    <Sparkles className="w-3.5 h-3.5 animate-spin text-brand-purple" />
+                  <div className="flex items-center space-x-2 text-lc-text-muted font-mono text-[9px]">
+                    <Sparkles className="w-3.5 h-3.5 animate-spin text-lc-violet" />
                     <span>AI coach is typing placement hacks...</span>
                   </div>
                 )}
               </div>
 
               {/* Sample Prompt Chips */}
-              <div className="space-y-1.5 pt-2 border-t border-white/5">
-                <p className="text-[9px] font-bold text-slate-550 uppercase">Frequently Queried Prep Prompts</p>
+              <div className="space-y-1.5 pt-2 border-t border-lc-glass-border">
+                <p className="text-[9px] font-bold text-lc-text-muted uppercase">Frequently Queried Prep Prompts</p>
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     "Time & Work formulas",
@@ -379,7 +379,7 @@ export default function App() {
                     <button
                       key={chip}
                       onClick={() => handleSendCoachMessage(chip)}
-                      className="px-2 py-1 rounded bg-slate-950 border border-white/5 text-[9px] text-slate-400 hover:border-brand-cyan/20 hover:text-brand-cyan cursor-pointer transition-colors"
+                      className="px-2 py-1 rounded bg-lc-void border border-lc-glass-border text-[9px] text-lc-text-muted hover:border-lc-cyan/20 hover:text-lc-cyan cursor-pointer transition-colors"
                     >
                       {chip}
                     </button>
@@ -391,18 +391,18 @@ export default function App() {
             {/* Input Box */}
             <form
               onSubmit={(e) => { e.preventDefault(); handleSendCoachMessage(coachInput); }}
-              className="mt-4 flex space-x-2 pt-4 border-t border-white/5"
+              className="mt-4 flex space-x-2 pt-4 border-t border-lc-glass-border"
             >
               <input
                 type="text"
                 value={coachInput}
                 onChange={(e) => setCoachInput(e.target.value)}
                 placeholder="Ask dynamic doubts, check placement paths..."
-                className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-300 outline-none focus:border-brand-purple/45"
+                className="flex-1 bg-lc-void border border-lc-glass-border rounded-lg px-3 py-2 text-xs text-lc-text outline-none focus:border-lc-violet/45"
               />
               <button
                 type="submit"
-                className="px-3 bg-brand-purple hover:bg-violet-650 rounded-lg text-white text-xs font-bold transition-all cursor-pointer"
+                className="px-3 bg-lc-violet hover:bg-lc-violet-hover rounded-lg text-lc-text text-xs font-bold transition-all cursor-pointer"
               >
                 Send
               </button>

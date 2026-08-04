@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Zap, Play, CheckCircle2, Code, MessageSquare, BookOpen, Star, AlertCircle, Compass, Sparkles, Brain, ArrowRight } from 'lucide-react';
 import { getApiBaseUrl } from '../config/api';
+import Scene3D from './three/LazyScene3D';
+import { StatOrb, XPBar, TiltCard, ConfettiBurst } from './ui/Gamified';
+import { GlassCard, GlassModal } from './ui/GlassCard';
 
 interface RewardItem {
   id: string;
@@ -29,6 +32,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   const [isStoreOpen, setIsStoreOpen] = useState(false);
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [confettiKey, setConfettiKey] = useState(0);
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -55,9 +59,11 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
 
   const nextLevelXp = 30000;
   const progressPercent = Math.min((xp / nextLevelXp) * 100, 100);
+  const streakNum = parseInt(String(statsData?.streak ?? '0'), 10) || 0;
 
   const handleBuyItem = (item: RewardItem) => {
     if (spendXp(item.cost)) {
+      setConfettiKey((k) => k + 1);
       alert(`Success! Redeemed: ${item.title}. Spent ${item.cost} XP.`);
     } else {
       alert(`Insufficient XP! You need ${item.cost} XP to redeem this item.`);
@@ -65,23 +71,23 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   };
 
   const stats = [
-    { icon: Zap, label: 'Daily Streak', value: statsData?.streak || '0 days', accent: 'orange' },
-    { icon: Code, label: 'Coding Accuracy', value: statsData?.codingAccuracy || '0.0%', accent: 'cyan' },
-    { icon: BookOpen, label: 'Aptitude Score', value: statsData?.aptitudeScore || '0/100', accent: 'purple' },
-    { icon: MessageSquare, label: 'Speech Rating', value: statsData?.speechRating || '0.0/10', accent: 'emerald' }
+    { icon: Zap, label: 'Daily Streak', value: statsData?.streak || '0 days', accent: 'amber' as const },
+    { icon: Code, label: 'Coding Accuracy', value: statsData?.codingAccuracy || '0.0%', accent: 'cyan' as const },
+    { icon: BookOpen, label: 'Aptitude Score', value: statsData?.aptitudeScore || '0/100', accent: 'violet' as const },
+    { icon: MessageSquare, label: 'Speech Rating', value: statsData?.speechRating || '0.0/10', accent: 'emerald' as const }
   ];
 
   const quickActions = [
-    { id: 'coding', title: 'Coding Arena', description: 'Solve high-signal problems with a polished editor and instant feedback.', icon: Code, accent: 'cyan' },
-    { id: 'aptitude', title: 'Aptitude Prep', description: 'Sharpen quant and logic with concise practice streams.', icon: BookOpen, accent: 'purple' },
-    { id: 'communication', title: 'Speech Coach', description: 'Practice pronunciation and confidence in one tap.', icon: MessageSquare, accent: 'emerald' },
-    { id: 'leaderboard', title: 'Leaderboard', description: 'Compare your momentum with your cohort.', icon: Award, accent: 'amber' }
+    { id: 'coding', title: 'Coding Arena', description: 'Solve high-signal problems with a polished editor and instant feedback.', icon: Code, accent: 'cyan' as const },
+    { id: 'aptitude', title: 'Aptitude Prep', description: 'Sharpen quant and logic with concise practice streams.', icon: BookOpen, accent: 'violet' as const },
+    { id: 'communication', title: 'Speech Coach', description: 'Practice pronunciation and confidence in one tap.', icon: MessageSquare, accent: 'emerald' as const },
+    { id: 'leaderboard', title: 'Leaderboard', description: 'Compare your momentum with your cohort.', icon: Award, accent: 'amber' as const }
   ];
 
   if (loading) {
     return (
-      <div className="flex h-[400px] flex-col items-center justify-center space-y-3 font-mono text-xs text-slate-500">
-        <Sparkles className="h-6 w-6 animate-spin text-brand-purple" />
+      <div className="flex h-[400px] flex-col items-center justify-center space-y-3 font-mono text-xs text-lc-text-muted">
+        <Sparkles className="h-6 w-6 animate-spin text-lc-violet" />
         <span>Loading workspace stats...</span>
       </div>
     );
@@ -96,214 +102,233 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   const displayName = rawName && rawName !== 'New Candidate' && !rawName.includes('@') ? rawName : (userEmail ? userEmail.split('@')[0] : 'Candidate');
 
   return (
-    <div className="space-y-4 pb-24 text-left">
-      <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="relative overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-900/90 to-brand-purple/15 p-4 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.24),transparent_55%)]" />
-        <div className="relative flex flex-col gap-4">
-          <div className="flex items-center gap-2 self-start rounded-full border border-brand-purple/30 bg-brand-purple/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-purple">
-            <Star className="h-3.5 w-3.5 fill-brand-purple" />
-            Premium academic account
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-[clamp(1.25rem,2.2vw,1.75rem)] font-semibold tracking-tight text-white">Welcome back, {displayName}</h2>
-            <p className="max-w-xl text-sm leading-6 text-slate-400">You are ranked #{statsData?.leaderboardRank || 1} in your cohort. Keep the momentum going with one focused session today.</p>
-          </div>
-          <div className="rounded-[20px] border border-white/10 bg-slate-950/60 p-3">
-            <div className="mb-2 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Level {level}</span>
-              <span className="text-brand-cyan">{xp.toLocaleString()} XP</span>
+    <div className="space-y-4 pb-4 text-left">
+      <ConfettiBurst trigger={confettiKey} />
+
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="lc-glass relative overflow-hidden p-4 sm:p-6"
+      >
+        <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 opacity-60">
+          <Scene3D variant="core" data={{ xpRatio: progressPercent / 100, streak: streakNum }} interactive={false} />
+        </div>
+        <div className="relative grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 rounded-full lc-neo lc-neo-pill px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-lc-violet">
+              <Star className="h-3.5 w-3.5 fill-lc-violet text-lc-violet" />
+              Premium academic account
             </div>
-            <div className="mb-3 h-2 overflow-hidden rounded-full bg-slate-800">
-              <div className="h-full rounded-full bg-gradient-to-r from-brand-purple to-brand-cyan transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+            <div className="space-y-2">
+              <h2 className="text-lc-text">Welcome back, {displayName}</h2>
+              <p className="max-w-xl text-sm leading-6 text-lc-text-muted">
+                You are ranked <span className="font-semibold text-lc-cyan">#{statsData?.leaderboardRank || 1}</span> in your cohort. Keep the momentum going with one focused session today.
+              </p>
             </div>
-            <button onClick={() => setIsStoreOpen(true)} className="flex h-11 w-full items-center justify-center gap-2 rounded-[16px] border border-brand-purple/20 bg-brand-purple/10 text-sm font-semibold text-brand-purple transition-all hover:bg-brand-purple/20">
-              <Sparkles className="h-4 w-4" />
+            <XPBar xp={xp} nextLevelXp={nextLevelXp} level={level} className="max-w-xl" />
+            <button
+              onClick={() => setIsStoreOpen(true)}
+              className="lc-neo lc-neo-pill flex h-11 items-center justify-center gap-2 px-5 text-sm font-bold text-lc-text"
+            >
+              <Sparkles className="h-4 w-4 text-lc-violet" />
               Spend XP in rewards
             </button>
+          </div>
+          <div className="hidden lg:block">
+            <div className="lc-glass-raised rounded-2xl h-full min-h-56">
+              <Scene3D variant="core" data={{ xpRatio: progressPercent / 100, streak: streakNum }} className="h-full" />
+            </div>
           </div>
         </div>
       </motion.section>
 
-      <section className="grid grid-cols-2 gap-3">
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
-          const tint = stat.accent === 'orange' ? 'text-orange-400' : stat.accent === 'cyan' ? 'text-brand-cyan' : stat.accent === 'purple' ? 'text-brand-purple' : 'text-emerald-400';
-          const bg = stat.accent === 'orange' ? 'bg-orange-500/12' : stat.accent === 'cyan' ? 'bg-brand-cyan/12' : stat.accent === 'purple' ? 'bg-brand-purple/12' : 'bg-emerald-500/12';
           return (
-            <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 * index, duration: 0.2 }} className="glass-panel p-3.5">
-              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 ${bg}`}>
-                <Icon className={`h-5 w-5 ${tint}`} />
-              </div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{stat.label}</p>
-              <p className="mt-1 text-lg font-semibold text-slate-100">{stat.value}</p>
+            <motion.div key={stat.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 * index, duration: 0.2 }}>
+              <StatOrb
+                label={stat.label}
+                value={stat.value}
+                accent={stat.accent}
+                icon={<Icon className="h-5 w-5" />}
+              />
             </motion.div>
           );
         })}
       </section>
 
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-panel p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <Compass className="h-4.5 w-4.5 text-brand-cyan" />
-          <h3 className="text-[1rem] font-semibold text-slate-100">Continue learning</h3>
-        </div>
-        <div className="space-y-2.5">
-          <div className="flex items-start gap-3 rounded-[16px] border border-white/8 bg-slate-950/30 p-3">
-            <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
-              <CheckCircle2 className="h-3.5 w-3.5" />
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+        <GlassCard padding="lg">
+          <div className="mb-3 flex items-center gap-2">
+            <Compass className="h-4 w-4 text-lc-cyan" />
+            <h3 className="text-lc-text">Continue learning</h3>
+          </div>
+          <div className="grid gap-2.5 md:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-2xl lc-neo p-3">
+              <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lc-emerald/15 text-lc-emerald">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-lc-text">Strong Skill Target</p>
+                <p className="text-xs text-lc-text-muted">Aptitude Strong Area: {strongTopicName}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-100">Strong Skill Target</p>
-              <p className="text-xs text-slate-500">Aptitude Strong Area: {strongTopicName}</p>
+            <div className="flex items-start gap-3 rounded-2xl lc-neo p-3">
+              <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lc-cyan/15 text-lc-cyan">
+                <div className="h-2.5 w-2.5 rounded-full bg-current" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-lc-text">Recommended Improvement Area</p>
+                <p className="text-xs text-lc-text-muted">Practice quant exercises in: {weakTopicName}</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-start gap-3 rounded-[16px] border border-white/8 bg-slate-950/30 p-3">
-            <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-brand-cyan/15 text-brand-cyan">
-              <div className="h-2.5 w-2.5 rounded-full bg-current" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-100">Recommended Improvement Area</p>
-              <p className="text-xs text-slate-500">Practice quant exercises in: {weakTopicName}</p>
-            </div>
-          </div>
-        </div>
+        </GlassCard>
       </motion.section>
 
       <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="space-y-3">
         <div className="flex items-center gap-2 px-1">
-          <Zap className="h-4.5 w-4.5 text-orange-400" />
-          <h3 className="text-[1rem] font-semibold text-slate-100">Daily challenges</h3>
+          <Zap className="h-4 w-4 text-lc-amber" />
+          <h3 className="text-lc-text">Daily challenges</h3>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="glass-panel p-4">
+          <TiltCard className="p-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className="rounded-full bg-brand-cyan/12 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-cyan">Coding</span>
-              <span className="text-[11px] text-slate-500">+30 XP</span>
+              <span className="rounded-full bg-lc-cyan/12 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-lc-cyan">Coding</span>
+              <span className="font-mono text-[11px] text-lc-text-muted">+30 XP</span>
             </div>
-            <h4 className="mb-2 text-base font-semibold text-slate-100">Container with most water</h4>
-            <p className="mb-4 text-sm leading-6 text-slate-500">A compact two-pointer problem that rewards sharp edge-case reasoning.</p>
-            <button onClick={() => onNavigate('coding')} className="flex h-11 w-full items-center justify-center gap-2 rounded-[16px] border border-brand-cyan/20 bg-brand-cyan/10 text-sm font-semibold text-brand-cyan transition-all hover:bg-brand-cyan/20">
+            <h4 className="mb-2 font-display text-base font-semibold text-lc-text">Container with most water</h4>
+            <p className="mb-4 text-sm leading-6 text-lc-text-muted">A compact two-pointer problem that rewards sharp edge-case reasoning.</p>
+            <button onClick={() => onNavigate('coding')} className="lc-neo lc-neo-pill flex h-11 w-full items-center justify-center gap-2 bg-gradient-to-r from-lc-cyan/15 to-lc-violet/15 text-sm font-semibold text-lc-cyan">
               <Play className="h-4 w-4" />
               Open challenge
             </button>
-          </div>
-          <div className="glass-panel p-4">
+          </TiltCard>
+          <TiltCard className="p-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className="rounded-full bg-brand-purple/12 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-purple">Aptitude</span>
-              <span className="text-[11px] text-slate-500">+20 XP</span>
+              <span className="rounded-full bg-lc-violet/12 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-lc-violet">Aptitude</span>
+              <span className="font-mono text-[11px] text-lc-text-muted">+20 XP</span>
             </div>
-            <h4 className="mb-2 text-base font-semibold text-slate-100">Probability & permutations</h4>
-            <p className="mb-4 text-sm leading-6 text-slate-500">Short, high-impact questions that mirror recruiter-style difficulty.</p>
-            <button onClick={() => onNavigate('aptitude')} className="flex h-11 w-full items-center justify-center gap-2 rounded-[16px] border border-brand-purple/20 bg-brand-purple/10 text-sm font-semibold text-brand-purple transition-all hover:bg-brand-purple/20">
+            <h4 className="mb-2 font-display text-base font-semibold text-lc-text">Probability & permutations</h4>
+            <p className="mb-4 text-sm leading-6 text-lc-text-muted">Short, high-impact questions that mirror recruiter-style difficulty.</p>
+            <button onClick={() => onNavigate('aptitude')} className="lc-neo lc-neo-pill flex h-11 w-full items-center justify-center gap-2 bg-gradient-to-r from-lc-violet/15 to-lc-cyan/15 text-sm font-semibold text-lc-violet">
               <Play className="h-4 w-4" />
               Start quiz
             </button>
-          </div>
+          </TiltCard>
         </div>
       </motion.section>
 
-      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }} className="glass-panel bg-gradient-to-br from-slate-900/70 via-brand-purple/10 to-slate-900/70 p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <Sparkles className="h-4.5 w-4.5 text-brand-purple" />
-          <h3 className="text-[1rem] font-semibold text-slate-100">AI coach</h3>
-        </div>
-        <p className="mb-4 text-sm leading-6 text-slate-500">Get clear, practical guidance on interview prep, coding strategy, and resume feedback without leaving the app.</p>
-        <button onClick={openAiCoach} className="flex h-12 w-full items-center justify-center gap-2 rounded-[18px] bg-gradient-to-r from-brand-purple to-brand-cyan text-sm font-semibold text-white shadow-[0_18px_40px_rgba(99,102,241,0.25)] transition-all hover:brightness-110 active:scale-[0.98]">
-          <MessageSquare className="h-4 w-4" />
-          Launch AI chat
-        </button>
+      <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.07 }}>
+        <GlassCard className="bg-gradient-to-br from-lc-violet/10 via-transparent to-lc-cyan/5" padding="lg">
+          <div className="mb-3 flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-lc-violet" />
+            <h3 className="text-lc-text">AI coach</h3>
+          </div>
+          <p className="mb-4 text-sm leading-6 text-lc-text-muted">Get clear, practical guidance on interview prep, coding strategy, and resume feedback without leaving the app.</p>
+          <button onClick={openAiCoach} className="lc-neo lc-neo-pill flex h-12 items-center justify-center gap-2 bg-gradient-to-r from-lc-violet to-lc-cyan px-6 text-sm font-bold text-lc-text">
+            <MessageSquare className="h-4 w-4" />
+            Launch AI chat
+          </button>
+        </GlassCard>
       </motion.section>
 
       <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="space-y-3">
         <div className="flex items-center gap-2 px-1">
-          <Brain className="h-4.5 w-4.5 text-emerald-400" />
-          <h3 className="text-[1rem] font-semibold text-slate-100">Mock interview</h3>
+          <Brain className="h-4 w-4 text-lc-emerald" />
+          <h3 className="text-lc-text">Mock interview & resume</h3>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="glass-panel p-4">
-            <div className="mb-3 flex items-center gap-2 text-amber-400">
+          <GlassCard padding="lg">
+            <div className="mb-3 flex items-center gap-2 text-lc-amber">
               <AlertCircle className="h-4 w-4" />
-              <h4 className="text-sm font-semibold">Weak spots</h4>
+              <h4 className="font-display text-sm font-semibold">Weak spots</h4>
             </div>
             <div className="space-y-2">
-              <div className="rounded-[16px] border border-red-500/15 bg-red-500/8 p-3 text-sm text-slate-350">Quant speed in "{weakTopicName}" is still below target.</div>
-              <div className="rounded-[16px] border border-amber-500/15 bg-amber-500/8 p-3 text-sm text-slate-350">Filler words increase slightly during behavioral rounds.</div>
+              <div className="rounded-2xl border border-lc-rose/15 bg-lc-rose/10 p-3 text-sm text-lc-text-muted">Quant speed in "{weakTopicName}" is still below target.</div>
+              <div className="rounded-2xl border border-lc-amber/15 bg-lc-amber/10 p-3 text-sm text-lc-text-muted">Filler words increase slightly during behavioral rounds.</div>
             </div>
-            <button onClick={() => onNavigate('analytics')} className="mt-3 flex h-11 w-full items-center justify-center rounded-[16px] border border-white/10 bg-slate-900/70 text-sm font-semibold text-brand-cyan transition-all hover:bg-slate-900">View analytics</button>
-          </div>
-          <div className="glass-panel p-4">
-            <h4 className="mb-2 text-sm font-semibold text-slate-100">Resume status</h4>
-            <p className="mb-4 text-sm leading-6 text-slate-500">Your current ATS score is tracked in the database. Optimize draft tags to hit 80+.</p>
-            <button onClick={() => onNavigate('resume')} className="flex h-11 w-full items-center justify-center rounded-[16px] bg-emerald-500 text-sm font-semibold text-slate-950 transition-all hover:bg-emerald-400">Optimize resume</button>
-          </div>
+            <button onClick={() => onNavigate('analytics')} className="lc-neo mt-3 flex h-11 w-full items-center justify-center text-sm font-semibold text-lc-cyan">View analytics</button>
+          </GlassCard>
+          <GlassCard padding="lg">
+            <h4 className="mb-2 font-display text-sm font-semibold text-lc-text">Resume status</h4>
+            <p className="mb-4 text-sm leading-6 text-lc-text-muted">Your current ATS score is tracked in the database. Optimize draft tags to hit 80+.</p>
+            <button onClick={() => onNavigate('resume')} className="lc-neo lc-neo-pill flex h-11 w-full items-center justify-center bg-gradient-to-r from-lc-emerald/20 to-lc-cyan/20 text-sm font-semibold text-lc-emerald">Optimize resume</button>
+          </GlassCard>
         </div>
       </motion.section>
 
       {statsData?.recentActivities && statsData.recentActivities.length > 0 && (
-        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-panel p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4.5 w-4.5 text-brand-cyan" />
-            <h3 className="text-[1rem] font-semibold text-slate-100">Recent Workspace Activities</h3>
-          </div>
-          <div className="space-y-2">
-            {statsData.recentActivities.map((act: any, idx: number) => (
-              <div key={idx} className="flex justify-between items-center text-xs p-2.5 bg-slate-950/20 border border-white/5 rounded-xl">
-                <div>
-                  <p className="font-semibold text-slate-300">{act.title}</p>
-                  <p className="text-[10px] text-slate-500">{act.detail}</p>
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+          <GlassCard padding="lg">
+            <div className="mb-3 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-lc-cyan" />
+              <h3 className="text-lc-text">Recent workspace activities</h3>
+            </div>
+            <div className="space-y-2">
+              {statsData.recentActivities.map((act: any, idx: number) => (
+                <div key={idx} className="flex items-center justify-between gap-3 rounded-xl lc-neo p-2.5">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-lc-text">{act.title}</p>
+                    <p className="truncate text-xs text-lc-text-muted">{act.detail}</p>
+                  </div>
+                  <span className="shrink-0 font-mono text-[10px] text-lc-text-muted">{new Date(act.date).toLocaleDateString()}</span>
                 </div>
-                <span className="text-[9px] text-slate-600 font-mono">{new Date(act.date).toLocaleDateString()}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </GlassCard>
         </motion.section>
       )}
 
       <section className="grid gap-3">
         {quickActions.map((action, index) => {
           const Icon = action.icon;
-          const tint = action.accent === 'cyan' ? 'text-brand-cyan' : action.accent === 'purple' ? 'text-brand-purple' : action.accent === 'emerald' ? 'text-emerald-400' : 'text-amber-400';
-          const panel = action.accent === 'cyan' ? 'border-brand-cyan/20' : action.accent === 'purple' ? 'border-brand-purple/20' : action.accent === 'emerald' ? 'border-emerald-500/20' : 'border-amber-500/20';
+          const tint = action.accent === 'cyan' ? 'text-lc-cyan' : action.accent === 'violet' ? 'text-lc-violet' : action.accent === 'emerald' ? 'text-lc-emerald' : 'text-lc-amber';
           return (
-            <motion.button key={action.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.09 + index * 0.03 }} onClick={() => onNavigate(action.id)} className={`glass-panel flex items-center justify-between gap-3 rounded-[20px] border p-4 text-left ${panel}`}>
+            <motion.button
+              key={action.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.09 + index * 0.03 }}
+              onClick={() => onNavigate(action.id)}
+              className="lc-glass flex items-center justify-between gap-3 p-4 text-left"
+            >
               <div className="flex items-center gap-3">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-slate-950/40 ${tint}`}>
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-lc-violet/15 to-lc-cyan/10 ${tint}`}>
                   <Icon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-slate-100">{action.title}</h4>
-                  <p className="mt-1 text-sm leading-5 text-slate-500">{action.description}</p>
+                  <h4 className="font-display text-sm font-semibold text-lc-text">{action.title}</h4>
+                  <p className="mt-1 text-sm leading-5 text-lc-text-muted">{action.description}</p>
                 </div>
               </div>
-              <ArrowRight className="h-4 w-4 text-slate-500" />
+              <ArrowRight className="h-4 w-4 shrink-0 text-lc-text-muted" />
             </motion.button>
           );
         })}
       </section>
 
-      {isStoreOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm">
-          <div className="glass-panel w-full max-w-md space-y-4 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-slate-100">XP rewards store</p>
-                <p className="text-xs text-slate-500">Balance: {xp.toLocaleString()} XP</p>
+      <GlassModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} title="XP rewards store" size="md">
+        <p className="mb-4 font-mono text-sm text-lc-text-muted">Balance: <span className="text-lc-cyan">{xp.toLocaleString()} XP</span></p>
+        <div className="space-y-2">
+          {rewardItems.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl lc-neo p-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-lc-text">{item.title}</p>
+                <p className="mt-1 text-xs leading-5 text-lc-text-muted">{item.description}</p>
               </div>
-              <button onClick={() => setIsStoreOpen(false)} className="text-sm text-slate-500">✕</button>
+              <button
+                onClick={() => handleBuyItem(item)}
+                className="lc-neo lc-neo-pill shrink-0 bg-gradient-to-r from-lc-violet to-lc-cyan px-3 py-2 text-xs font-bold text-lc-text"
+              >
+                {item.cost} XP
+              </button>
             </div>
-            <div className="space-y-2">
-              {rewardItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 rounded-[16px] border border-white/8 bg-slate-950/40 p-3">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-100">{item.title}</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">{item.description}</p>
-                  </div>
-                  <button onClick={() => handleBuyItem(item)} className="rounded-[14px] bg-brand-purple px-3 py-2 text-xs font-semibold text-white">{item.cost} XP</button>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-      )}
+      </GlassModal>
     </div>
   );
 }

@@ -11,12 +11,11 @@ const PORT = process.env.PORT || 5001;
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (like mobile apps or curl)
     if (!origin) {
       return callback(null, true);
     }
     if (
-      origin.startsWith('http://localhost:') || 
+      origin.startsWith('http://localhost:') ||
       origin.startsWith('http://127.0.0.1:') ||
       origin.endsWith('vercel.app') ||
       origin.includes('apticode')
@@ -30,10 +29,8 @@ app.use(cors({
 
 app.use(express.json());
 
-// Mount the modular routes under /api
 app.use('/api', apiRouter);
 
-// Health check
 app.get('/health', (req, res) => {
   res.json({
     status: 'UP',
@@ -41,14 +38,17 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Initialize database dynamically and start listener
-initDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`[Server] AptiCode secure API gateway listening on http://localhost:${PORT}`);
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  initDatabase().then(() => {
+    app.listen(PORT, () => {
+      console.log(`[Server] AptiCode secure API gateway listening on http://localhost:${PORT}`);
+    });
+  }).catch(err => {
+    console.error('[Server] Critical Database Initialization Error:', err);
+    app.listen(PORT, () => {
+      console.log(`[Server] AptiCode secure API gateway listening on http://localhost:${PORT} (Database offline fallback)`);
+    });
   });
-}).catch(err => {
-  console.error('[Server] Critical Database Initialization Error:', err);
-  app.listen(PORT, () => {
-    console.log(`[Server] AptiCode secure API gateway listening on http://localhost:${PORT} (Database offline fallback)`);
-  });
-});
+}

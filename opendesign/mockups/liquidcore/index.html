@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LiquidCore — Design System Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../design-systems/liquidcore/tokens/colors_and_type.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--lc-font-body);
+      background: var(--lc-void);
+      color: var(--lc-text-primary);
+      font-size: var(--lc-text-base);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+    .backdrop {
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 20%, color-mix(in oklch, var(--lc-brand-violet) 10%, transparent) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, color-mix(in oklch, var(--lc-brand-cyan) 10%, transparent) 0%, transparent 60%);
+    }
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    h1, h2, h3, .display { font-family: var(--lc-font-display); letter-spacing: -0.02em; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; }
+    .mono { font-family: var(--lc-font-mono); }
+    .muted { color: var(--lc-text-secondary); }
+    .gradient-text {
+      background: linear-gradient(135deg, var(--lc-brand-violet), var(--lc-brand-cyan));
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 14px; font-family: var(--lc-font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.2em; }
+
+    .section { margin-top: 56px; }
+    .grid { display: grid; gap: 16px; }
+    .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+
+    /* Core primitives — mirrors client/src/index.css */
+    .lc-glass {
+      background: var(--lc-glass-bg);
+      backdrop-filter: blur(var(--lc-blur-lg));
+      -webkit-backdrop-filter: blur(var(--lc-blur-lg));
+      border: 1px solid var(--lc-glass-border);
+      border-radius: var(--lc-radius-2xl);
+      box-shadow: var(--lc-shadow-glass);
+    }
+    .lc-neo {
+      background: var(--lc-neo-raised);
+      border-radius: var(--lc-radius-lg);
+      box-shadow: var(--lc-shadow-neo-raised);
+    }
+    .card { padding: 20px; }
+    .pad-sm { padding: 14px 18px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: 999px; border: none;
+      font-family: var(--lc-font-body); font-weight: 700; font-size: 14px;
+      color: var(--lc-text-primary); cursor: pointer;
+    }
+    .btn.primary { background: linear-gradient(90deg, var(--lc-brand-violet), var(--lc-brand-cyan)); }
+    .btn.ghost { background: var(--lc-neo-raised); box-shadow: var(--lc-shadow-neo-raised); }
+    .swatch {
+      border-radius: var(--lc-radius-lg); padding: 14px;
+      font-family: var(--lc-font-mono); font-size: 11px;
+      display: flex; flex-direction: column; gap: 4px;
+      border: 1px solid var(--lc-glass-border);
+    }
+    .orb { border-radius: 20px; padding: 16px; }
+    .orb .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.18em; color: var(--lc-text-secondary); }
+    .orb .value { font-family: var(--lc-font-display); font-weight: 700; font-size: 1.75rem; margin-top: 8px; }
+    .ring { width: 100%; height: 220px; border-radius: 20px; position: relative; overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 50%, color-mix(in oklch, var(--lc-brand-violet) 30%, transparent) 0%, transparent 45%),
+        radial-gradient(circle at 30% 70%, color-mix(in oklch, var(--lc-brand-cyan) 20%, transparent) 0%, transparent 50%);
+      border: 1px solid var(--lc-glass-border);
+    }
+    .ring::after {
+      content: "3D scene slot — e.g. orbital / crystal / core"; position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--lc-font-mono); font-size: 12px; color: var(--lc-text-secondary); letter-spacing: 0.1em;
+    }
+    .type-row { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--lc-glass-border); }
+    .type-row .sample { flex: 1; font-family: var(--lc-font-display); font-weight: 700; }
+    .type-row .meta { font-family: var(--lc-font-mono); font-size: 11px; color: var(--lc-text-secondary); }
+    .chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 5px 12px; font-family: var(--lc-font-mono); font-size: 11px; background: var(--lc-neo-raised); box-shadow: var(--lc-shadow-neo-raised); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .hero {
+      display: flex; flex-direction: column; gap: 12px;
+      padding: 40px 28px; border-radius: var(--lc-radius-2xl);
+      background:
+        linear-gradient(135deg, color-mix(in oklch, var(--lc-brand-violet) 16%, transparent), transparent 55%),
+        var(--lc-glass-bg);
+      backdrop-filter: blur(var(--lc-blur-xl));
+      border: 1px solid var(--lc-glass-border);
+      box-shadow: var(--lc-shadow-glass);
+    }
+    .theme-switch { display: inline-flex; gap: 4px; background: var(--lc-neo-raised); box-shadow: var(--lc-shadow-neo-raised); border-radius: 999px; padding: 4px; }
+    .theme-switch button { border: none; background: transparent; color: var(--lc-text-secondary); font-family: var(--lc-font-mono); font-size: 11px; padding: 6px 14px; border-radius: 999px; cursor: pointer; }
+    .theme-switch button.active { background: linear-gradient(90deg, var(--lc-brand-violet), var(--lc-brand-cyan)); color: var(--lc-text-primary); }
+  </style>
+</head>
+<body>
+  <div class="backdrop"></div>
+  <div class="wrap">
+    <div class="pill lc-neo"><span class="dot" style="background: var(--lc-brand-cyan)"></span> LiquidCore v1</div>
+
+    <section class="hero" style="margin-top: 20px">
+      <div class="theme-switch" style="align-self: flex-end">
+        <button id="btn-dark" class="active">dark</button>
+        <button id="btn-light">light</button>
+      </div>
+      <h1>AptiCode · <span class="gradient-text">LiquidCore</span></h1>
+      <p class="muted" style="max-width: 640px">Glass slabs, neumorphic keys, liquid ambient motion, and a 3D scene per screen. Dark-first with a light executive mode. Built to degrade gracefully from high to low devices.</p>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px">
+        <button class="btn primary">Start preparing →</button>
+        <button class="btn ghost">Explore modules</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Color tokens</h2>
+      <div class="grid cols-4">
+        <div class="swatch" style="background: var(--lc-void); color: var(--lc-text-primary)">--lc-void<br>oklch(0.16 0.02 265)</div>
+        <div class="swatch" style="background: var(--lc-brand-violet); color: #fff">--lc-brand-violet<br>oklch(0.66 0.16 295)</div>
+        <div class="swatch" style="background: var(--lc-brand-cyan); color: #052733">--lc-brand-cyan<br>oklch(0.79 0.16 210)</div>
+        <div class="swatch" style="background: var(--lc-status-emerald); color: #062">--lc-status-emerald<br>oklch(0.65 0.20 150)</div>
+        <div class="swatch" style="background: var(--lc-status-amber); color: #543800">--lc-status-amber<br>oklch(0.78 0.18 85)</div>
+        <div class="swatch" style="background: var(--lc-status-rose); color: #400">--lc-status-rose<br>oklch(0.60 0.20 25)</div>
+        <div class="swatch" style="background: var(--lc-glass-bg); color: var(--lc-text-primary)">--lc-glass-bg<br>white 5% mix</div>
+        <div class="swatch" style="background: var(--lc-neo-raised); color: var(--lc-text-primary)">--lc-neo-raised<br>oklch(0.21 0.03 265)</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Typography</h2>
+      <div class="lc-glass card">
+        <div class="type-row"><span class="sample" style="font-size: 2rem">Display — Space Grotesk 700</span><span class="meta">h1 / 2rem+</span></div>
+        <div class="type-row"><span class="sample" style="font-size: 1.25rem">Section headings</span><span class="meta">h2 / 1.25rem</span></div>
+        <div class="type-row"><span class="sample" style="font-family: var(--lc-font-body); font-size: 1rem; font-weight: 500">Body — Plus Jakarta Sans 500</span><span class="meta">body / 0.875rem</span></div>
+        <div class="type-row"><span class="sample mono" style="font-size: 0.875rem; font-weight: 400">Mono labels — JetBrains Mono</span><span class="meta">mono / 0.7–0.875rem</span></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Glass slabs & neo keys</h2>
+      <div class="grid cols-2">
+        <div class="lc-glass card">
+          <h3 style="font-size: 1rem; margin-bottom: 8px">Glass slab</h3>
+          <p class="muted" style="font-size: 13px">blur(16px) · 1px border · 20px radius · soft drop shadow. Used for cards, panels, modal shells, and the app sidebar.</p>
+        </div>
+        <div class="lc-neo card">
+          <h3 style="font-size: 1rem; margin-bottom: 8px">Neo key</h3>
+          <p class="muted" style="font-size: 13px">14px radius · raised dual-light shadow. Used for tactile controls: buttons, chips, tabs, switches, and inputs.</p>
+        </div>
+        <div class="lc-glass card pad-sm" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center">
+          <span class="chip"><span class="dot" style="background: var(--lc-brand-cyan)"></span>Level 4</span>
+          <span class="chip" style="color: var(--lc-brand-violet)">+30 XP</span>
+          <button class="btn ghost" style="padding: 8px 16px; font-size: 12px">Sign out</button>
+        </div>
+        <div class="lc-glass card">
+          <p class="muted" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 8px">XP charge</p>
+          <div style="height: 8px; border-radius: 999px; background: var(--lc-void); overflow: hidden">
+            <div style="width: 62%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--lc-brand-violet), var(--lc-brand-cyan)); box-shadow: 0 0 12px var(--lc-brand-violet)"></div>
+          </div>
+          <p class="mono muted" style="font-size: 11px; margin-top: 8px">1,860 / 3,000 XP</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Stat orbs</h2>
+      <div class="grid cols-4">
+        <div class="lc-glass orb"><p class="label">Daily streak</p><p class="value" style="color: var(--lc-brand-cyan)">12 days</p><p class="mono muted" style="font-size: 11px">▲ +1 vs yesterday</p></div>
+        <div class="lc-glass orb"><p class="label">Coding accuracy</p><p class="value" style="color: var(--lc-brand-violet)">86.4%</p><p class="mono muted" style="font-size: 11px">▲ +2.1%</p></div>
+        <div class="lc-glass orb"><p class="label">Aptitude score</p><p class="value" style="color: var(--lc-status-emerald)">78/100</p><p class="mono muted" style="font-size: 11px">▲ top quartile</p></div>
+        <div class="lc-glass orb"><p class="label">Speech rating</p><p class="value" style="color: var(--lc-status-amber)">8.4/10</p><p class="mono muted" style="font-size: 11px">— steady</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>3D scene slots</h2>
+      <div class="grid cols-2">
+        <div class="ring"></div>
+        <div class="ring"></div>
+      </div>
+      <p class="mono muted" style="font-size: 11px; margin-top: 12px">Scene variants: orbital · crystal · helix · core · spheregrid · shards · waveform · holoring · papers · podium · terrain · vault. Loaded lazily per screen; static gradient on low-tier / reduced-motion devices.</p>
+    </section>
+
+    <footer style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--lc-glass-border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px">
+      <p class="mono muted" style="font-size: 11px">© 2026 AptiCode · LiquidCore design system</p>
+      <p class="mono muted" style="font-size: 11px">tokens/colors_and_type.css · SKILL.md</p>
+    </footer>
+  </div>
+
+  <script>
+    const root = document.documentElement;
+    document.getElementById('btn-dark').onclick = () => { root.classList.remove('light'); document.getElementById('btn-dark').classList.add('active'); document.getElementById('btn-light').classList.remove('active'); };
+    document.getElementById('btn-light').onclick = () => { root.classList.add('light'); document.getElementById('btn-light').classList.add('active'); document.getElementById('btn-dark').classList.remove('active'); };
+  </script>
+</body>
+</html>

@@ -23,6 +23,59 @@ export async function getChallenges() {
   ];
 }
 
+export async function createChallenge(data: {
+  title: string;
+  description: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  timeLimitMs?: number;
+  memoryLimitKb?: number;
+  testcases?: Array<{ inputData: string; expectedOutput: string; isHidden?: boolean }>;
+}) {
+  const { title, description, difficulty, timeLimitMs, memoryLimitKb, testcases } = data;
+
+  const problem = await db.codingProblem.create({
+    data: {
+      title,
+      description,
+      difficulty,
+      timeLimitMs: timeLimitMs || 2000,
+      memoryLimitKb: memoryLimitKb || 262144,
+      testcases: {
+        create: (testcases || []).map(tc => ({
+          inputData: tc.inputData,
+          expectedOutput: tc.expectedOutput,
+          isHidden: tc.isHidden ?? true
+        }))
+      }
+    },
+    include: { testcases: true }
+  });
+
+  return {
+    id: problem.id,
+    title: problem.title,
+    difficulty: problem.difficulty,
+    testcaseCount: problem.testcases.length
+  };
+}
+
+export async function deleteChallenge(id: string) {
+  await db.codingProblem.delete({ where: { id } });
+  return { success: true };
+}
+
+export async function addTestcase(problemId: string, data: { inputData: string; expectedOutput: string; isHidden?: boolean }) {
+  const tc = await db.codingTestcase.create({
+    data: {
+      problemId,
+      inputData: data.inputData,
+      expectedOutput: data.expectedOutput,
+      isHidden: data.isHidden ?? true
+    }
+  });
+  return tc;
+}
+
 export async function saveCodingSubmission(userId: string, data: any) {
   const { problemId, problemTitle, code, language } = data;
 
@@ -53,6 +106,7 @@ export async function saveCodingSubmission(userId: string, data: any) {
       userId,
       problemId: dbProblem.id,
       code,
+      language: language || 'python',
       status: verdict === 'SUCCESS' ? 'ACCEPTED' : 'WRONG_ANSWER',
       executionMs: runtime,
       memoryKb: memory
@@ -69,7 +123,7 @@ export async function saveCodingSubmission(userId: string, data: any) {
   return {
     id: submission.id,
     problemTitle,
-    language,
+    language: language || 'python',
     status: verdict,
     timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString(),
     runtime,
@@ -86,7 +140,7 @@ export async function getUserCodingHistory(userId: string) {
 
   return attempts.map((att: any) => ({
     problemTitle: att.problem?.title || 'Coding Problem',
-    language: 'python',
+    language: att.language || 'python',
     status: att.status === 'ACCEPTED' ? 'SUCCESS' : 'WRONG_ANSWER',
     timestamp: new Date(att.createdAt).toLocaleTimeString() + ' ' + new Date(att.createdAt).toLocaleDateString()
   }));

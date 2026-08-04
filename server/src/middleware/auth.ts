@@ -1,30 +1,49 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { verifyAccessToken } from '../services/authService';
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
 
 export interface AuthenticatedRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: string;
-  };
+  user?: JwtPayload;
 }
 
 export function authMiddleware(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ status: 'fail', message: 'No authorization token provided.' });
-  }
-
-  const token = authHeader.split(' ')[1];
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'super-secret-apticode-token-decryption-key') as any;
-    req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: decoded.role
-    };
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ status: 'fail', message: 'Access token missing or malformed.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyAccessToken(token);
+
+    if (!decoded) {
+      return res.status(401).json({ status: 'fail', message: 'Invalid or expired access token.' });
+    }
+
+    req.user = decoded;
     next();
   } catch (err: any) {
-    return res.status(401).json({ status: 'fail', message: 'Invalid or expired authorization token.' });
+    console.error('[Auth Middleware] Unexpected error:', err);
+    return res.status(500).json({ status: 'error', message: 'Internal server error during authentication.' });
   }
+}
+
+export function requireRole(roles: string[]) {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({ status: 'fail', message: 'Authentication required.' });
+    }
+
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ status: 'fail', message: 'Insufficient permissions.' });
+    }
+
+    next();
+  };
 }

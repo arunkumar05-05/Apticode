@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Play, AlertCircle, CheckCircle2, RefreshCw, Award, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import { Clock, Play } from 'lucide-react';
 import { getApiBaseUrl } from '../config/api';
+import { LiquidBackdrop } from './ui/LiquidBackdrop';
+import Scene3D from './three/LazyScene3D';
 
 interface TestQuestion {
   questionText: string;
@@ -37,7 +39,7 @@ export default function MockTestView() {
 
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
-  const [timeLeft, setTimeLeft] = useState<number>(180); 
+  const [timeLeft, setTimeLeft] = useState<number>(180);
 
   const [score, setScore] = useState<number>(0);
   const [correctCount, setCorrectCount] = useState<number>(0);
@@ -62,7 +64,7 @@ export default function MockTestView() {
   const handleStartTest = () => {
     setCurrentIdx(0);
     setSelectedAnswers({});
-    setTimeLeft(180); 
+    setTimeLeft(180);
     setTestState('ACTIVE');
   };
 
@@ -130,170 +132,179 @@ export default function MockTestView() {
   };
 
   return (
-    <div className="glass-panel p-6 max-w-3xl mx-auto text-left space-y-6 pb-12">
-      
-      {/* SETUP VIEW */}
-      {testState === 'SETUP' && (
-        <div className="space-y-6">
-          <div className="border-b border-white/5 pb-4">
-            <h2 className="text-2xl font-extrabold text-slate-200">Mock Test Simulator</h2>
-            <p className="text-xs text-slate-500 font-mono mt-1">Simulate real technical and aptitude rounds with negative marking</p>
-          </div>
+    <div className="relative overflow-hidden pb-12">
+      <LiquidBackdrop />
 
-          <div className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Test Scope</label>
-                <select
-                  value={testType}
-                  onChange={(e) => setTestType(e.target.value as any)}
-                  className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3 text-xs font-semibold text-slate-350 outline-none"
-                >
-                  <option value="TOPIC">Topic-wise mock (Quantitative focus)</option>
-                  <option value="COMPANY">Company specific test (Google standard)</option>
-                  <option value="FULL">Full mock length test</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Marking Scheme</label>
-                <select
-                  value={negativeMarking ? 'yes' : 'no'}
-                  onChange={(e) => setNegativeMarking(e.target.value === 'yes')}
-                  className="w-full h-11 bg-slate-900 border border-slate-800 rounded-xl px-3 text-xs font-semibold text-slate-350 outline-none"
-                >
-                  <option value="yes">Negative marking (+4, -1 schema)</option>
-                  <option value="no">Normal marking (+4, 0 schema)</option>
-                </select>
-              </div>
-            </div>
-
-            <button
-              onClick={handleStartTest}
-              className="w-full h-12 rounded-xl bg-gradient-to-r from-brand-purple to-brand-cyan text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-md shadow-brand-purple/10 cursor-pointer"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              <span>Launch Mock Test</span>
-            </button>
-          </div>
+      {/* Spheregrid scene band */}
+      <div className="relative overflow-hidden pointer-events-none mb-6">
+        <div className="lc-glass h-40 sm:h-48 lg:h-52 overflow-hidden">
+          <Scene3D variant="spheregrid" className="absolute inset-0" />
         </div>
-      )}
+      </div>
 
-      {/* ACTIVE TEST VIEW */}
-      {testState === 'ACTIVE' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-xl border border-white/5 text-xs font-mono">
-            <span className="text-slate-400">Question {currentIdx + 1} of {mockQuestions.length}</span>
-            <div className="flex items-center space-x-2 font-bold text-brand-cyan">
-              <Clock className="w-4 h-4 text-slate-400" />
-              <span>{formatTime(timeLeft)}</span>
+      <div className="lc-glass p-6 max-w-3xl mx-auto text-left space-y-6">
+        {/* SETUP VIEW */}
+        {testState === 'SETUP' && (
+          <div className="space-y-6">
+            <div className="border-b border-lc-glass-border pb-4">
+              <h2 className="text-2xl font-extrabold text-lc-text">Mock Test Simulator</h2>
+              <p className="text-xs text-lc-text-muted font-mono mt-1">Simulate real technical and aptitude rounds with negative marking</p>
             </div>
-          </div>
 
-          <div className="p-6 bg-slate-950/20 rounded-xl border border-white/5 space-y-6">
-            <p className="text-sm md:text-base font-semibold leading-relaxed text-slate-200">
-              {mockQuestions[currentIdx].questionText}
-            </p>
-
-            <div className="grid gap-3">
-              {mockQuestions[currentIdx].options.map((opt, oIdx) => {
-                const isSelected = selectedAnswers[currentIdx] === oIdx;
-                return (
-                  <button
-                    key={oIdx}
-                    onClick={() => handleAnswerSelect(oIdx)}
-                    className={`w-full p-4 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
-                      isSelected 
-                        ? 'border-brand-purple bg-brand-purple/10 text-brand-purple'
-                        : 'border-white/5 bg-slate-950/20 text-slate-400 hover:bg-slate-900/40'
-                    }`}
+            <div className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-lc-text-muted uppercase tracking-wider">Test Scope</label>
+                  <select
+                    value={testType}
+                    onChange={(e) => setTestType(e.target.value as any)}
+                    className="w-full h-11 lc-neo rounded-xl px-3 text-xs font-semibold text-lc-text-muted outline-none"
                   >
-                    {opt}
-                  </button>
-                );
-              })}
+                    <option value="TOPIC">Topic-wise mock (Quantitative focus)</option>
+                    <option value="COMPANY">Company specific test (Google standard)</option>
+                    <option value="FULL">Full mock length test</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-lc-text-muted uppercase tracking-wider">Marking Scheme</label>
+                  <select
+                    value={negativeMarking ? 'yes' : 'no'}
+                    onChange={(e) => setNegativeMarking(e.target.value === 'yes')}
+                    className="w-full h-11 lc-neo rounded-xl px-3 text-xs font-semibold text-lc-text-muted outline-none"
+                  >
+                    <option value="yes">Negative marking (+4, -1 schema)</option>
+                    <option value="no">Normal marking (+4, 0 schema)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={handleStartTest}
+                className="w-full h-12 rounded-xl lc-neo bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text font-bold text-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>Launch Mock Test</span>
+              </button>
             </div>
           </div>
+        )}
 
-          <div className="flex justify-between items-center gap-4">
+        {/* ACTIVE TEST VIEW */}
+        {testState === 'ACTIVE' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center bg-lc-glass-raised p-4 rounded-xl border-lc-glass-border text-xs font-mono">
+              <span className="text-lc-text-muted">Question {currentIdx + 1} of {mockQuestions.length}</span>
+              <div className="flex items-center space-x-2 font-bold text-lc-cyan">
+                <Clock className="w-4 h-4 text-lc-text-muted" />
+                <span>{formatTime(timeLeft)}</span>
+              </div>
+            </div>
+
+            <div className="p-6 bg-lc-glass-raised rounded-xl border-lc-glass-border space-y-6">
+              <p className="text-sm md:text-base font-semibold leading-relaxed text-lc-text">
+                {mockQuestions[currentIdx].questionText}
+              </p>
+
+              <div className="grid gap-3">
+                {mockQuestions[currentIdx].options.map((opt, oIdx) => {
+                  const isSelected = selectedAnswers[currentIdx] === oIdx;
+                  return (
+                    <button
+                      key={oIdx}
+                      onClick={() => handleAnswerSelect(oIdx)}
+                      className={`w-full p-4 rounded-xl border text-left text-xs font-semibold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-lc-violet bg-lc-violet/10 text-lc-violet'
+                          : 'border-lc-glass-border bg-lc-void/20 text-lc-text-muted hover:bg-lc-glass-raised'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center gap-4">
+              <button
+                onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
+                disabled={currentIdx === 0}
+                className="px-4 py-2.5 rounded-lg border-lc-glass-border text-[10px] text-lc-text-muted font-bold hover:text-lc-text cursor-pointer disabled:opacity-30"
+              >
+                Previous
+              </button>
+
+              {currentIdx < mockQuestions.length - 1 ? (
+                <button
+                  onClick={() => setCurrentIdx(prev => prev + 1)}
+                  className="px-6 py-2.5 rounded-lg lc-neo text-[10px] text-lc-cyan font-bold cursor-pointer"
+                >
+                  Next Question
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmitTest}
+                  className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text text-[10px] font-bold cursor-pointer"
+                >
+                  Submit Mock Test
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* SUMMARY RESULT VIEW */}
+        {testState === 'SUMMARY' && (
+          <div className="space-y-6">
+            <div className="p-6 bg-lc-glass-raised rounded-xl border-lc-glass-border text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-lc-cyan/10 border-lc-cyan/20 flex items-center justify-center text-xl font-black text-lc-cyan mx-auto">
+                {score}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-lc-text">Mock Test Report Card</h3>
+                <p className="text-[10px] text-lc-text-muted font-mono mt-1">Successfully synced with the database</p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto text-xs font-mono pt-2">
+                <div className="bg-lc-glass-raised p-2.5 rounded text-lc-emerald">Correct: {correctCount}</div>
+                <div className="bg-lc-glass-raised p-2.5 rounded text-lc-rose">Wrong: {incorrectCount}</div>
+                <div className="bg-lc-glass-raised p-2.5 rounded text-lc-violet">Accuracy: {
+                  correctCount + incorrectCount > 0
+                    ? Math.round((correctCount / (correctCount + incorrectCount)) * 100)
+                    : 100
+                }%</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold text-lc-text-muted uppercase tracking-widest font-mono">Detailed Explanations</h4>
+              <div className="space-y-3">
+                {mockQuestions.map((q, idx) => {
+                  const ans = selectedAnswers[idx];
+                  const correct = ans === q.correctIndex;
+                  return (
+                    <div key={idx} className="p-4 bg-lc-glass-raised rounded-xl border-lc-glass-border space-y-2 text-xs">
+                      <p className="font-extrabold text-lc-text">{idx + 1}. {q.questionText}</p>
+                      <p className={`text-[10px] font-mono ${correct ? 'text-lc-emerald' : 'text-lc-rose'}`}>
+                        Your choice: {ans !== undefined ? q.options[ans] : 'Skipped'} • {correct ? 'Correct' : 'Incorrect'}
+                      </p>
+                      <p className="text-[10px] text-lc-text-muted leading-relaxed font-sans">{q.explanation}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             <button
-              onClick={() => setCurrentIdx(prev => Math.max(0, prev - 1))}
-              disabled={currentIdx === 0}
-              className="px-4 py-2.5 rounded-lg border border-slate-800 text-[10px] text-slate-400 font-bold hover:text-slate-200 cursor-pointer disabled:opacity-30"
+              onClick={() => setTestState('SETUP')}
+              className="w-full py-3 lc-neo text-xs font-bold text-lc-cyan cursor-pointer transition-colors"
             >
-              Previous
+              Start Another Simulation
             </button>
-
-            {currentIdx < mockQuestions.length - 1 ? (
-              <button
-                onClick={() => setCurrentIdx(prev => prev + 1)}
-                className="px-6 py-2.5 rounded-lg bg-slate-900 border border-slate-800 text-[10px] text-brand-cyan font-bold hover:bg-slate-850 cursor-pointer"
-              >
-                Next Question
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmitTest}
-                className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-brand-purple to-brand-cyan text-white text-[10px] font-bold shadow-md cursor-pointer"
-              >
-                Submit Mock Test
-              </button>
-            )}
           </div>
-        </div>
-      )}
-
-      {/* SUMMARY RESULT VIEW */}
-      {testState === 'SUMMARY' && (
-        <div className="space-y-6">
-          <div className="p-6 bg-slate-950/40 rounded-xl border border-white/5 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-brand-cyan/10 border border-brand-cyan/20 flex items-center justify-center text-xl font-black text-brand-cyan mx-auto">
-              {score}
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-slate-200">Mock Test Report Card</h3>
-              <p className="text-[10px] text-slate-500 font-mono mt-1">Successfully synced with the database</p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto text-xs font-mono pt-2">
-              <div className="bg-slate-900/50 p-2.5 rounded">Correct: {correctCount}</div>
-              <div className="bg-slate-900/50 p-2.5 rounded text-red-400">Wrong: {incorrectCount}</div>
-              <div className="bg-slate-900/50 p-2.5 rounded text-brand-purple">Accuracy: {
-                correctCount + incorrectCount > 0 
-                  ? Math.round((correctCount / (correctCount + incorrectCount)) * 100) 
-                  : 100
-              }%</div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest font-mono">Detailed Explanations</h4>
-            <div className="space-y-3">
-              {mockQuestions.map((q, idx) => {
-                const ans = selectedAnswers[idx];
-                const correct = ans === q.correctIndex;
-                return (
-                  <div key={idx} className="p-4 bg-slate-950/20 rounded-xl border border-white/5 space-y-2 text-xs">
-                    <p className="font-extrabold text-slate-350">{idx + 1}. {q.questionText}</p>
-                    <p className={`text-[10px] font-mono ${correct ? 'text-emerald-400' : 'text-red-400'}`}>
-                      Your choice: {ans !== undefined ? q.options[ans] : 'Skipped'} • {correct ? 'Correct' : 'Incorrect'}
-                    </p>
-                    <p className="text-[10px] text-slate-500 leading-relaxed font-sans">{q.explanation}</p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <button
-            onClick={() => setTestState('SETUP')}
-            className="w-full py-3 bg-slate-900 border border-slate-800 hover:bg-slate-850 rounded-xl text-xs font-bold text-brand-cyan cursor-pointer transition-colors"
-          >
-            Start Another Simulation
-          </button>
-        </div>
-      )}
-
+        )}
+      </div>
     </div>
   );
 }

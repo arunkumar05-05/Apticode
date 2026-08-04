@@ -1,0 +1,200 @@
+/* ============================================================
+   LiquidCore — Design Tokens (CSS Custom Properties)
+   Dark (primary) + Light (executive) — AptiCode
+   ============================================================ */
+
+:root {
+  /* ---- Color: Dark (primary experience) ---- */
+  --lc-void: oklch(0.16 0.02 265);
+  --lc-void-rgb: 5, 6, 14;
+
+  --lc-glass-bg: color-mix(in oklch, white 5%, transparent);
+  --lc-glass-border: color-mix(in oklch, white 8%, transparent);
+  --lc-glass-highlight: color-mix(in oklch, white 12%, transparent);
+
+  --lc-glass-raised-bg: color-mix(in oklch, white 8%, transparent);
+
+  --lc-neo-raised: oklch(0.21 0.03 265);
+  --lc-neo-shadow-dark: color-mix(in oklch, black 60%, transparent);
+  --lc-neo-shadow-light: color-mix(in oklch, white 15%, transparent);
+
+  --lc-text-primary: oklch(0.97 0.01 265);
+  --lc-text-secondary: oklch(0.65 0.03 265);
+
+  --lc-brand-violet: oklch(0.66 0.16 295);
+  --lc-brand-violet-hover: oklch(0.72 0.18 295);
+  --lc-brand-cyan: oklch(0.79 0.16 210);
+  --lc-brand-cyan-hover: oklch(0.85 0.18 210);
+
+  --lc-status-emerald: oklch(0.65 0.20 150);
+  --lc-status-amber: oklch(0.78 0.18 85);
+  --lc-status-rose: oklch(0.60 0.20 25);
+
+  /* ---- Color: Light (executive/admin) ---- */
+  --lc-void-light: oklch(0.97 0.01 265);
+  --lc-glass-bg-light: color-mix(in oklch, white 70%, transparent);
+  --lc-glass-border-light: color-mix(in oklch, black 10%, transparent);
+  --lc-glass-highlight-light: color-mix(in oklch, white 100%, transparent);
+  --lc-neo-raised-light: oklch(0.94 0.01 265);
+  --lc-text-primary-light: oklch(0.20 0.03 265);
+  --lc-text-secondary-light: oklch(0.46 0.03 265);
+  --lc-brand-violet-light: oklch(0.55 0.20 285);
+  --lc-brand-cyan-light: oklch(0.54 0.17 220);
+
+  /* ---- Typography ---- */
+  --lc-font-display: "Space Grotesk", "Plus Jakarta Sans", system-ui, sans-serif;
+  --lc-font-body: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --lc-font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  --lc-font-display-w: 700;
+  --lc-font-body-w: 400;
+  --lc-font-body-m: 500;
+  --lc-font-body-sb: 600;
+  --lc-font-body-b: 700;
+  --lc-font-mono-w: 400;
+  --lc-font-mono-b: 700;
+
+  --lc-text-xs: 0.7rem;   /* 11px */
+  --lc-text-sm: 0.8125rem; /* 13px */
+  --lc-text-base: 0.875rem;  /* 14px */
+  --lc-text-lg: 1rem;     /* 16px */
+  --lc-text-xl: 1.125rem;  /* 18px */
+  --lc-text-2xl: 1.375rem; /* 22px */
+  --lc-text-3xl: 1.75rem;  /* 28px */
+  --lc-text-4xl: 2.25rem;  /* 36px */
+
+  /* ---- Spacing (base-8) ---- */
+  --lc-space-1: 0.25rem;  /* 4px */
+  --lc-space-2: 0.5rem;   /* 8px */
+  --lc-space-3: 0.75rem;  /* 12px */
+  --lc-space-4: 1rem;     /* 16px */
+  --lc-space-5: 1.25rem;  /* 20px */
+  --lc-space-6: 1.5rem;   /* 24px */
+  --lc-space-8: 2rem;     /* 32px */
+  --lc-space-10: 2.5rem;  /* 40px */
+  --lc-space-12: 3rem;    /* 48px */
+  --lc-space-16: 4rem;    /* 64px */
+
+  /* ---- Radii ---- */
+  --lc-radius-sm: 8px;
+  --lc-radius-md: 12px;
+  --lc-radius-lg: 14px;   /* neo key */
+  --lc-radius-xl: 16px;
+  --lc-radius-2xl: 20px;  /* glass slab */
+  --lc-radius-full: 999px;
+
+  /* ---- Blur ---- */
+  --lc-blur-sm: 8px;
+  --lc-blur-md: 12px;
+  --lc-blur-lg: 16px;     /* standard glass */
+  --lc-blur-xl: 24px;
+
+  /* ---- Shadows ---- */
+  --lc-shadow-glass: 0 18px 50px -12px color-mix(in oklch, black 50%, transparent);
+  --lc-shadow-glass-hover: 0 24px 60px -16px color-mix(in oklch, black 55%, transparent);
+  --lc-shadow-neo-raised: 6px 6px 16px -2px var(--lc-neo-shadow-dark),
+                          -4px -4px 10px -2px var(--lc-neo-shadow-light);
+  --lc-shadow-neo-pressed: inset 4px 4px 10px -2px var(--lc-neo-shadow-dark),
+                           inset -3px -3px 8px -2px var(--lc-neo-shadow-light);
+  --lc-shadow-neo-raised-light: 4px 4px 10px -2px color-mix(in oklch, black 18%, transparent),
+                                 -3px -3px 8px -2px color-mix(in oklch, white 90%, transparent);
+
+  /* ---- Transitions ---- */
+  --lc-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --lc-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --lc-dur-fast: 120ms;
+  --lc-dur-base: 200ms;
+  --lc-dur-slow: 400ms;
+  --lc-dur-xslow: 600ms;
+
+  /* ---- Z layers ---- */
+  --lc-z-void: -1;
+  --lc-z-liquid: 0;
+  --lc-z-glass: 10;
+  --lc-z-neo: 20;
+  --lc-z-chrome: 30;
+  --lc-z-canvas: 40;
+}
+
+/* ============================================================
+   Light theme (manual .light class on <html>)
+   ============================================================ */
+.light {
+  --lc-void: var(--lc-void-light);
+  --lc-glass-bg: var(--lc-glass-bg-light);
+  --lc-glass-border: var(--lc-glass-border-light);
+  --lc-glass-highlight: var(--lc-glass-highlight-light);
+  --lc-neo-raised: var(--lc-neo-raised-light);
+  --lc-text-primary: var(--lc-text-primary-light);
+  --lc-text-secondary: var(--lc-text-secondary-light);
+  --lc-brand-violet: var(--lc-brand-violet-light);
+  --lc-brand-cyan: var(--lc-brand-cyan-light);
+  --lc-shadow-neo-raised: var(--lc-shadow-neo-raised-light);
+}
+
+/* ============================================================
+   Utility classes (Tailwind-free primitives)
+   ============================================================ */
+.lc-glass {
+  background: var(--lc-glass-bg);
+  backdrop-filter: blur(var(--lc-blur-lg));
+  -webkit-backdrop-filter: blur(var(--lc-blur-lg));
+  border: 1px solid var(--lc-glass-border);
+  border-radius: var(--lc-radius-2xl);
+  box-shadow: var(--lc-shadow-glass);
+  transition: transform var(--lc-dur-base) var(--lc-ease-spring),
+              box-shadow var(--lc-dur-base) var(--lc-ease-out);
+}
+
+.lc-glass:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--lc-shadow-glass-hover);
+}
+
+.lc-glass-raised {
+  background: var(--lc-glass-raised-bg);
+}
+
+.lc-neo {
+  background: var(--lc-neo-raised);
+  border-radius: var(--lc-radius-lg);
+  box-shadow: var(--lc-shadow-neo-raised);
+  transition: transform var(--lc-dur-fast) var(--lc-ease-spring),
+              box-shadow var(--lc-dur-fast) var(--lc-ease-out);
+}
+
+.lc-neo:hover {
+  transform: translateY(-2px);
+}
+
+.lc-neo:active {
+  transform: translateY(0);
+  box-shadow: var(--lc-shadow-neo-pressed);
+}
+
+.lc-neo-pill {
+  border-radius: var(--lc-radius-full);
+}
+
+.lc-tilt {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.lc-text-gradient {
+  background: linear-gradient(135deg, var(--lc-brand-violet), var(--lc-brand-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   Motion respect
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
