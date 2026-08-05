@@ -33,6 +33,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   const [statsData, setStatsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [confettiKey, setConfettiKey] = useState(0);
+  const safeXp = typeof xp === 'number' && Number.isFinite(xp) ? xp : 0;
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -58,7 +59,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   }, []);
 
   const nextLevelXp = 30000;
-  const progressPercent = Math.min((xp / nextLevelXp) * 100, 100);
+  const progressPercent = Math.min((safeXp / nextLevelXp) * 100, 100);
   const streakNum = parseInt(String(statsData?.streak ?? '0'), 10) || 0;
 
   const handleBuyItem = (item: RewardItem) => {
@@ -311,7 +312,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
       </section>
 
       <GlassModal isOpen={isStoreOpen} onClose={() => setIsStoreOpen(false)} title="XP rewards store" size="md">
-        <p className="mb-4 font-mono text-sm text-lc-text-muted">Balance: <span className="text-lc-cyan">{xp.toLocaleString()} XP</span></p>
+        <p className="mb-4 font-mono text-sm text-lc-text-muted">Balance: <span className="text-lc-cyan">{safeXp.toLocaleString()} XP</span></p>
         <div className="space-y-2">
           {rewardItems.map((item) => (
             <div key={item.id} className="flex items-center justify-between gap-3 rounded-2xl lc-neo p-3">

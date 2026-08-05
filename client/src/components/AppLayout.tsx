@@ -84,8 +84,9 @@ export default function AppLayout({
     { id: '3', title: 'Cohort test unlocked', time: '1d ago', read: true, text: 'Solve Quantitative questions to unlock level 3.' }
   ]);
 
-  const hasUnread = notifications.some((n) => !n.read);
-  const xpPct = Math.min((xp % 1000) / 10, 100);
+   const hasUnread = notifications.some((n) => !n.read);
+   const safeXp = typeof xp === 'number' && Number.isFinite(xp) ? xp : 0;
+   const xpPct = Math.min((safeXp % 1000) / 10, 100);
 
   const goTo = (id: string) => {
     setCurrentView(id);
@@ -163,7 +164,7 @@ export default function AppLayout({
                   />
                 </div>
                 <p className="mt-2 font-mono text-[11px] tabular-nums text-lc-text-muted">
-                  {xp.toLocaleString()} XP
+                  {safeXp.toLocaleString()} XP
                 </p>
               </div>
             ) : (

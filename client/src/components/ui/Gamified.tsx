@@ -93,7 +93,7 @@ export function XPBar({ xp, nextLevelXp, level, label = 'XP', showLevel = true, 
             </span>
           )}
         </div>
-        <span className="font-mono text-sm tabular-nums text-lc-text-muted">{xp.toLocaleString()} / {nextLevelXp.toLocaleString()}</span>
+        <span className="font-mono text-sm tabular-nums text-lc-text-muted">{(typeof xp === 'number' && Number.isFinite(xp) ? xp : 0).toLocaleString()} / {(typeof nextLevelXp === 'number' && Number.isFinite(nextLevelXp) ? nextLevelXp : 0).toLocaleString()}</span>
       </div>
       <div className="relative h-2.5 lc-neo rounded-full overflow-hidden" style={{ boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.3)' }}>
         <motion.div
@@ -170,8 +170,9 @@ interface TickerProps {
 }
 
 export function Ticker({ value, decimals = 0, prefix = '', suffix = '', className = '', fontSize = 'md' }: TickerProps) {
-  const [displayValue, setDisplayValue] = React.useState(value);
-  const startRef = React.useRef(value);
+  const startValue = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+  const [displayValue, setDisplayValue] = React.useState(startValue);
+  const startRef = React.useRef(startValue);
   const sizeMap = { sm: 'text-xl', md: 'text-3xl', lg: 'text-5xl', xl: 'text-7xl' };
 
   React.useEffect(() => {
