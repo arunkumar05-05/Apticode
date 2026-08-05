@@ -1,4 +1,5 @@
 import { db } from '../prisma/db';
+import { callAiJson } from '../utils/ai';
 
 const RESUME_AUDIT_SYSTEM_INSTRUCTION = `You are the AptiCode ATS Resume Auditor.
 Your job is to analyze the candidate's resume content, technical experience, and skills matrix.
@@ -114,34 +115,16 @@ export async function auditResume(userId: string, data: any) {
     "Missing target backend stack skills: 'Redis', 'Docker', 'Prisma ORM'."
   ];
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (apiKey && apiKey !== 'your_key') {
-    try {
-      const userPrompt = `Name: ${personal.name}\nSkills: ${skills}\nProjects: ${projectText}`;
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: `${RESUME_AUDIT_SYSTEM_INSTRUCTION}\n\nCandidate resume:\n${userPrompt}` }] }],
-          generationConfig: { temperature: 0.2 }
-        })
-      });
-      if (response.ok) {
-        const resJson: any = await response.json();
-        const rawText = resJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        let cleaned = rawText.trim();
-        if (cleaned.startsWith('```json')) cleaned = cleaned.substring(7);
-        if (cleaned.endsWith('```')) cleaned = cleaned.substring(0, cleaned.length - 3);
-
-        const evaluation = JSON.parse(cleaned.trim());
-        atsScore = evaluation.atsScore || 65;
-        if (Array.isArray(evaluation.auditFeedback)) {
-          auditFeedback = evaluation.auditFeedback;
-        }
-      }
-    } catch (err: any) {
-      console.error('[Gemini Resume Audit] error:', err.message);
+  const evaluation = await callAiJson<any>({
+    system: RESUME_AUDIT_SYSTEM_INSTRUCTION,
+    prompt: `Candidate resume:\nName: ${personal.name}\nSkills: ${skills}\nProjects: ${projectText}`,
+    temperature: 0.2,
+    maxTokens: 6000
+  });
+  if (evaluation) {
+    atsScore = evaluation.atsScore || 65;
+    if (Array.isArray(evaluation.auditFeedback)) {
+      auditFeedback = evaluation.auditFeedback;
     }
   }
 

@@ -13,7 +13,7 @@ const pg = new PGClient({
 const sqlite = new SQLiteClient({
   datasources: {
     db: {
-      url: 'file:./dev.db'
+      url: 'file:./prisma/dev.db'
     }
   }
 });
@@ -58,11 +58,12 @@ function getClient() {
 function isConnectionError(error: any) {
   if (!error) return false;
   const msg = String(error.message || '').toLowerCase();
-  return /connect econnrefused|connection terminated|econnreset|connection refused|p1001|p1002|p1017|timeout exceeded|is offline|socket hang up|connection pool|econnreset|client_network_offline/i.test(msg);
+  return /connect econnrefused|connection terminated|econnreset|connection refused|p1001|p1002|p1017|timeout exceeded|is offline|socket hang up|connection pool|client_network_offline|unable to open database file|database is locked/i.test(msg);
 }
 
 function handleConnectionFailure(error: any) {
-  console.warn('[Database] Connection error encountered:', (error && error.message) ? error.message.slice(0, 200) : error);
+  const msg = error && error.message ? error.message.trim() : String(error);
+  console.warn('[Database] Connection error encountered:', msg.slice(0, 400));
   if (activeDriver === 'pg') {
     console.warn('[Database] Runtime failover: PG -> SQLite.');
     activeDriver = 'sqlite';
@@ -94,7 +95,10 @@ export const db: any = new Proxy({} as any, {
             return await (client as any)[modelName][methodName](...args);
           } catch (err: any) {
             if (isConnectionError(err)) handleConnectionFailure(err);
-            else console.warn('[Database] Query fallback:', (err && err.message) ? err.message.slice(0, 160) : err);
+            else {
+              const msg = err && err.message ? err.message.trim() : String(err);
+              console.warn('[Database] Query fallback:', msg.slice(0, 240));
+            }
             const active = getClient();
             try {
               if (active !== sqlite) return await (sqlite as any)[modelName][methodName](...args);

@@ -46,6 +46,7 @@ router.get('/mcqs/progress', aptitudeController.getHistory as any);
 router.post('/mcqs', mcqController.create as any);
 router.get('/mcqs', mcqController.list as any);
 router.delete('/mcqs/:id', mcqController.remove as any);
+router.post('/mcqs/generate', mcqController.generate as any);
 
 // Coding Arena
 router.get('/coding/challenges', codingController.getChallenges as any);

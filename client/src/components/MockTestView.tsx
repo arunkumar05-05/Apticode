@@ -40,6 +40,9 @@ export default function MockTestView() {
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{ [key: number]: number }>({});
   const [timeLeft, setTimeLeft] = useState<number>(180);
+  const [questions, setQuestions] = useState<TestQuestion[]>(mockQuestions);
+  const [loadingQuestions, setLoadingQuestions] = useState<boolean>(false);
+  const [questionSource, setQuestionSource] = useState<'AI' | 'STATIC'>('STATIC');
 
   const [score, setScore] = useState<number>(0);
   const [correctCount, setCorrectCount] = useState<number>(0);
@@ -61,11 +64,46 @@ export default function MockTestView() {
     return () => clearInterval(timer);
   }, [testState, timeLeft]);
 
-  const handleStartTest = () => {
+  const handleStartTest = async () => {
     setCurrentIdx(0);
     setSelectedAnswers({});
     setTimeLeft(180);
-    setTestState('ACTIVE');
+
+    // Fetch AI-generated questions from the API
+    setLoadingQuestions(true);
+    try {
+      const saved = localStorage.getItem('apticode-user-session');
+      const token = saved ? JSON.parse(saved).token : '';
+      const topicMap: Record<string, string> = {
+        TOPIC: 'Time and Work',
+        COMPANY: 'Google Interview',
+        FULL: 'General Aptitude'
+      };
+      const res = await fetch(`${getApiBaseUrl()}/api/mcqs/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ topic: topicMap[testType], count: testType === 'FULL' ? 10 : 5, difficulty: 'MEDIUM' })
+      });
+      const json = await res.json();
+      if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
+        setQuestions(json.data.map((q: any) => ({
+          questionText: q.questionText,
+          options: q.options,
+          correctIndex: q.correctIndex,
+          explanation: q.explanation
+        })));
+        setQuestionSource('AI');
+      } else {
+        setQuestions(mockQuestions);
+        setQuestionSource('STATIC');
+      }
+    } catch {
+      setQuestions(mockQuestions);
+      setQuestionSource('STATIC');
+    } finally {
+      setLoadingQuestions(false);
+      setTestState('ACTIVE');
+    }
   };
 
   const handleAnswerSelect = (optionIdx: number) => {
@@ -84,7 +122,7 @@ export default function MockTestView() {
   const handleSubmitTest = async () => {
     let correct = 0;
     let incorrect = 0;
-    mockQuestions.forEach((q, idx) => {
+    questions.forEach((q, idx) => {
       const ans = selectedAnswers[idx];
       if (ans === undefined) return;
       if (ans === q.correctIndex) {
@@ -181,10 +219,17 @@ export default function MockTestView() {
 
               <button
                 onClick={handleStartTest}
-                className="w-full h-12 rounded-xl lc-neo bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text font-bold text-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                disabled={loadingQuestions}
+                className="w-full h-12 rounded-xl lc-neo bg-gradient-to-r from-lc-violet to-lc-cyan text-lc-text font-bold text-xs flex items-center justify-center space-x-1.5 cursor-pointer disabled:opacity-50"
               >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Launch Mock Test</span>
+                {loadingQuestions ? (
+                  <span className="animate-pulse">Generating AI questions…</span>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>Launch Mock Test</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -194,7 +239,7 @@ export default function MockTestView() {
         {testState === 'ACTIVE' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center bg-lc-glass-raised p-4 rounded-xl border-lc-glass-border text-xs font-mono">
-              <span className="text-lc-text-muted">Question {currentIdx + 1} of {mockQuestions.length}</span>
+              <span className="text-lc-text-muted">Question {currentIdx + 1} of {questions.length}</span>
               <div className="flex items-center space-x-2 font-bold text-lc-cyan">
                 <Clock className="w-4 h-4 text-lc-text-muted" />
                 <span>{formatTime(timeLeft)}</span>
@@ -203,11 +248,11 @@ export default function MockTestView() {
 
             <div className="p-6 bg-lc-glass-raised rounded-xl border-lc-glass-border space-y-6">
               <p className="text-sm md:text-base font-semibold leading-relaxed text-lc-text">
-                {mockQuestions[currentIdx].questionText}
+                {questions[currentIdx].questionText}
               </p>
 
               <div className="grid gap-3">
-                {mockQuestions[currentIdx].options.map((opt, oIdx) => {
+                {questions[currentIdx].options.map((opt, oIdx) => {
                   const isSelected = selectedAnswers[currentIdx] === oIdx;
                   return (
                     <button
@@ -235,7 +280,7 @@ export default function MockTestView() {
                 Previous
               </button>
 
-              {currentIdx < mockQuestions.length - 1 ? (
+              {currentIdx < questions.length - 1 ? (
                 <button
                   onClick={() => setCurrentIdx(prev => prev + 1)}
                   className="px-6 py-2.5 rounded-lg lc-neo text-[10px] text-lc-cyan font-bold cursor-pointer"
@@ -263,7 +308,9 @@ export default function MockTestView() {
               </div>
               <div>
                 <h3 className="text-base font-bold text-lc-text">Mock Test Report Card</h3>
-                <p className="text-[10px] text-lc-text-muted font-mono mt-1">Successfully synced with the database</p>
+                <p className="text-[10px] text-lc-text-muted font-mono mt-1">
+                  {questionSource === 'AI' ? '✓ AI-generated questions' : 'Using curated question bank'} · Synced with database
+                </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto text-xs font-mono pt-2">
@@ -280,7 +327,7 @@ export default function MockTestView() {
             <div className="space-y-4">
               <h4 className="text-xs font-bold text-lc-text-muted uppercase tracking-widest font-mono">Detailed Explanations</h4>
               <div className="space-y-3">
-                {mockQuestions.map((q, idx) => {
+                {questions.map((q, idx) => {
                   const ans = selectedAnswers[idx];
                   const correct = ans === q.correctIndex;
                   return (

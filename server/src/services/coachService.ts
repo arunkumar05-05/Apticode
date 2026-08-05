@@ -1,35 +1,21 @@
+import { callAi } from '../utils/ai';
+
 const COACH_SYSTEM_INSTRUCTION = `You are the AptiCode AI Placement Coach, a helpful, encouraging, and highly technical assistant designed to guide candidates through software engineering placements, math/aptitude shortcuts, communication rules, and coding audits.
 Be concise and structure your answers with clear headings or bullet points where appropriate.
 Format math formulas beautifully in text or markdown (avoid raw HTML).`;
 
 export async function getCoachResponse(message: string, history: any[]) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  
-  if (apiKey && apiKey !== 'your_key') {
-    try {
-      const contents = history.map((msg: any) => ({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
-      }));
-      contents.push({
-        role: 'user',
-        parts: [{ text: `${COACH_SYSTEM_INSTRUCTION}\n\nUser: ${message}` }]
-      });
+  const historyText = history
+    .map((msg: any) => `${msg.sender === 'user' ? 'User' : 'Coach'}: ${msg.text}`)
+    .join('\n');
+  const prompt = historyText ? `Conversation so far:\n${historyText}\n\nUser: ${message}` : message;
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents, generationConfig: { temperature: 0.7 } })
-      });
-
-      if (response.ok) {
-        const resJson: any = await response.json();
-        return resJson.candidates?.[0]?.content?.parts?.[0]?.text || "I am analyzing your placement query.";
-      }
-    } catch (err: any) {
-      console.error('[Gemini Coach] Error:', err.message);
-    }
-  }
+  const reply = await callAi({
+    system: COACH_SYSTEM_INSTRUCTION,
+    prompt,
+    temperature: 0.7
+  });
+  if (reply) return reply;
 
   const query = message.toLowerCase();
   if (query.includes('time') || query.includes('work')) {
