@@ -78,26 +78,26 @@ model User {
 }
 
 model Profile {
-  id                     String   @id @default(uuid())
-  userId                 String   @unique
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName               String?
-  email                  String?
-  phone                  String?
-  college                String?
-  branch                 String?
-  graduationYear         Int?
-  registerNumber         String?
-  skills                 String?
-  bio                    String?
-  github                 String?
-  linkedin               String?
-  portfolio              String?
-  profilePhoto           String?
-  resume                 String?
-  placementReadinessIndex Int     @default(0)
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id                      String   @id @default(uuid())
+  userId                  String   @unique
+  user                    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName                String?
+  email                   String?
+  phone                   String?
+  college                 String?
+  branch                  String?
+  graduationYear          Int?
+  registerNumber          String?
+  skills                  String?
+  bio                     String?
+  github                  String?
+  linkedin                String?
+  portfolio               String?
+  profilePhoto            String?
+  resume                  String?
+  placementReadinessIndex Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 }
 
 model RefreshToken {
@@ -107,18 +107,21 @@ model RefreshToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model AptitudeTopic {
-  id            String              @id @default(uuid())
-  name          String              @unique
-  description   String?
-  category      AptitudeCategory
-  createdAt     DateTime            @default(now())
-  videos        AptitudeVideo[]
-  notes         AptitudeNotes?
-  questions     AptitudeQuestion[]
-  userProgress  UserTopicProgress[]
+  id           String              @id @default(uuid())
+  name         String              @unique
+  description  String?
+  category     AptitudeCategory
+  createdAt    DateTime            @default(now())
+  videos       AptitudeVideo[]
+  notes        AptitudeNotes?
+  questions    AptitudeQuestion[]
+  userProgress UserTopicProgress[]
 }
 
 model AptitudeVideo {
@@ -150,11 +153,14 @@ model AptitudeQuestion {
   optionB       String
   optionC       String
   optionD       String
-  correctOption String          // 'A', 'B', 'C', 'D'
+  correctOption String // 'A', 'B', 'C', 'D'
   explanation   String?
   difficulty    DifficultyLevel @default(MEDIUM)
   createdAt     DateTime        @default(now())
   bookmarks     UserBookmark[]
+
+  @@index([topicId, difficulty])
+  @@index([createdAt])
 }
 
 model UserBookmark {
@@ -183,17 +189,17 @@ model UserTopicProgress {
 }
 
 model CodingProblem {
-  id           String           @id @default(uuid())
-  title        String           @unique
-  description  String
-  timeLimitMs  Int              @default(2000)
-  memoryLimitKb Int             @default(262144)
-  difficulty   DifficultyLevel  @default(MEDIUM)
-  editorial    String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  testcases    CodingTestcase[]
-  attempts     CodingSubmission[]
+  id            String             @id @default(uuid())
+  title         String             @unique
+  description   String
+  timeLimitMs   Int                @default(2000)
+  memoryLimitKb Int                @default(262144)
+  difficulty    DifficultyLevel    @default(MEDIUM)
+  editorial     String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  testcases     CodingTestcase[]
+  attempts      CodingSubmission[]
 }
 
 model CodingTestcase {
@@ -218,6 +224,9 @@ model CodingSubmission {
   executionMs Int?
   memoryKb    Int?
   createdAt   DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([problemId, status])
 }
 
 model CommunicationSession {
@@ -231,28 +240,36 @@ model CommunicationSession {
   fluencyScore Int
   confidence   Int
   createdAt    DateTime        @default(now())
+
+  @@index([userId, createdAt])
+  @@index([sessionType])
 }
 
 model MockInterview {
-  id            String             @id @default(uuid())
-  userId        String
-  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  interviewType InterviewType
-  overallScore  Int
+  id             String             @id @default(uuid())
+  userId         String
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviewType  InterviewType
+  overallScore   Int
   technicalScore Int
   softSkillScore Int
   feedbackReport String?
-  createdAt     DateTime           @default(now())
-  messages      InterviewMessage[]
+  createdAt      DateTime           @default(now())
+  messages       InterviewMessage[]
+
+  @@index([userId, createdAt])
+  @@index([interviewType])
 }
 
 model InterviewMessage {
   id          String        @id @default(uuid())
   interviewId String
   interview   MockInterview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-  sender      String        // 'INTERVIEWER' | 'USER'
+  sender      String // 'INTERVIEWER' | 'USER'
   messageText String
   createdAt   DateTime      @default(now())
+
+  @@index([interviewId, createdAt])
 }
 
 model UserAttempt {
@@ -262,10 +279,13 @@ model UserAttempt {
   topicId            String
   score              Int
   accuracy           Decimal
-  timeTaken          Int      // in seconds
-  incorrectQuestions String   // JSON string of array
-  topicPerformance   String   // JSON string
+  timeTaken          Int // in seconds
+  incorrectQuestions String // JSON string of array
+  topicPerformance   String // JSON string
   completedAt        DateTime @default(now())
+
+  @@index([userId, completedAt])
+  @@index([topicId, completedAt])
 }
 
 model Resume {
@@ -273,10 +293,13 @@ model Resume {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   versionName String
-  contentJson String   // JSON string
+  contentJson String // JSON string
   atsScore    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([atsScore])
 }
 
 model XpLog {
@@ -291,10 +314,10 @@ model XpLog {
 }
 
 model Leaderboard {
-  userId   String   @id
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  totalXp  Int      @default(0)
-  rank     Int?
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalXp   Int      @default(0)
+  rank      Int?
   updatedAt DateTime @updatedAt
 
   @@index([totalXp])
