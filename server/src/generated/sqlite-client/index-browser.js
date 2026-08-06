@@ -130,6 +130,7 @@ exports.Prisma.UserScalarFieldEnum = {
   level: 'level',
   xp: 'xp',
   isEmailVerified: 'isEmailVerified',
+  isOnboarded: 'isOnboarded',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -159,9 +160,67 @@ exports.Prisma.ProfileScalarFieldEnum = {
 exports.Prisma.RefreshTokenScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
+  sessionId: 'sessionId',
   token: 'token',
   expiresAt: 'expiresAt',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  deviceInfo: 'deviceInfo',
+  userAgent: 'userAgent',
+  ipAddress: 'ipAddress',
+  createdAt: 'createdAt',
+  lastActivity: 'lastActivity',
+  expiresAt: 'expiresAt',
+  revoked: 'revoked'
+};
+
+exports.Prisma.AuthAuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  sessionId: 'sessionId',
+  event: 'event',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  success: 'success',
+  detail: 'detail',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  used: 'used',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EmailVerificationTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  used: 'used',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.XpLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  amount: 'amount',
+  reason: 'reason',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.LeaderboardScalarFieldEnum = {
+  userId: 'userId',
+  totalXp: 'totalXp',
+  rank: 'rank',
+  updatedAt: 'updatedAt'
 };
 
 exports.Prisma.AptitudeTopicScalarFieldEnum = {
@@ -247,6 +306,7 @@ exports.Prisma.CodingSubmissionScalarFieldEnum = {
   userId: 'userId',
   problemId: 'problemId',
   code: 'code',
+  language: 'language',
   status: 'status',
   executionMs: 'executionMs',
   memoryKb: 'memoryKb',
@@ -272,6 +332,7 @@ exports.Prisma.MockInterviewScalarFieldEnum = {
   overallScore: 'overallScore',
   technicalScore: 'technicalScore',
   softSkillScore: 'softSkillScore',
+  feedbackReport: 'feedbackReport',
   createdAt: 'createdAt'
 };
 
@@ -305,6 +366,16 @@ exports.Prisma.ResumeScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  message: 'message',
+  type: 'type',
+  isRead: 'isRead',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -320,6 +391,12 @@ exports.Prisma.ModelName = {
   User: 'User',
   Profile: 'Profile',
   RefreshToken: 'RefreshToken',
+  Session: 'Session',
+  AuthAuditLog: 'AuthAuditLog',
+  PasswordResetToken: 'PasswordResetToken',
+  EmailVerificationToken: 'EmailVerificationToken',
+  XpLog: 'XpLog',
+  Leaderboard: 'Leaderboard',
   AptitudeTopic: 'AptitudeTopic',
   AptitudeVideo: 'AptitudeVideo',
   AptitudeNotes: 'AptitudeNotes',
@@ -333,7 +410,8 @@ exports.Prisma.ModelName = {
   MockInterview: 'MockInterview',
   InterviewMessage: 'InterviewMessage',
   UserAttempt: 'UserAttempt',
-  Resume: 'Resume'
+  Resume: 'Resume',
+  Notification: 'Notification'
 };
 
 /**

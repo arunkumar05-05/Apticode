@@ -1,60 +1,69 @@
 import { db } from './prisma/db';
 import bcrypt from 'bcryptjs';
 import { defaultSeedTopics } from './services/aptitudeService';
+import { logger } from './config/logger';
+import { config } from './config';
+
+// In production, NEVER seed demo user accounts (use the real invite/signup flow).
+const SEED_DEMO_USERS = !config.isProd;
 
 async function seed() {
-  console.log('[Seed] Starting seed process...');
+  logger.info('Starting seed process...');
 
-  const existingAdmin = await db.user.findUnique({ where: { email: 'admin@college.edu' } });
-  if (!existingAdmin) {
-    const hash = await bcrypt.hash('AdminPassword2026!', 10);
-    await db.user.create({
-      data: {
-        email: 'admin@college.edu',
-        passwordHash: hash,
-        fullName: 'Prof. Shastri',
-        role: 'ADMIN',
-        authProvider: 'local-password',
-        profile: {
-          create: {
-            fullName: 'Prof. Shastri',
-            email: 'admin@college.edu',
-            college: 'AptiCode College',
-            branch: 'Computer Science',
-            graduationYear: 2026
-          }
-        }
-      }
-    });
-    console.log('[Seed] Demo admin user created.');
-  } else {
-    console.log('[Seed] Admin user already exists, skipping.');
-  }
+  if (SEED_DEMO_USERS) {
+    const existingAdmin = await db.user.findUnique({ where: { email: 'admin@college.edu' } });
+    if (!existingAdmin) {
+      const hash = await bcrypt.hash('AdminPassword2026!', 10);
+      await db.user.create({
+        data: {
+          email: 'admin@college.edu',
+          passwordHash: hash,
+          fullName: 'Prof. Shastri',
+          role: 'ADMIN',
+          authProvider: 'local-password',
+          profile: {
+            create: {
+              fullName: 'Prof. Shastri',
+              email: 'admin@college.edu',
+              college: 'AptiCode College',
+              branch: 'Computer Science',
+              graduationYear: 2026,
+            },
+          },
+        },
+      });
+      logger.info('Demo admin user created.');
+    } else {
+      logger.info('Admin user already exists, skipping.');
+    }
 
-  const existingStudent = await db.user.findUnique({ where: { email: 'student@college.edu' } });
-  if (!existingStudent) {
-    const hash = await bcrypt.hash('StudentPassword2026!', 10);
-    await db.user.create({
-      data: {
-        email: 'student@college.edu',
-        passwordHash: hash,
-        fullName: 'Rahul Sharma',
-        role: 'STUDENT',
-        authProvider: 'local-password',
-        profile: {
-          create: {
-            fullName: 'Rahul Sharma',
-            email: 'student@college.edu',
-            college: 'AptiCode College',
-            branch: 'Computer Science',
-            graduationYear: 2026
-          }
-        }
-      }
-    });
-    console.log('[Seed] Demo student user created.');
+    const existingStudent = await db.user.findUnique({ where: { email: 'student@college.edu' } });
+    if (!existingStudent) {
+      const hash = await bcrypt.hash('StudentPassword2026!', 10);
+      await db.user.create({
+        data: {
+          email: 'student@college.edu',
+          passwordHash: hash,
+          fullName: 'Rahul Sharma',
+          role: 'STUDENT',
+          authProvider: 'local-password',
+          profile: {
+            create: {
+              fullName: 'Rahul Sharma',
+              email: 'student@college.edu',
+              college: 'AptiCode College',
+              branch: 'Computer Science',
+              graduationYear: 2026,
+            },
+          },
+        },
+      });
+      logger.info('Demo student user created.');
+    } else {
+      logger.info('Student user already exists, skipping.');
+    }
   } else {
-    console.log('[Seed] Student user already exists, skipping.');
+    logger.info('Production mode: skipping demo user seeding.');
   }
 
   const topicCount = await db.aptitudeTopic.count();
@@ -86,10 +95,10 @@ async function seed() {
         });
       }
 
-      console.log(`[Seed] Seeded topic: ${topic.name} with ${topicData.questions.length} questions.`);
+      logger.info(`Seeded topic: ${topic.name} with ${topicData.questions.length} questions.`);
     }
   } else {
-    console.log(`[Seed] ${topicCount} topics already exist, skipping aptitude seed.`);
+    logger.info(`${topicCount} topics already exist, skipping aptitude seed.`);
   }
 
   const problemCount = await db.codingProblem.count();
@@ -156,16 +165,16 @@ async function seed() {
         },
         include: { testcases: true }
       });
-      console.log(`[Seed] Seeded coding problem: ${p.title} with ${problem.testcases.length} testcases.`);
+      logger.info(`Seeded coding problem: ${p.title} with ${problem.testcases.length} testcases.`);
     }
   } else {
-    console.log(`[Seed] ${problemCount} coding problems already exist, skipping.`);
+    logger.info(`${problemCount} coding problems already exist, skipping.`);
   }
 
-  console.log('[Seed] Seed process complete.');
+  logger.info('Seed process complete.');
 }
 
 seed().catch((err: any) => {
-  console.error('[Seed] Error:', err.message);
+  logger.error({ err: { message: err?.message } }, 'Seed error');
   process.exit(1);
 });

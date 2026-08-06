@@ -75,6 +75,10 @@ model User {
   xpLogs           XpLog[]
   notifications    Notification[]
   leaderboard      Leaderboard?
+  sessions         Session[]
+  auditLogs        AuthAuditLog[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationToken EmailVerificationToken?
 }
 
 model Profile {
@@ -104,11 +108,78 @@ model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String?  // NULL = pre-session legacy token
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([expiresAt])
+  @@index([sessionId])
+}
+
+model Session {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceInfo    String?
+  userAgent     String?
+  ipAddress     String?
+  createdAt     DateTime       @default(now())
+  lastActivity  DateTime       @default(now())
+  expiresAt     DateTime
+  revoked       Boolean        @default(false)
+  refreshTokens RefreshToken[]
+  auditLogs     AuthAuditLog[]
+
+  @@index([userId, revoked, expiresAt])
+  @@index([expiresAt])
+  @@index([userId, createdAt])
+}
+
+model AuthAuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId  String?
+  session    Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  event      String
+  ipAddress  String?
+  userAgent  String?
+  success    Boolean
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([userId, event, success, createdAt])
+  @@index([ipAddress, event, createdAt])
+  @@index([event, success, createdAt])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, used])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, used])
   @@index([expiresAt])
 }
 

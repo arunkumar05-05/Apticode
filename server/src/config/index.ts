@@ -40,7 +40,13 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
+  JWT_ISSUER: z.string().default('apticode-server'),
+  JWT_AUDIENCE: z.string().default('apticode-client'),
+  JWT_VERSION: z.coerce.number().int().positive().default(1),
   BCRYPT_SALT_ROUNDS: z.coerce.number().int().min(8).max(14).default(10),
+  LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  LOGIN_LOCKOUT_BASE_SECONDS: z.coerce.number().int().positive().default(30),
+  LOGIN_LOCKOUT_MAX_SECONDS: z.coerce.number().int().positive().default(600),
 
   // AI provider (OpenAI-compatible; vsllm by default). Optional until AI is used.
   AI_API_KEY: z.string().optional(),
@@ -160,6 +166,21 @@ export const config = {
     });
   },
   get appVersion() { return appVersion; },
+  get auth() {
+    const c = cfg();
+    return {
+      jwtSecret: c.JWT_SECRET,
+      jwtIssuer: c.JWT_ISSUER,
+      jwtAudience: c.JWT_AUDIENCE,
+      jwtVersion: c.JWT_VERSION,
+      accessExpiresIn: c.JWT_ACCESS_EXPIRES_IN,
+      refreshExpiresIn: c.JWT_REFRESH_EXPIRES_IN,
+      bcryptSaltRounds: c.BCRYPT_SALT_ROUNDS,
+      loginMaxAttempts: c.LOGIN_MAX_ATTEMPTS,
+      loginLockoutBaseSec: c.LOGIN_LOCKOUT_BASE_SECONDS,
+      loginLockoutMaxSec: c.LOGIN_LOCKOUT_MAX_SECONDS,
+    };
+  },
 };
 
 export type AppConfig = typeof config;

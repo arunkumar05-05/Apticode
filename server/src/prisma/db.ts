@@ -1,21 +1,50 @@
+/**
+ * Database layer.
+ *
+ * - Postgres (production) -> SQLite (development) -> in-memory (tests) fallback chain.
+ * - Connection pooling for Postgres is configured via DATABASE_URL (e.g. append
+ *   `?connection_limit=20&application_name=apticode-server`). Prisma pools client-side;
+ *   for high-traffic deployments terminate behind PgBouncer (env: PGPOOL_* below).
+ * - Exposes `db` (Proxy with live failover), `getActiveDriver()`,
+ *   `setActiveDriverForTests()`, `initDatabase()`, and `dbHealth()`.
+ * - Never throws raw Prisma/SQL to callers; connection errors are logged + routed.
+ */
 import { PrismaClient as PGClient } from '@prisma/client';
 import { PrismaClient as SQLiteClient } from '../generated/sqlite-client';
 import { InMemoryStore } from './memoryStore';
+import { logger } from '../config/logger';
+
+// --- Postgres connection pool configuration ---
+// Prisma's pg driver pools client-side via the connection string. Operators can
+// tune pool size and keepalive through DATABASE_URL params or the PGPOOL_* env
+// vars below, which we normalize into the URL at boot.
+const buildPgDatasource = (): { db: { url: string } } => {
+  const url = process.env.DATABASE_URL;
+  if (!url) return { db: { url: '' } };
+  try {
+    const parsed = new URL(url);
+    const limit = process.env.PGPOOL_MAX_CONNECTIONS;
+    if (limit) parsed.searchParams.set('connection_limit', limit);
+    const idle = process.env.PGPOOL_IDLE_TIMEOUT_MS;
+    if (idle) parsed.searchParams.set('idle_in_transaction_session_timeout', idle);
+    parsed.searchParams.set('application_name', 'apticode-server');
+    if (!parsed.searchParams.has('keepalive')) parsed.searchParams.set('keepalive', '1');
+    return { db: { url: parsed.toString() } };
+  } catch {
+    return { db: { url } };
+  }
+};
 
 const pg = new PGClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL
-    }
-  }
+  datasources: buildPgDatasource(),
 });
 
 const sqlite = new SQLiteClient({
   datasources: {
     db: {
-      url: 'file:./prisma/dev.db'
-    }
-  }
+      url: 'file:./prisma/dev.db',
+    },
+  },
 });
 
 const memory = new InMemoryStore();
@@ -34,16 +63,16 @@ export async function initDatabase() {
   try {
     await pg.$connect();
     await pg.$queryRaw`SELECT 1`;
-    console.log('[Database] PostgreSQL online. Active.');
+    logger.info('PostgreSQL online. Active.');
     activeDriver = 'pg';
   } catch (err: any) {
-    console.warn('[Database] PostgreSQL offline, trying SQLite...');
+    logger.warn('PostgreSQL offline, trying SQLite...');
     try {
       await sqlite.$connect();
-      console.log('[Database] SQLite online. Active.');
+      logger.info('SQLite online. Active.');
       activeDriver = 'sqlite';
     } catch (sqliteErr: any) {
-      console.warn('[Database] SQLite offline, falling back to In-Memory store.');
+      logger.warn('SQLite offline, falling back to In-Memory store.');
       activeDriver = 'memory';
     }
   }
@@ -63,12 +92,12 @@ function isConnectionError(error: any) {
 
 function handleConnectionFailure(error: any) {
   const msg = error && error.message ? error.message.trim() : String(error);
-  console.warn('[Database] Connection error encountered:', msg.slice(0, 400));
+  logger.warn({ err: msg.slice(0, 400) }, 'Database connection error — attempting failover');
   if (activeDriver === 'pg') {
-    console.warn('[Database] Runtime failover: PG -> SQLite.');
+    logger.warn('Runtime failover: PG -> SQLite.');
     activeDriver = 'sqlite';
   } else if (activeDriver === 'sqlite') {
-    console.warn('[Database] Runtime failover: SQLite -> Memory.');
+    logger.warn('Runtime failover: SQLite -> Memory.');
     activeDriver = 'memory';
   }
 }
@@ -96,8 +125,7 @@ export const db: any = new Proxy({} as any, {
           } catch (err: any) {
             if (isConnectionError(err)) handleConnectionFailure(err);
             else {
-              const msg = err && err.message ? err.message.trim() : String(err);
-              console.warn('[Database] Query fallback:', msg.slice(0, 240));
+              logger.warn({ err: { message: (err && err.message ? err.message.trim() : '').slice(0, 240) } }, 'Database query fallback');
             }
             const active = getClient();
             try {
@@ -112,3 +140,44 @@ export const db: any = new Proxy({} as any, {
     });
   }
 });
+
+/**
+ * Health probe for the active database: which driver, liveness (SELECT 1),
+ * provider version string, and whether the connection is reachable.
+ * Never throws — safe to call from /health under any driver.
+ */
+export async function dbHealth(): Promise<{
+  provider: 'postgresql' | 'sqlite' | 'memory';
+  reachable: boolean;
+  version: string;
+  driver: string;
+}> {
+  const driver = activeDriver;
+  let version = 'n/a';
+  let reachable = false;
+
+  if (driver === 'memory') {
+    return { provider: 'sqlite', reachable: true, version: 'in-memory', driver };
+  }
+
+  try {
+    const client = driver === 'pg' ? pg : sqlite;
+    if (driver === 'pg') {
+      // PostgreSQL version() returns one row.
+      const rows: any = await client!.$queryRaw`SELECT version() AS v`;
+      version = String((rows && rows[0] && rows[0].v) || 'postgresql').slice(0, 80);
+    } else {
+      // SQLite version() returns one row.
+      const rows: any = await client!.$queryRaw`SELECT sqlite_version() AS v`;
+      version = String((rows && rows[0] && rows[0].v) || 'sqlite');
+    }
+    // liveness probe + the SELECT above both succeeded
+    await client!.$queryRaw`SELECT 1`;
+    reachable = true;
+  } catch (err: any) {
+    logger.warn({ err: { message: (err && err.message ? err.message.trim() : '').slice(0, 240) } }, 'dbHealth probe failed');
+    reachable = false;
+  }
+
+  return { provider: driver === 'pg' ? 'postgresql' : 'sqlite', reachable, version, driver };
+}

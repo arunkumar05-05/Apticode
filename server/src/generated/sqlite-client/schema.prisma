@@ -9,27 +9,35 @@ generator client {
 }
 
 model User {
-  id               String                 @id @default(uuid())
-  email            String                 @unique
-  passwordHash     String?
-  firebaseUid      String?                @unique
-  authProvider     String?
-  fullName         String?
-  role             String                 @default("STUDENT")
-  level            Int                    @default(1)
-  xp               Int                    @default(0)
-  isEmailVerified  Boolean                @default(false)
-  createdAt        DateTime               @default(now())
-  updatedAt        DateTime               @updatedAt
-  profile          Profile?
-  refreshTokens    RefreshToken[]
-  bookmarks        UserBookmark[]
-  topicProgress    UserTopicProgress[]
-  codingAttempts   CodingSubmission[]
-  speechSessions   CommunicationSession[]
-  mockInterviews   MockInterview[]
-  aptitudeAttempts UserAttempt[]
-  resumes          Resume[]
+  id                     String                  @id @default(uuid())
+  email                  String                  @unique
+  passwordHash           String?
+  firebaseUid            String?                 @unique
+  authProvider           String?
+  fullName               String?
+  role                   String                  @default("STUDENT")
+  level                  Int                     @default(1)
+  xp                     Int                     @default(0)
+  isEmailVerified        Boolean                 @default(false)
+  isOnboarded            Boolean                 @default(false)
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  profile                Profile?
+  refreshTokens          RefreshToken[]
+  bookmarks              UserBookmark[]
+  topicProgress          UserTopicProgress[]
+  codingAttempts         CodingSubmission[]
+  speechSessions         CommunicationSession[]
+  mockInterviews         MockInterview[]
+  aptitudeAttempts       UserAttempt[]
+  resumes                Resume[]
+  xpLogs                 XpLog[]
+  notifications          Notification[]
+  leaderboard            Leaderboard?
+  sessions               Session[]
+  auditLogs              AuthAuditLog[]
+  passwordResetTokens    PasswordResetToken[]
+  emailVerificationToken EmailVerificationToken?
 }
 
 model Profile {
@@ -59,9 +67,102 @@ model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String? // NULL = pre-session legacy token; present → session-scoped
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([sessionId])
+}
+
+model Session {
+  id            String         @id @default(uuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceInfo    String? // parsed client device hint
+  userAgent     String?
+  ipAddress     String?
+  createdAt     DateTime       @default(now())
+  lastActivity  DateTime       @default(now())
+  expiresAt     DateTime
+  revoked       Boolean        @default(false)
+  refreshTokens RefreshToken[]
+  auditLogs     AuthAuditLog[]
+
+  @@index([userId, revoked, expiresAt])
+  @@index([expiresAt])
+  @@index([userId, createdAt])
+}
+
+model AuthAuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sessionId String?
+  session   Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  event     String // REGISTER, LOGIN_SUCCESS, LOGIN_FAILURE, LOGOUT, REFRESH,
+  // PASSWORD_RESET_REQUEST, PASSWORD_CHANGE, EMAIL_VERIFIED,
+  // SESSION_REVOKED, TOKEN_REUSE_DETECTED, LOCKOUT
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  detail    String? // free-form, NEVER contains passwords/tokens/jwts
+  createdAt DateTime @default(now())
+
+  @@index([userId, event, success, createdAt])
+  @@index([ipAddress, event, createdAt])
+  @@index([event, success, createdAt])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, used])
+  @@index([expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @unique // one active verification token per user
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, used])
+  @@index([expiresAt])
+}
+
+model XpLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Leaderboard {
+  userId    String   @id
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  totalXp   Int      @default(0)
+  rank      Int?
+  updatedAt DateTime @updatedAt
+
+  @@index([totalXp])
 }
 
 model AptitudeTopic {
@@ -110,6 +211,9 @@ model AptitudeQuestion {
   difficulty    String         @default("MEDIUM")
   createdAt     DateTime       @default(now())
   bookmarks     UserBookmark[]
+
+  @@index([topicId, difficulty])
+  @@index([createdAt])
 }
 
 model UserBookmark {
@@ -168,10 +272,14 @@ model CodingSubmission {
   problemId   String
   problem     CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   code        String
+  language    String        @default("python")
   status      String        @default("PENDING")
   executionMs Int?
   memoryKb    Int?
   createdAt   DateTime      @default(now())
+
+  @@index([userId, createdAt])
+  @@index([problemId, status])
 }
 
 model CommunicationSession {
@@ -185,6 +293,9 @@ model CommunicationSession {
   fluencyScore Int
   confidence   Int
   createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([sessionType])
 }
 
 model MockInterview {
@@ -195,8 +306,12 @@ model MockInterview {
   overallScore   Int
   technicalScore Int
   softSkillScore Int
+  feedbackReport String?
   createdAt      DateTime           @default(now())
   messages       InterviewMessage[]
+
+  @@index([userId, createdAt])
+  @@index([interviewType])
 }
 
 model InterviewMessage {
@@ -206,6 +321,8 @@ model InterviewMessage {
   sender      String // 'INTERVIEWER' | 'USER'
   messageText String
   createdAt   DateTime      @default(now())
+
+  @@index([interviewId, createdAt])
 }
 
 model UserAttempt {
@@ -219,6 +336,9 @@ model UserAttempt {
   incorrectQuestions String // JSON string of array
   topicPerformance   String // JSON string
   completedAt        DateTime @default(now())
+
+  @@index([userId, completedAt])
+  @@index([topicId, completedAt])
 }
 
 model Resume {
@@ -230,4 +350,20 @@ model Resume {
   atsScore    Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([atsScore])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
 }

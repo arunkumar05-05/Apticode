@@ -18,6 +18,10 @@ export class InMemoryStore {
   xpLogs: any[] = [];
   leaderboards: any[] = [];
   notifications: any[] = [];
+  sessions: any[] = [];
+  auditLogs: any[] = [];
+  passwordResetTokens: any[] = [];
+  emailVerificationTokens: any[] = [];
 
   // Implement generic repositories
   user = this.createRepository('users');
@@ -37,6 +41,10 @@ export class InMemoryStore {
   xpLog = this.createRepository('xpLogs');
   leaderboard = this.createRepository('leaderboards');
   notification = this.createRepository('notifications');
+  session = this.createRepository('sessions');
+  authAuditLog = this.createRepository('auditLogs');
+  passwordResetToken = this.createRepository('passwordResetTokens');
+  emailVerificationToken = this.createRepository('emailVerificationTokens');
 
   private createRepository(arrayName: string) {
     const getArray = () => (this as any)[arrayName] as any[];
@@ -107,6 +115,25 @@ export class InMemoryStore {
         arr[index] = updated;
         return updated;
       },
+      updateMany: async (args: any) => {
+        const arr = getArray();
+        const where = args?.where || {};
+        const data = args.data || {};
+        let count = 0;
+        for (const item of arr) {
+          const matched = Object.keys(where).every(key => {
+            if (typeof where[key] === 'object' && where[key] !== null) {
+              return Object.keys(where[key]).every(subKey => item[subKey] === where[key][subKey]);
+            }
+            return item[key] === where[key];
+          });
+          if (matched) {
+            Object.assign(item, data, { updatedAt: new Date() });
+            count++;
+          }
+        }
+        return { count };
+      },
       upsert: async (args: any) => {
         const arr = getArray();
         const where = args.where;
@@ -146,6 +173,23 @@ export class InMemoryStore {
         if (index === -1) throw new Error('Record not found in memory store for delete');
         const deleted = arr.splice(index, 1)[0];
         return deleted;
+      },
+      deleteMany: async (args: any) => {
+        const arr = getArray();
+        const where = args?.where || {};
+        const matched = arr.filter(item =>
+          Object.keys(where).every(key => {
+            if (typeof where[key] === 'object' && where[key] !== null) {
+              return Object.keys(where[key]).every(subKey => item[subKey] === where[key][subKey]);
+            }
+            return item[key] === where[key];
+          })
+        );
+        // Remove matched in place; memory arrays are the source of truth.
+        for (let i = arr.length - 1; i >= 0; i--) {
+          if (matched.includes(arr[i])) arr.splice(i, 1);
+        }
+        return { count: matched.length };
       },
       count: async (args: any) => {
         const arr = getArray();

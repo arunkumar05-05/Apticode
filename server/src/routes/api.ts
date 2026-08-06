@@ -23,9 +23,15 @@ router.post('/auth/supabase-verify', authController.supabaseVerify);
 router.post('/auth/firebase-verify', authController.firebaseVerify);
 router.post('/auth/refresh', authController.refresh);
 router.post('/auth/logout', authController.logout);
+router.post('/auth/password-reset/request', authController.requestPasswordReset);
+router.post('/auth/password-reset/confirm', authController.confirmPasswordReset);
 
 // Protect all following routes with JWT token checks
 router.use(authMiddleware as any);
+
+router.post('/auth/email/resend', authController.resendVerification);
+router.get('/auth/sessions', authController.getSessions);
+router.delete('/auth/sessions/:id', authController.revokeSession);
 
 // AI Coach chat
 router.post('/ai/coach', coachController.chat as any);
