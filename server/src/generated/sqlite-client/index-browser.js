@@ -310,7 +310,14 @@ exports.Prisma.CodingSubmissionScalarFieldEnum = {
   status: 'status',
   executionMs: 'executionMs',
   memoryKb: 'memoryKb',
-  createdAt: 'createdAt'
+  createdAt: 'createdAt',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  attempts: 'attempts',
+  xpAwarded: 'xpAwarded',
+  errorMessage: 'errorMessage',
+  resultJson: 'resultJson',
+  queueJobId: 'queueJobId'
 };
 
 exports.Prisma.CommunicationSessionScalarFieldEnum = {

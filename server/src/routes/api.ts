@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware, requireRole } from '../middleware/auth';
-import { aiLimiter } from '../middleware/rateLimiter';
+import { aiLimiter, codeSubmissionLimiter } from '../middleware/rateLimiter';
 import * as authController from '../controllers/authController';
 import * as coachController from '../controllers/coachController';
 import * as profileController from '../controllers/profileController';
@@ -15,6 +15,7 @@ import * as leaderboardController from '../controllers/leaderboardController';
 import * as mcqController from '../controllers/mcqController';
 import * as adminController from '../controllers/adminController';
 import * as aiMonitoringController from '../controllers/aiMonitoringController';
+import * as codingMonitoringController from '../controllers/codingMonitoringController';
 
 const router = Router();
 
@@ -61,8 +62,9 @@ router.get('/coding/challenges', codingController.getChallenges as any);
 router.post('/coding/challenges', codingController.createChallenge as any);
 router.delete('/coding/challenges/:id', codingController.deleteChallenge as any);
 router.post('/coding/challenges/:id/testcases', codingController.addTestcase as any);
-router.post('/coding/submissions', codingController.submitCode as any);
+router.post('/coding/submissions', codeSubmissionLimiter as any, codingController.submitCode as any);
 router.get('/coding/submissions', codingController.getHistory as any);
+router.get('/coding/submissions/:id', codingController.getSubmission as any);
 
 // Speech Audit Coach
 router.post('/communication/eval', aiLimiter as any, commController.evaluate as any);
@@ -96,5 +98,10 @@ router.get('/admin/ai/providers', requireRole(['ADMIN']), aiMonitoringController
 router.get('/admin/ai/health', requireRole(['ADMIN']), aiMonitoringController.getAiHealth as any);
 router.get('/admin/ai/usage', requireRole(['ADMIN']), aiMonitoringController.getAiUsage as any);
 router.post('/admin/ai/metrics/flush', requireRole(['ADMIN']), aiMonitoringController.flushAiMetrics as any);
+
+// Phase 5 — code pipeline monitoring endpoints (admin-only)
+router.get('/admin/code/queue', requireRole(['ADMIN']), codingMonitoringController.getQueueStatus as any);
+router.get('/admin/code/worker', requireRole(['ADMIN']), codingMonitoringController.getWorkerStatus as any);
+router.post('/admin/code/queue/requeue-failed', requireRole(['ADMIN']), codingMonitoringController.requeueFailed as any);
 
 export default router;

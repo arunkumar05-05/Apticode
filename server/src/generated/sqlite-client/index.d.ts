@@ -20596,11 +20596,13 @@ export namespace Prisma {
   export type CodingSubmissionAvgAggregateOutputType = {
     executionMs: number | null
     memoryKb: number | null
+    attempts: number | null
   }
 
   export type CodingSubmissionSumAggregateOutputType = {
     executionMs: number | null
     memoryKb: number | null
+    attempts: number | null
   }
 
   export type CodingSubmissionMinAggregateOutputType = {
@@ -20613,6 +20615,13 @@ export namespace Prisma {
     executionMs: number | null
     memoryKb: number | null
     createdAt: Date | null
+    startedAt: Date | null
+    completedAt: Date | null
+    attempts: number | null
+    xpAwarded: boolean | null
+    errorMessage: string | null
+    resultJson: string | null
+    queueJobId: string | null
   }
 
   export type CodingSubmissionMaxAggregateOutputType = {
@@ -20625,6 +20634,13 @@ export namespace Prisma {
     executionMs: number | null
     memoryKb: number | null
     createdAt: Date | null
+    startedAt: Date | null
+    completedAt: Date | null
+    attempts: number | null
+    xpAwarded: boolean | null
+    errorMessage: string | null
+    resultJson: string | null
+    queueJobId: string | null
   }
 
   export type CodingSubmissionCountAggregateOutputType = {
@@ -20637,6 +20653,13 @@ export namespace Prisma {
     executionMs: number
     memoryKb: number
     createdAt: number
+    startedAt: number
+    completedAt: number
+    attempts: number
+    xpAwarded: number
+    errorMessage: number
+    resultJson: number
+    queueJobId: number
     _all: number
   }
 
@@ -20644,11 +20667,13 @@ export namespace Prisma {
   export type CodingSubmissionAvgAggregateInputType = {
     executionMs?: true
     memoryKb?: true
+    attempts?: true
   }
 
   export type CodingSubmissionSumAggregateInputType = {
     executionMs?: true
     memoryKb?: true
+    attempts?: true
   }
 
   export type CodingSubmissionMinAggregateInputType = {
@@ -20661,6 +20686,13 @@ export namespace Prisma {
     executionMs?: true
     memoryKb?: true
     createdAt?: true
+    startedAt?: true
+    completedAt?: true
+    attempts?: true
+    xpAwarded?: true
+    errorMessage?: true
+    resultJson?: true
+    queueJobId?: true
   }
 
   export type CodingSubmissionMaxAggregateInputType = {
@@ -20673,6 +20705,13 @@ export namespace Prisma {
     executionMs?: true
     memoryKb?: true
     createdAt?: true
+    startedAt?: true
+    completedAt?: true
+    attempts?: true
+    xpAwarded?: true
+    errorMessage?: true
+    resultJson?: true
+    queueJobId?: true
   }
 
   export type CodingSubmissionCountAggregateInputType = {
@@ -20685,6 +20724,13 @@ export namespace Prisma {
     executionMs?: true
     memoryKb?: true
     createdAt?: true
+    startedAt?: true
+    completedAt?: true
+    attempts?: true
+    xpAwarded?: true
+    errorMessage?: true
+    resultJson?: true
+    queueJobId?: true
     _all?: true
   }
 
@@ -20784,6 +20830,13 @@ export namespace Prisma {
     executionMs: number | null
     memoryKb: number | null
     createdAt: Date
+    startedAt: Date | null
+    completedAt: Date | null
+    attempts: number
+    xpAwarded: boolean
+    errorMessage: string | null
+    resultJson: string | null
+    queueJobId: string | null
     _count: CodingSubmissionCountAggregateOutputType | null
     _avg: CodingSubmissionAvgAggregateOutputType | null
     _sum: CodingSubmissionSumAggregateOutputType | null
@@ -20815,6 +20868,13 @@ export namespace Prisma {
     executionMs?: boolean
     memoryKb?: boolean
     createdAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    attempts?: boolean
+    xpAwarded?: boolean
+    errorMessage?: boolean
+    resultJson?: boolean
+    queueJobId?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     problem?: boolean | CodingProblemDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["codingSubmission"]>
@@ -20829,6 +20889,13 @@ export namespace Prisma {
     executionMs?: boolean
     memoryKb?: boolean
     createdAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    attempts?: boolean
+    xpAwarded?: boolean
+    errorMessage?: boolean
+    resultJson?: boolean
+    queueJobId?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     problem?: boolean | CodingProblemDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["codingSubmission"]>
@@ -20843,6 +20910,13 @@ export namespace Prisma {
     executionMs?: boolean
     memoryKb?: boolean
     createdAt?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    attempts?: boolean
+    xpAwarded?: boolean
+    errorMessage?: boolean
+    resultJson?: boolean
+    queueJobId?: boolean
   }
 
   export type CodingSubmissionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -20870,6 +20944,13 @@ export namespace Prisma {
       executionMs: number | null
       memoryKb: number | null
       createdAt: Date
+      startedAt: Date | null
+      completedAt: Date | null
+      attempts: number
+      xpAwarded: boolean
+      errorMessage: string | null
+      resultJson: string | null
+      queueJobId: string | null
     }, ExtArgs["result"]["codingSubmission"]>
     composites: {}
   }
@@ -21274,6 +21355,13 @@ export namespace Prisma {
     readonly executionMs: FieldRef<"CodingSubmission", 'Int'>
     readonly memoryKb: FieldRef<"CodingSubmission", 'Int'>
     readonly createdAt: FieldRef<"CodingSubmission", 'DateTime'>
+    readonly startedAt: FieldRef<"CodingSubmission", 'DateTime'>
+    readonly completedAt: FieldRef<"CodingSubmission", 'DateTime'>
+    readonly attempts: FieldRef<"CodingSubmission", 'Int'>
+    readonly xpAwarded: FieldRef<"CodingSubmission", 'Boolean'>
+    readonly errorMessage: FieldRef<"CodingSubmission", 'String'>
+    readonly resultJson: FieldRef<"CodingSubmission", 'String'>
+    readonly queueJobId: FieldRef<"CodingSubmission", 'String'>
   }
     
 
@@ -29901,7 +29989,14 @@ export namespace Prisma {
     status: 'status',
     executionMs: 'executionMs',
     memoryKb: 'memoryKb',
-    createdAt: 'createdAt'
+    createdAt: 'createdAt',
+    startedAt: 'startedAt',
+    completedAt: 'completedAt',
+    attempts: 'attempts',
+    xpAwarded: 'xpAwarded',
+    errorMessage: 'errorMessage',
+    resultJson: 'resultJson',
+    queueJobId: 'queueJobId'
   };
 
   export type CodingSubmissionScalarFieldEnum = (typeof CodingSubmissionScalarFieldEnum)[keyof typeof CodingSubmissionScalarFieldEnum]
@@ -31368,6 +31463,13 @@ export namespace Prisma {
     executionMs?: IntNullableFilter<"CodingSubmission"> | number | null
     memoryKb?: IntNullableFilter<"CodingSubmission"> | number | null
     createdAt?: DateTimeFilter<"CodingSubmission"> | Date | string
+    startedAt?: DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+    attempts?: IntFilter<"CodingSubmission"> | number
+    xpAwarded?: BoolFilter<"CodingSubmission"> | boolean
+    errorMessage?: StringNullableFilter<"CodingSubmission"> | string | null
+    resultJson?: StringNullableFilter<"CodingSubmission"> | string | null
+    queueJobId?: StringNullableFilter<"CodingSubmission"> | string | null
     user?: XOR<UserRelationFilter, UserWhereInput>
     problem?: XOR<CodingProblemRelationFilter, CodingProblemWhereInput>
   }
@@ -31382,6 +31484,13 @@ export namespace Prisma {
     executionMs?: SortOrderInput | SortOrder
     memoryKb?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    startedAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    attempts?: SortOrder
+    xpAwarded?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    resultJson?: SortOrderInput | SortOrder
+    queueJobId?: SortOrderInput | SortOrder
     user?: UserOrderByWithRelationInput
     problem?: CodingProblemOrderByWithRelationInput
   }
@@ -31399,6 +31508,13 @@ export namespace Prisma {
     executionMs?: IntNullableFilter<"CodingSubmission"> | number | null
     memoryKb?: IntNullableFilter<"CodingSubmission"> | number | null
     createdAt?: DateTimeFilter<"CodingSubmission"> | Date | string
+    startedAt?: DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+    attempts?: IntFilter<"CodingSubmission"> | number
+    xpAwarded?: BoolFilter<"CodingSubmission"> | boolean
+    errorMessage?: StringNullableFilter<"CodingSubmission"> | string | null
+    resultJson?: StringNullableFilter<"CodingSubmission"> | string | null
+    queueJobId?: StringNullableFilter<"CodingSubmission"> | string | null
     user?: XOR<UserRelationFilter, UserWhereInput>
     problem?: XOR<CodingProblemRelationFilter, CodingProblemWhereInput>
   }, "id">
@@ -31413,6 +31529,13 @@ export namespace Prisma {
     executionMs?: SortOrderInput | SortOrder
     memoryKb?: SortOrderInput | SortOrder
     createdAt?: SortOrder
+    startedAt?: SortOrderInput | SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    attempts?: SortOrder
+    xpAwarded?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    resultJson?: SortOrderInput | SortOrder
+    queueJobId?: SortOrderInput | SortOrder
     _count?: CodingSubmissionCountOrderByAggregateInput
     _avg?: CodingSubmissionAvgOrderByAggregateInput
     _max?: CodingSubmissionMaxOrderByAggregateInput
@@ -31433,6 +31556,13 @@ export namespace Prisma {
     executionMs?: IntNullableWithAggregatesFilter<"CodingSubmission"> | number | null
     memoryKb?: IntNullableWithAggregatesFilter<"CodingSubmission"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"CodingSubmission"> | Date | string
+    startedAt?: DateTimeNullableWithAggregatesFilter<"CodingSubmission"> | Date | string | null
+    completedAt?: DateTimeNullableWithAggregatesFilter<"CodingSubmission"> | Date | string | null
+    attempts?: IntWithAggregatesFilter<"CodingSubmission"> | number
+    xpAwarded?: BoolWithAggregatesFilter<"CodingSubmission"> | boolean
+    errorMessage?: StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
+    resultJson?: StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
+    queueJobId?: StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
   }
 
   export type CommunicationSessionWhereInput = {
@@ -33423,6 +33553,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
     user: UserCreateNestedOneWithoutCodingAttemptsInput
     problem: CodingProblemCreateNestedOneWithoutAttemptsInput
   }
@@ -33437,6 +33574,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
   }
 
   export type CodingSubmissionUpdateInput = {
@@ -33447,6 +33591,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
     user?: UserUpdateOneRequiredWithoutCodingAttemptsNestedInput
     problem?: CodingProblemUpdateOneRequiredWithoutAttemptsNestedInput
   }
@@ -33461,6 +33612,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CodingSubmissionCreateManyInput = {
@@ -33473,6 +33631,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
   }
 
   export type CodingSubmissionUpdateManyMutationInput = {
@@ -33483,6 +33648,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CodingSubmissionUncheckedUpdateManyInput = {
@@ -33495,6 +33667,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CommunicationSessionCreateInput = {
@@ -35239,11 +35418,19 @@ export namespace Prisma {
     executionMs?: SortOrder
     memoryKb?: SortOrder
     createdAt?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+    attempts?: SortOrder
+    xpAwarded?: SortOrder
+    errorMessage?: SortOrder
+    resultJson?: SortOrder
+    queueJobId?: SortOrder
   }
 
   export type CodingSubmissionAvgOrderByAggregateInput = {
     executionMs?: SortOrder
     memoryKb?: SortOrder
+    attempts?: SortOrder
   }
 
   export type CodingSubmissionMaxOrderByAggregateInput = {
@@ -35256,6 +35443,13 @@ export namespace Prisma {
     executionMs?: SortOrder
     memoryKb?: SortOrder
     createdAt?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+    attempts?: SortOrder
+    xpAwarded?: SortOrder
+    errorMessage?: SortOrder
+    resultJson?: SortOrder
+    queueJobId?: SortOrder
   }
 
   export type CodingSubmissionMinOrderByAggregateInput = {
@@ -35268,11 +35462,19 @@ export namespace Prisma {
     executionMs?: SortOrder
     memoryKb?: SortOrder
     createdAt?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+    attempts?: SortOrder
+    xpAwarded?: SortOrder
+    errorMessage?: SortOrder
+    resultJson?: SortOrder
+    queueJobId?: SortOrder
   }
 
   export type CodingSubmissionSumOrderByAggregateInput = {
     executionMs?: SortOrder
     memoryKb?: SortOrder
+    attempts?: SortOrder
   }
 
   export type CommunicationSessionCountOrderByAggregateInput = {
@@ -37598,6 +37800,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
     problem: CodingProblemCreateNestedOneWithoutAttemptsInput
   }
 
@@ -37610,6 +37819,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
   }
 
   export type CodingSubmissionCreateOrConnectWithoutUserInput = {
@@ -38085,6 +38301,13 @@ export namespace Prisma {
     executionMs?: IntNullableFilter<"CodingSubmission"> | number | null
     memoryKb?: IntNullableFilter<"CodingSubmission"> | number | null
     createdAt?: DateTimeFilter<"CodingSubmission"> | Date | string
+    startedAt?: DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+    completedAt?: DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+    attempts?: IntFilter<"CodingSubmission"> | number
+    xpAwarded?: BoolFilter<"CodingSubmission"> | boolean
+    errorMessage?: StringNullableFilter<"CodingSubmission"> | string | null
+    resultJson?: StringNullableFilter<"CodingSubmission"> | string | null
+    queueJobId?: StringNullableFilter<"CodingSubmission"> | string | null
   }
 
   export type CommunicationSessionUpsertWithWhereUniqueWithoutUserInput = {
@@ -40623,6 +40846,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
     user: UserCreateNestedOneWithoutCodingAttemptsInput
   }
 
@@ -40635,6 +40865,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
   }
 
   export type CodingSubmissionCreateOrConnectWithoutProblemInput = {
@@ -41808,6 +42045,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
   }
 
   export type CommunicationSessionCreateManyUserInput = {
@@ -41974,6 +42218,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
     problem?: CodingProblemUpdateOneRequiredWithoutAttemptsNestedInput
   }
 
@@ -41986,6 +42237,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CodingSubmissionUncheckedUpdateManyWithoutUserInput = {
@@ -41997,6 +42255,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CommunicationSessionUpdateWithoutUserInput = {
@@ -42509,6 +42774,13 @@ export namespace Prisma {
     executionMs?: number | null
     memoryKb?: number | null
     createdAt?: Date | string
+    startedAt?: Date | string | null
+    completedAt?: Date | string | null
+    attempts?: number
+    xpAwarded?: boolean
+    errorMessage?: string | null
+    resultJson?: string | null
+    queueJobId?: string | null
   }
 
   export type CodingTestcaseUpdateWithoutProblemInput = {
@@ -42543,6 +42815,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
     user?: UserUpdateOneRequiredWithoutCodingAttemptsNestedInput
   }
 
@@ -42555,6 +42834,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type CodingSubmissionUncheckedUpdateManyWithoutProblemInput = {
@@ -42566,6 +42852,13 @@ export namespace Prisma {
     executionMs?: NullableIntFieldUpdateOperationsInput | number | null
     memoryKb?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    attempts?: IntFieldUpdateOperationsInput | number
+    xpAwarded?: BoolFieldUpdateOperationsInput | boolean
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    resultJson?: NullableStringFieldUpdateOperationsInput | string | null
+    queueJobId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type InterviewMessageCreateManyInterviewInput = {

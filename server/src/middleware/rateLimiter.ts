@@ -23,3 +23,11 @@ export const aiLimiter = rateLimit({
   legacyHeaders: false,
   message: { status: 'fail', message: 'Too many AI requests, please try again later.' }
 });
+
+export const codeSubmissionLimiter = rateLimit({
+  windowMs: 60000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'fail', message: 'Too many code submissions, please try again later.' }
+});

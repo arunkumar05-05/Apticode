@@ -33,6 +33,13 @@ enum CompileStatus {
   TIME_LIMIT_EXCEEDED
   RUNTIME_ERROR
   COMPILE_ERROR
+  // Phase 5 — async queue pipeline (additive; existing members untouched)
+  QUEUED
+  RUNNING
+  PARTIAL
+  TIMED_OUT
+  CANCELLED
+  SYSTEM_ERROR
 }
 
 enum CommSessionType {
@@ -296,8 +303,19 @@ model CodingSubmission {
   memoryKb    Int?
   createdAt   DateTime      @default(now())
 
+  // Phase 5 — async queue pipeline (nullable/defaulted only)
+  startedAt   DateTime?
+  completedAt DateTime?
+  attempts    Int           @default(0)
+  xpAwarded   Boolean       @default(false)
+  errorMessage String?
+  resultJson  String?
+  queueJobId  String?
+
   @@index([userId, createdAt])
   @@index([problemId, status])
+  @@index([status, completedAt])
+  @@index([language, status, completedAt])
 }
 
 model CommunicationSession {

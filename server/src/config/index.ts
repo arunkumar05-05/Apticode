@@ -35,6 +35,9 @@ const envSchema = z.object({
   UPSTASH_REDIS_REST_URL: z.string().url().optional(),
   UPSTASH_REDIS_TOKEN: z.string().optional(),
   REDIS_TTL_SECONDS: z.coerce.number().int().positive().default(300),
+  // Phase 5 — BullMQ connection (force TLS even on plain redis:// URLs)
+  REDIS_TLS: z.preprocess(toBool, z.boolean()).default(false),
+  BULLMQ_PREFIX: z.string().default('bull'),
 
   // Auth
   JWT_SECRET: z.string().min(32),
@@ -76,6 +79,39 @@ const envSchema = z.object({
   BODY_LIMIT: z.string().default('1mb'),
   REQUEST_ID_HEADER: z.string().default('x-request-id'),
   ENABLE_REQUEST_LOGGING: z.preprocess(toBool, z.boolean()).default(true),
+
+  // ---------------------------------------------------------------- *
+  // Phase 5 — Judge0 code-execution provider
+  // ---------------------------------------------------------------- *
+  JUDGE0_API_URL: z.string().default(''),
+  JUDGE0_API_TOKEN: z.string().optional(),
+  JUDGE0_AUTH_TOKEN: z.string().optional(), // legacy alias
+  JUDGE0_AUTH_TYPE: z.enum(['header', 'bearer', 'none']).default('header'),
+  JUDGE0_AUTH_HEADER: z.string().default('X-Auth-Token'),
+  JUDGE0_API_VERSION: z.enum(['ce', 'extra', 'self']).default('ce'),
+  JUDGE0_FETCH_LANGUAGES: z.preprocess(toBool, z.boolean()).default(false),
+  JUDGE0_LANGUAGES_CACHE_TTL_MS: z.coerce.number().int().positive().default(3_600_000),
+  JUDGE0_WAIT_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
+  JUDGE0_POLL_MODE: z.preprocess(toBool, z.boolean()).default(false),
+  JUDGE0_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(1_000),
+  JUDGE0_POLL_MAX_ATTEMPTS: z.coerce.number().int().positive().default(60),
+  JUDGE0_CONCURRENCY: z.coerce.number().int().positive().default(3),
+  JUDGE0_MAX_TESTCASES_PER_JOB: z.coerce.number().int().positive().default(32),
+  JUDGE0_MAX_CPU_SECONDS: z.coerce.number().int().positive().default(15),
+  JUDGE0_MAX_MEMORY_KB: z.coerce.number().int().positive().default(512_000),
+  JUDGE0_PROVIDER_OVERRIDE: z.string().optional(),
+
+  // ---------------------------------------------------------------- *
+  // Phase 5 — queue pipeline
+  // ---------------------------------------------------------------- *
+  QUEUE_SUBMISSION_ATTEMPTS: z.coerce.number().int().positive().default(3),
+  QUEUE_SUBMISSION_BACKOFF_MS: z.coerce.number().int().positive().default(2_000),
+  QUEUE_RESULT_ATTEMPTS: z.coerce.number().int().positive().default(5),
+  QUEUE_JOB_MAX_DURATION_MS: z.coerce.number().int().positive().default(300_000),
+  CODE_MAX_BYTES: z.coerce.number().int().positive().default(65_536),
+  WORKER_HEARTBEAT_INTERVAL_MS: z.coerce.number().int().positive().default(10_000),
+  WORKER_HEARTBEAT_TTL_MS: z.coerce.number().int().positive().default(30_000),
+  CODE_XP_REWARD_SUBMISSION: z.coerce.number().int().positive().default(250),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -122,7 +158,55 @@ export const config = {
   get redis() {
     const c = cfg();
     const url = c.UPSTASH_REDIS_REST_URL || c.REDIS_URL;
-    return { url, ttlSeconds: c.REDIS_TTL_SECONDS, token: c.UPSTASH_REDIS_TOKEN };
+    return { url, ttlSeconds: c.REDIS_TTL_SECONDS, token: c.UPSTASH_REDIS_TOKEN, tls: c.REDIS_TLS, bullmqPrefix: c.BULLMQ_PREFIX };
+  },
+  get judge0() {
+    const c = cfg();
+    const token = c.JUDGE0_API_TOKEN || c.JUDGE0_AUTH_TOKEN || '';
+    const unconfigured = !c.JUDGE0_API_URL || /your_url/i.test(c.JUDGE0_API_URL) || !token || /your_key/i.test(token);
+    return {
+      apiUrl: c.JUDGE0_API_URL,
+      apiToken: token,
+      authType: c.JUDGE0_AUTH_TYPE,
+      authHeader: c.JUDGE0_AUTH_HEADER,
+      apiVersion: c.JUDGE0_API_VERSION,
+      fetchLanguages: c.JUDGE0_FETCH_LANGUAGES,
+      languagesCacheTtlMs: c.JUDGE0_LANGUAGES_CACHE_TTL_MS,
+      waitTimeoutMs: c.JUDGE0_WAIT_TIMEOUT_MS,
+      pollMode: c.JUDGE0_POLL_MODE,
+      pollIntervalMs: c.JUDGE0_POLL_INTERVAL_MS,
+      pollMaxAttempts: c.JUDGE0_POLL_MAX_ATTEMPTS,
+      concurrency: c.JUDGE0_CONCURRENCY,
+      maxTestcasesPerJob: c.JUDGE0_MAX_TESTCASES_PER_JOB,
+      maxCpuSeconds: c.JUDGE0_MAX_CPU_SECONDS,
+      maxMemoryKb: c.JUDGE0_MAX_MEMORY_KB,
+      providerOverride: c.JUDGE0_PROVIDER_OVERRIDE,
+      enabled: !unconfigured,
+    };
+  },
+  get queue() {
+    const c = cfg();
+    return {
+      prefix: c.BULLMQ_PREFIX,
+      submissionAttempts: c.QUEUE_SUBMISSION_ATTEMPTS,
+      submissionBackoffMs: c.QUEUE_SUBMISSION_BACKOFF_MS,
+      resultAttempts: c.QUEUE_RESULT_ATTEMPTS,
+      jobMaxDurationMs: c.QUEUE_JOB_MAX_DURATION_MS,
+      codeMaxBytes: c.CODE_MAX_BYTES,
+    };
+  },
+  get worker() {
+    const c = cfg();
+    return {
+      heartbeatIntervalMs: c.WORKER_HEARTBEAT_INTERVAL_MS,
+      heartbeatTtlMs: c.WORKER_HEARTBEAT_TTL_MS,
+    };
+  },
+  get code() {
+    const c = cfg();
+    return {
+      xpRewardSubmission: c.CODE_XP_REWARD_SUBMISSION,
+    };
   },
   get ai() {
     const c = cfg();

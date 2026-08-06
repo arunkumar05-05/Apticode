@@ -1,4 +1,14 @@
+/**
+ * Coding challenges + async submission pipeline (Phase 5).
+ *
+ * saveCodingSubmission now persists a QUEUED row and enqueues it; when Redis
+ * is unreachable the submission runs inline through the same worker
+ * processors, so the legacy synchronous behavior (and its tests) keep
+ * working with no Redis. Response shape stays backward-compatible:
+ * { id, problemTitle, language, status, timestamp, runtime?, memory? }.
+ */
 import { db } from '../prisma/db';
+import { enqueueSubmission } from '../queues/queueService';
 
 export async function getChallenges() {
   try {
@@ -76,21 +86,25 @@ export async function addTestcase(problemId: string, data: { inputData: string; 
   return tc;
 }
 
+/**
+ * Legacy status vocabulary → Phase 5 statuses.
+ * ACCEPTED → 'SUCCESS' (legacy), non-terminal → 'PENDING', everything else
+ * (WRONG_ANSWER, PARTIAL, COMPILE_ERROR, RUNTIME_ERROR, TIME_LIMIT_EXCEEDED,
+ * SYSTEM_ERROR, TIMED_OUT, CANCELLED) passes through unchanged.
+ */
+export function mapSubmissionStatus(status: string): string {
+  if (status === 'ACCEPTED') return 'SUCCESS';
+  if (status === 'QUEUED' || status === 'RUNNING' || status === 'PENDING') return 'PENDING';
+  return status;
+}
+
 export async function saveCodingSubmission(userId: string, data: any) {
   const { problemId, problemTitle, code, language } = data;
+  const lang = language || 'python';
 
-  const containsPlaceholders = 
-    code.includes('pass') || 
-    code.includes('return new int[0]') || 
-    code.includes('return 0') || 
-    code.includes('return null') ||
-    code.includes('return NULL');
-
-  const verdict = !containsPlaceholders ? 'SUCCESS' : 'WRONG_ANSWER';
-  const runtime = Math.floor(Math.random() * 15) + 5; // milliseconds
-  const memory = Math.floor(Math.random() * 1500) + 5000; // kb
-
-  let dbProblem = await db.codingProblem.findFirst({ where: { title: problemTitle } });
+  let dbProblem = problemId
+    ? await db.codingProblem.findUnique({ where: { id: problemId } })
+    : await db.codingProblem.findFirst({ where: { title: problemTitle } });
   if (!dbProblem) {
     dbProblem = await db.codingProblem.create({
       data: {
@@ -106,28 +120,98 @@ export async function saveCodingSubmission(userId: string, data: any) {
       userId,
       problemId: dbProblem.id,
       code,
-      language: language || 'python',
-      status: verdict === 'SUCCESS' ? 'ACCEPTED' : 'WRONG_ANSWER',
-      executionMs: runtime,
-      memoryKb: memory
+      language: lang,
+      status: 'QUEUED'
     }
   });
 
-  if (verdict === 'SUCCESS') {
-    await db.user.update({
-      where: { id: userId },
-      data: { xp: { increment: 250 } }
-    });
+  const result = await enqueueSubmission({
+    submissionId: submission.id,
+    userId,
+    problemId: dbProblem.id,
+    code,
+    language: lang,
+    enqueuedAt: Date.now()
+  });
+
+  let status = 'QUEUED';
+  let runtime: number | undefined;
+  let memory: number | undefined;
+  if (result.mode === 'inline') {
+    const final = await db.codingSubmission.findUnique({ where: { id: submission.id } });
+    status = mapSubmissionStatus(final?.status || result.status);
+    runtime = final?.executionMs ?? undefined;
+    memory = final?.memoryKb ?? undefined;
   }
 
   return {
     id: submission.id,
-    problemTitle,
-    language: language || 'python',
-    status: verdict,
+    problemTitle: dbProblem.title,
+    language: lang,
+    status,
     timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString(),
     runtime,
     memory
+  };
+}
+
+/**
+ * Single submission view. Hidden testcases are redacted to
+ * { testcaseId, hidden, verdict, executionMs, memoryKb } — never
+ * input/expected/stdout. Non-owners get 404 unless ADMIN.
+ */
+export async function getSubmissionById(id: string, userId: string, role: string) {
+  const submission = await db.codingSubmission.findUnique({
+    where: { id },
+    include: { problem: true }
+  });
+  if (!submission) return null;
+  if (submission.userId !== userId && role !== 'ADMIN') return null;
+
+  let perTestCase: any[] | undefined;
+  try {
+    const parsed = submission.resultJson ? JSON.parse(submission.resultJson) : null;
+    if (parsed && Array.isArray(parsed.perTestCase) && parsed.perTestCase.length > 0) {
+      perTestCase = parsed.perTestCase.map((tc: any) => {
+        if (tc.hidden) {
+          return {
+            testcaseId: tc.testcaseId,
+            hidden: true,
+            verdict: tc.verdict,
+            executionMs: tc.executionMs,
+            memoryKb: tc.memoryKb
+          };
+        }
+        return {
+          testcaseId: tc.testcaseId,
+          hidden: false,
+          verdict: tc.verdict,
+          stdout: tc.stdout,
+          stderr: tc.stderr,
+          compileOutput: tc.compileOutput,
+          executionMs: tc.executionMs,
+          memoryKb: tc.memoryKb
+        };
+      });
+    }
+  } catch {
+    perTestCase = undefined;
+  }
+
+  return {
+    id: submission.id,
+    problemId: submission.problemId,
+    problemTitle: submission.problem?.title || 'Coding Problem',
+    language: submission.language || 'python',
+    code: submission.code,
+    status: mapSubmissionStatus(submission.status),
+    verdict: submission.status,
+    executionMs: submission.executionMs ?? undefined,
+    memoryKb: submission.memoryKb ?? undefined,
+    createdAt: submission.createdAt,
+    completedAt: submission.completedAt ?? undefined,
+    errorMessage: submission.errorMessage ?? undefined,
+    perTestCase
   };
 }
 
@@ -141,7 +225,7 @@ export async function getUserCodingHistory(userId: string) {
   return attempts.map((att: any) => ({
     problemTitle: att.problem?.title || 'Coding Problem',
     language: att.language || 'python',
-    status: att.status === 'ACCEPTED' ? 'SUCCESS' : 'WRONG_ANSWER',
+    status: mapSubmissionStatus(att.status),
     timestamp: new Date(att.createdAt).toLocaleTimeString() + ' ' + new Date(att.createdAt).toLocaleDateString()
   }));
 }

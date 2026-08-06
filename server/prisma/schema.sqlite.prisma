@@ -273,13 +273,24 @@ model CodingSubmission {
   problem     CodingProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
   code        String
   language    String        @default("python")
-  status      String        @default("PENDING")
+  status      String        @default("PENDING") // PENDING|ACCEPTED|WRONG_ANSWER|TIME_LIMIT_EXCEEDED|RUNTIME_ERROR|COMPILE_ERROR|QUEUED|RUNNING|PARTIAL|TIMED_OUT|CANCELLED|SYSTEM_ERROR
   executionMs Int?
   memoryKb    Int?
   createdAt   DateTime      @default(now())
 
+  // Phase 5 — async queue pipeline (nullable/defaulted only)
+  startedAt   DateTime?
+  completedAt DateTime?
+  attempts    Int           @default(0)
+  xpAwarded   Boolean       @default(false)
+  errorMessage String?
+  resultJson  String?
+  queueJobId  String?
+
   @@index([userId, createdAt])
   @@index([problemId, status])
+  @@index([status, completedAt])
+  @@index([language, status, completedAt])
 }
 
 model CommunicationSession {

@@ -42,5 +42,47 @@ services:
     ports:
       - '6379:6379'
 
+  # Phase 5 — BullMQ code-execution worker (same image as the API, different entrypoint)
+  worker:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: apticode/server:latest
+    env_file: .env
+    command: ['node', 'dist/worker/index.js']
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  # Optional local Judge0 CE runner (no auth by default):
+  #   docker compose --profile judge0 up -d
+  judge0:
+    image: judge0/judge0-ce:1.13.0
+    profiles: ['judge0']
+    command: ./bin/rails server -p 2358
+    ports:
+      - '2358:2358'
+    environment:
+      RAILS_ENV: development
+      SECRET_KEY_BASE: dev-secret-key-base-change-me
+      REDIS_URL: redis://redis:6379
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: apticode
+      POSTGRES_PASSWORD: apticode
+      POSTGRES_DB: apticode
+      JUDGE0_DAEMON_PROCESSES: '4'
+      JUDGE0_MAX_QUEUE_SIZE: '100'
+      JUDGE0_ENABLE_WAIT: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
 volumes:
   pg_data:
