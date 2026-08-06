@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, CheckCircle2, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
-import { apiFetch } from '../config/api';
-import Scene3D from './three/LazyScene3D';
+import { apiFetch, ApiError } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
 interface Problem {
@@ -130,7 +129,7 @@ function getCurrentUserEmail(): string {
 }
 
 type RunStatus = 'IDLE' | 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR' | 'PENDING';
-type HistoryStatus = 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR';
+type HistoryStatus = 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR' | 'QUEUED';
 
 function mapRunStatus(status: string | undefined): RunStatus {
   if (status === 'SUCCESS' || status === 'ACCEPTED') return 'SUCCESS';
@@ -143,6 +142,7 @@ function mapHistoryStatus(status: string | undefined): HistoryStatus {
   const mapped = mapRunStatus(status);
   if (mapped === 'SUCCESS') return 'SUCCESS';
   if (mapped === 'WRONG_ANSWER') return 'WRONG_ANSWER';
+  if (mapped === 'PENDING') return 'QUEUED';
   return 'COMPILE_ERROR';
 }
 
@@ -157,6 +157,7 @@ export default function CodingView() {
   const [isRunning, setIsRunning] = useState(false);
   const [runStatus, setRunStatus] = useState<RunStatus>('IDLE');
   const [lastExecutionMs, setLastExecutionMs] = useState<number | undefined>(undefined);
+  const [pollTimedOut, setPollTimedOut] = useState(false);
   const [lastError, setLastError] = useState<string | undefined>(undefined);
   const [debugReport, setDebugReport] = useState('');
   const [isDebugging, setIsDebugging] = useState(false);
@@ -237,6 +238,7 @@ export default function CodingView() {
 
   const handleRunCode = async () => {
     setIsRunning(true);
+    setPollTimedOut(false);
     setConsoleTab('console');
 
     const userEmail = getCurrentUserEmail();
@@ -267,6 +269,7 @@ export default function CodingView() {
           errorMessage = sub.errorMessage;
           break;
         }
+        if (statusResult === 'PENDING') setPollTimedOut(true);
       }
 
       setIsRunning(false);
@@ -292,6 +295,15 @@ export default function CodingView() {
         console.error('Failed to save submission history backup:', err);
       }
     } catch (err: any) {
+      // A real API error (validation, session expiry, server failure) must never
+      // fake a local verdict — surface the server message instead.
+      if (err instanceof ApiError) {
+        setIsRunning(false);
+        setRunStatus('COMPILE_ERROR');
+        setLastExecutionMs(undefined);
+        setLastError(err.message);
+        return;
+      }
       console.warn('[Coding Backend] API execution failed. Simulating local sandbox compiler.', err.message);
       
       setTimeout(async () => {
@@ -360,7 +372,7 @@ export default function CodingView() {
 
       {/* Shards constellation band */}
       <div className="relative overflow-hidden pointer-events-none lc-glass">
-        <Scene3D variant="shards" className="h-20 sm:h-24" interactive={false} />
+        <div className="h-20 sm:h-24" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
       </div>
 
       {/* Mobile Tab Switcher */}
@@ -575,7 +587,7 @@ export default function CodingView() {
                       ) : runStatus === 'PENDING' ? (
                         <div className="space-y-1.5">
                           <p className="text-lc-amber flex items-center space-x-1"><RefreshCw className="w-3.5 h-3.5 animate-spin" /> <span>Pending — execution queued in sandbox pipeline.</span></p>
-                          <p className="text-lc-text-muted">Waiting for the worker to pick up the job...</p>
+                          <p className="text-lc-text-muted">{pollTimedOut ? 'Still queued after ~18s — it will appear in Submission Logs once the worker processes it.' : 'Waiting for the worker to pick up the job...'}</p>
                         </div>
                       ) : runStatus === 'SUCCESS' ? (
                         <div className="space-y-1.5">
@@ -672,9 +684,9 @@ export default function CodingView() {
                           <p className="text-[10px] text-lc-text-muted">{sub.timestamp}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          sub.status === 'SUCCESS' ? 'bg-lc-emerald/10 text-lc-emerald' : sub.status === 'COMPILE_ERROR' ? 'bg-lc-amber/10 text-lc-amber' : 'bg-lc-rose/10 text-lc-rose'
+                          sub.status === 'SUCCESS' ? 'bg-lc-emerald/10 text-lc-emerald' : sub.status === 'QUEUED' ? 'bg-lc-amber/10 text-lc-amber' : sub.status === 'COMPILE_ERROR' ? 'bg-lc-amber/10 text-lc-amber' : 'bg-lc-rose/10 text-lc-rose'
                         }`}>
-                          {sub.status === 'SUCCESS' ? 'Accepted' : sub.status === 'COMPILE_ERROR' ? 'Compile Error' : 'Wrong Answer'}
+                          {sub.status === 'SUCCESS' ? 'Accepted' : sub.status === 'QUEUED' ? 'Queued' : sub.status === 'COMPILE_ERROR' ? 'Compile Error' : 'Wrong Answer'}
                         </span>
                       </div>
                     ))}

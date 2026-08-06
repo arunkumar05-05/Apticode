@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Award, ClipboardList, Sparkles, Download, GraduationCap, RefreshCw } from 'lucide-react';
-import { apiFetch } from '../config/api';
+import { apiFetch, ApiError } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
-import Scene3D from './three/LazyScene3D';
 
 interface ProfileData {
   fullName: string;
@@ -174,33 +173,36 @@ export default function ProfileView() {
     // 400 the local state and localStorage must keep the last good profile.
     let serverOk = true;
     try {
-      const resData = await apiFetch<{ status?: string; profile?: any; errors?: any[]; message?: string }>('/profile', {
+      const resData = await apiFetch<{ status?: string; profile?: any }>('/profile', {
         method: 'PUT',
         body: JSON.stringify(formattedData)
       });
-      if (resData.status === 'fail') {
-        setSaveErrors(
-          Array.isArray(resData.errors)
-            ? resData.errors
-            : [{ field: '', message: resData.message || 'Could not save profile.' }]
-        );
-        serverOk = false;
-      } else {
-        setSaveErrors([]);
-        if (resData.status === 'success' && resData.profile) {
-          const raw = resData.profile;
-          const updated: ProfileData = {
-            ...formattedData,
-            fullName: formatHumanName(raw.fullName, raw.email)
-          };
-          setProfile(updated);
-          setEditData(updated);
-          if (updated.email) {
-            localStorage.setItem(`apticode-user-profile-${updated.email}`, JSON.stringify(updated));
-          }
+      setSaveErrors([]);
+      if (resData.status === 'success' && resData.profile) {
+        const raw = resData.profile;
+        const updated: ProfileData = {
+          ...formattedData,
+          fullName: formatHumanName(raw.fullName, raw.email)
+        };
+        setProfile(updated);
+        setEditData(updated);
+        if (updated.email) {
+          localStorage.setItem(`apticode-user-profile-${updated.email}`, JSON.stringify(updated));
         }
       }
-    } catch {
+    } catch (err) {
+      // The server enforces required fields with 400 { status:'fail', errors:[{field,message}] }.
+      // apiFetch throws ApiError for any non-2xx — surface the field errors instead of
+      // falling through to the "saved successfully" path.
+      if (err instanceof ApiError) {
+        setSaveErrors(
+          Array.isArray(err.payload?.errors)
+            ? err.payload.errors
+            : [{ field: '', message: err.message || 'Could not save profile.' }]
+        );
+        serverOk = false;
+        return;
+      }
       console.warn('[Profile Save] Server fetch offline fallback active.');
     } finally {
       setSaving(false);
@@ -237,7 +239,7 @@ export default function ProfileView() {
 
       <div className="relative overflow-hidden pointer-events-none mb-6 lg:mb-8">
         <div className="lc-glass h-44 sm:h-52 lg:h-60 overflow-hidden">
-          <Scene3D variant="crystal" className="absolute inset-0" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
         </div>
       </div>
 

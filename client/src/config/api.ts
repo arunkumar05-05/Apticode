@@ -73,10 +73,14 @@ async function attemptRefresh(): Promise<string | null> {
     });
     const body = await res.json().catch(() => null);
     if (!res.ok || !body || body.status !== 'success' || !body.token) return null;
+    // Guard against the logout/clear race: if the session was cleared while the
+    // refresh was in flight, do not resurrect it with rotated tokens.
+    const current = getSession();
+    if (!current?.refreshToken) return null;
     saveSession({
-      ...session,
+      ...current,
       token: body.token,
-      refreshToken: body.refreshToken || session.refreshToken
+      refreshToken: body.refreshToken || current.refreshToken
     });
     return body.token;
   } catch {

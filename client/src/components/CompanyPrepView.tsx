@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ChevronRight, CheckCircle2, DollarSign } from 'lucide-react';
-import Scene3D from './three/LazyScene3D';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
 interface CompanyConfig {
@@ -78,7 +77,7 @@ export default function CompanyPrepView() {
       <div className="grid md:grid-cols-4 gap-8 pb-12 text-left">
         {/* Vault constellation band */}
         <div className="hidden md:col-span-4 lg:block lc-glass relative overflow-hidden pointer-events-none">
-          <Scene3D variant="vault" className="h-40 lg:h-56" interactive={false} />
+          <div className="h-40 lg:h-56" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
         </div>
 
         {/* Sidebar: Companies List */}

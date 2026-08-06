@@ -3,10 +3,8 @@ import {
   Users, FileSpreadsheet, Trash2, Search,
   Sparkles, Code, BookOpen, Layers, Activity, HeartPulse, Database, Cpu
 } from 'lucide-react';
-import { supabase } from '../supabase';
 import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
-import Scene3D from './three/LazyScene3D';
 
 interface StudentRecord {
   id: string;
@@ -187,23 +185,40 @@ export default function AdminView() {
     setMonitoringLoading(true);
     setMonitoringError(null);
     const loadMonitoring = async () => {
-      try {
-        const [aiHealth, queueRes, workerRes] = await Promise.all([
-          apiFetch<{ aiEnabled?: boolean; overallHealthy?: boolean; providers?: any[] }>('/admin/ai/health'),
-          apiFetch<{ data?: { redisReachable?: boolean; queues?: any[] } }>('/admin/code/queue'),
-          apiFetch<{ data?: { workers?: any[]; config?: any } }>('/admin/code/worker')
-        ]);
-        if (!cancelled) {
-          setMonitoring({ aiHealth, queue: queueRes.data || null, workers: workerRes.data || null });
-        }
-      } catch (err: any) {
-        console.warn('[Admin Monitoring] fetch failed:', err.message);
-        if (!cancelled) setMonitoringError('Pipeline metrics unavailable right now.');
-      } finally {
-        if (!cancelled) setMonitoringLoading(false);
+      // /admin/code/worker can hang for a long time when Redis is down — bound every
+      // panel with a timeout and let each one degrade independently (allSettled).
+      const withTimeout = <T,>(promise: Promise<T>, ms: number): Promise<T> =>
+        new Promise<T>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('timeout')), ms);
+          promise.then(
+            (v) => { clearTimeout(timer); resolve(v); },
+            (e) => { clearTimeout(timer); reject(e); }
+          );
+        });
+      const [aiResult, queueResult, workerResult] = await Promise.allSettled([
+        withTimeout(apiFetch<{ aiEnabled?: boolean; overallHealthy?: boolean; providers?: any[] }>('/admin/ai/health'), 8000),
+        withTimeout(apiFetch<{ data?: { redisReachable?: boolean; queues?: any[] } }>('/admin/code/queue'), 8000),
+        withTimeout(apiFetch<{ data?: { workers?: any[]; config?: any } }>('/admin/code/worker'), 8000)
+      ]);
+      if (cancelled) return;
+      setMonitoring({
+        aiHealth: aiResult.status === 'fulfilled' ? aiResult.value : null,
+        queue: queueResult.status === 'fulfilled' ? queueResult.value.data || null : null,
+        workers: workerResult.status === 'fulfilled' ? workerResult.value.data || null : null
+      });
+      const failed = [aiResult, queueResult, workerResult].filter((r) => r.status === 'rejected').length;
+      if (failed > 0) {
+        console.warn(`[Admin Monitoring] ${failed} of 3 pipeline panels failed to load.`);
+        setMonitoringError(
+          failed === 3 ? 'Pipeline metrics unavailable right now.' : 'Some pipeline metrics are unavailable.'
+        );
+      } else {
+        setMonitoringError(null);
       }
     };
-    loadMonitoring();
+    loadMonitoring().finally(() => {
+      if (!cancelled) setMonitoringLoading(false);
+    });
     return () => { cancelled = true; };
   }, [adminActiveTab]);
 
@@ -373,7 +388,7 @@ export default function AdminView() {
 
       <div className="relative overflow-hidden pointer-events-none mb-6 lg:mb-8">
         <div className="lc-glass h-40 sm:h-48 lg:h-52 overflow-hidden">
-          <Scene3D variant="vault" className="absolute inset-0" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
         </div>
       </div>
 

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Zap, Play, CheckCircle2, Code, MessageSquare, BookOpen, Star, AlertCircle, Compass, Sparkles, Brain, ArrowRight } from 'lucide-react';
 import { apiFetch } from '../config/api';
-import Scene3D from './three/LazyScene3D';
 import { StatOrb, XPBar, TiltCard, ConfettiBurst } from './ui/Gamified';
 import { GlassCard, GlassModal } from './ui/GlassCard';
 
@@ -52,8 +51,6 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   }, []);
 
   const nextLevelXp = 30000;
-  const progressPercent = Math.min((safeXp / nextLevelXp) * 100, 100);
-  const streakNum = parseInt(String(statsData?.streak ?? '0'), 10) || 0;
 
   const handleBuyItem = (item: RewardItem) => {
     if (spendXp(item.cost)) {
@@ -106,7 +103,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
         className="lc-glass relative overflow-hidden p-4 sm:p-6"
       >
         <div className="pointer-events-none absolute -right-16 -top-16 h-72 w-72 opacity-60">
-          <Scene3D variant="core" data={{ xpRatio: progressPercent / 100, streak: streakNum }} interactive={false} />
+          <div style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
         </div>
         <div className="relative grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="space-y-4">
@@ -131,7 +128,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
           </div>
           <div className="hidden lg:block">
             <div className="lc-glass-raised rounded-2xl h-full min-h-56">
-              <Scene3D variant="core" data={{ xpRatio: progressPercent / 100, streak: streakNum }} className="h-full" />
+              <div className="h-full" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
             </div>
           </div>
         </div>

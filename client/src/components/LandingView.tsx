@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Terminal, BookOpen, Mic, Brain, Award, Zap } from 'lucide-react';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
-import Scene3D from './three/LazyScene3D';
 import { TiltCard } from './ui/Gamified';
 
 interface LandingViewProps {
@@ -91,7 +90,7 @@ export default function LandingView({ onEnterApp }: LandingViewProps) {
             className="relative"
           >
             <div className="lc-glass h-72 overflow-hidden sm:h-96 lg:h-[26rem]">
-              <Scene3D variant="orbital" className="absolute inset-0" interactive />
+              <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
             </div>
             <div className="pointer-events-none absolute -bottom-3 -left-3 rounded-2xl lc-neo px-3 py-2 font-mono text-xs text-lc-text">
               <span className="text-lc-emerald">●</span> orbit sync: active

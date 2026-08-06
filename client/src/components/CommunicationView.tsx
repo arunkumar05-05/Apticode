@@ -3,7 +3,6 @@ import { Mic, MicOff, AlertTriangle, Volume2, Sparkles, MessageCircle, BookOpen 
 import { supabase } from '../supabase';
 import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
-import Scene3D from './three/LazyScene3D';
 
 interface GrammarQuestion {
   id: number;
@@ -265,7 +264,7 @@ export default function CommunicationView() {
       {/* Waveform scene band */}
       <div className="relative overflow-hidden pointer-events-none">
         <div className="lc-glass h-40 sm:h-48 lg:h-52 overflow-hidden">
-          <Scene3D variant="waveform" data={{ isActive: isRecording, amplitude: seconds }} className="absolute inset-0" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
         </div>
       </div>
 

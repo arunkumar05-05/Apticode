@@ -18,7 +18,7 @@ import AppLayout from './components/AppLayout';
 import CompanyPrepView from './components/CompanyPrepView';
 import MockTestView from './components/MockTestView';
 import ProfileView from './components/ProfileView';
-import { getApiBaseUrl, logout } from './config/api';
+import { apiFetch, getSession, logout, saveSession } from './config/api';
 import { supabase } from './supabase';
 
 
@@ -90,19 +90,19 @@ export default function App() {
     if (!user) return;
     const fetchStats = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${user.token}`
-          }
-        });
-        const data = await response.json();
+        // apiFetch reads the live session from localStorage, so it stays correct
+        // even after the refresh-token rotation swaps the in-memory token.
+        const data = await apiFetch<{ status?: string; stats?: any }>('/dashboard');
         if (data.status === 'success' && data.stats) {
           setXp(data.stats.xp);
           setLevel(data.stats.level);
           if (data.stats.fullName && data.stats.fullName !== 'New Candidate' && data.stats.fullName !== 'Candidate' && data.stats.fullName !== user.name) {
-            const updatedUser = { ...user, name: data.stats.fullName };
-            setUser(updatedUser);
-            localStorage.setItem('apticode-user-session', JSON.stringify(updatedUser));
+            const session = getSession();
+            if (session) {
+              const updatedUser = { ...session, name: data.stats.fullName };
+              setUser(updatedUser);
+              saveSession(updatedUser);
+            }
           }
         }
       } catch (err) {
@@ -136,6 +136,7 @@ export default function App() {
     const handleSessionExpired = () => {
       localStorage.removeItem('apticode-user-session');
       localStorage.removeItem('apticode-current-view');
+      supabase.auth.signOut().catch(() => {});
       setUser(null);
       setCurrentView('landing');
     };

@@ -4,7 +4,6 @@ import { Lock, Mail, User, ShieldCheck, ArrowRight, Zap } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../supabase';
 import { getApiBaseUrl } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
-import Scene3D from './three/LazyScene3D';
 import { NeoSegment } from './ui/NeoKey';
 
 const getSupabaseErrorMessage = (error: any, defaultFallback: string): string => {
@@ -253,7 +252,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
           className="hidden lg:block relative"
         >
           <div className="lc-glass h-96 overflow-hidden">
-            <Scene3D variant="crystal" className="absolute inset-0" />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }} />
           </div>
           <div className="mt-6 space-y-3">
             <h2 className="text-lc-text">Your crystal-clear path to placement.</h2>

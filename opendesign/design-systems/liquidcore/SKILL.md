@@ -14,7 +14,7 @@ description: LiquidCore design system — AptiCode's liquid-crystal console aest
 | Glass | `GlassCard` | Structure, cards, nav, modals, tables |
 | Neo | `NeoKey`, `NeoSegment`, `NeoSlider`, `NeoSwitch` | Tactile controls |
 | Liquid | `LiquidBackdrop` | Living ambient layer |
-| 3D | `Scene3D` (variants) | Dimensional scenes per screen |
+| Visual | `VisualPattern` (variants) | Responsive pattern layer |
 
 ## Tokens
 

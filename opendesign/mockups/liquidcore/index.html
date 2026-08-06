@@ -83,7 +83,7 @@
       border: 1px solid var(--lc-glass-border);
     }
     .ring::after {
-      content: "3D scene slot — e.g. orbital / crystal / core"; position: absolute; inset: 0;
+      content: "Visual pattern — ambient / flow / core"; position: absolute; inset: 0;
       display: flex; align-items: center; justify-content: center;
       font-family: var(--lc-font-mono); font-size: 12px; color: var(--lc-text-secondary); letter-spacing: 0.1em;
     }
@@ -118,7 +118,7 @@
         <button id="btn-light">light</button>
       </div>
       <h1>AptiCode · <span class="gradient-text">LiquidCore</span></h1>
-      <p class="muted" style="max-width: 640px">Glass slabs, neumorphic keys, liquid ambient motion, and a 3D scene per screen. Dark-first with a light executive mode. Built to degrade gracefully from high to low devices.</p>
+      <p class="muted" style="max-width: 640px">Glass slabs, neumorphic keys, liquid ambient motion, and visual patterns per screen. Dark-first with a light executive mode. Built to degrade gracefully from high to low devices.</p>
       <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px">
         <button class="btn primary">Start preparing →</button>
         <button class="btn ghost">Explore modules</button>
@@ -177,7 +177,7 @@
 
     <section class="section">
       <h2>Stat orbs</h2>
-      <div class="grid cols-4">
+      <div class="grid cols-2 cols-md-4">
         <div class="lc-glass orb"><p class="label">Daily streak</p><p class="value" style="color: var(--lc-brand-cyan)">12 days</p><p class="mono muted" style="font-size: 11px">▲ +1 vs yesterday</p></div>
         <div class="lc-glass orb"><p class="label">Coding accuracy</p><p class="value" style="color: var(--lc-brand-violet)">86.4%</p><p class="mono muted" style="font-size: 11px">▲ +2.1%</p></div>
         <div class="lc-glass orb"><p class="label">Aptitude score</p><p class="value" style="color: var(--lc-status-emerald)">78/100</p><p class="mono muted" style="font-size: 11px">▲ top quartile</p></div>
@@ -186,12 +186,22 @@
     </section>
 
     <section class="section">
-      <h2>3D scene slots</h2>
-      <div class="grid cols-2">
-        <div class="ring"></div>
-        <div class="ring"></div>
+      <h2>Visual patterns</h2>
+      <div class="grid cols-2 cols-md-4">
+        <div class="ring">
+          <div class="ring::after">Ambient light field — responsive gradient</div>
+        </div>
+        <div class="ring">
+          <div class="ring::after">Data flow pattern</div>
+        </div>
+        <div class="ring">
+          <div class="ring::after">Energy core node</div>
+        </div>
+        <div class="ring">
+          <div class="ring::after">Network node</div>
+        </div>
       </div>
-      <p class="mono muted" style="font-size: 11px; margin-top: 12px">Scene variants: orbital · crystal · helix · core · spheregrid · shards · waveform · holoring · papers · podium · terrain · vault. Loaded lazily per screen; static gradient on low-tier / reduced-motion devices.</p>
+      <p class="mono muted" style="font-size: 11px; margin-top: 12px">Static animated patterns optimized for mobile; no WebGL/Canvas. Smooth transform-only animations with device-tier awareness.</p>
     </section>
 
     <footer style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--lc-glass-border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px">

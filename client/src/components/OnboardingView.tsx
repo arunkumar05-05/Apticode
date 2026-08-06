@@ -5,9 +5,8 @@ import {
   Target, Cpu, Compass, BookOpen, Layers, Zap, Flame,
   BarChart3, Star, Sparkles, X, Code, Users
 } from 'lucide-react';
-import { apiFetch } from '../config/api';
+import { apiFetch, ApiError } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
-import Scene3D from './three/LazyScene3D';
 import { NeoSlider } from './ui/NeoKey';
 
 interface OnboardingViewProps {
@@ -205,7 +204,7 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
               : nameHandle
                 ? nameHandle.charAt(0).toUpperCase() + nameHandle.slice(1)
                 : 'Student';
-          const resData = await apiFetch<{ status?: string; errors?: any[]; message?: string }>('/profile', {
+          const resData = await apiFetch<{ status?: string; profile?: any }>('/profile', {
             method: 'PUT',
             body: JSON.stringify({
               fullName: derivedName,
@@ -221,19 +220,21 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
               isOnboarded: true
             })
           });
-          if (resData.status === 'fail') {
-            setSaveErrors(
-              Array.isArray(resData.errors)
-                ? resData.errors
-                : [{ field: '', message: resData.message || 'Could not save profile details.' }]
-            );
-            setSaving(false);
-            return;
-          }
           setSaveErrors([]);
         }
       }
     } catch (err) {
+      // 400 { status:'fail', errors:[{field,message}] } arrives as ApiError — show the
+      // field errors and abort onboarding instead of silently completing it.
+      if (err instanceof ApiError) {
+        setSaveErrors(
+          Array.isArray(err.payload?.errors)
+            ? err.payload.errors
+            : [{ field: '', message: err.message || 'Could not save profile details.' }]
+        );
+        setSaving(false);
+        return;
+      }
       console.warn('[Onboarding] API sync error:', err);
     }
 
@@ -652,22 +653,21 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
       <LiquidBackdrop />
 
       <div className="grid w-full max-w-5xl items-start gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="hidden lg:block relative"
-        >
-          <div className="lc-glass h-80 overflow-hidden">
-            <Scene3D variant="helix" data={{ progress: (step - 1) / 7 }} className="absolute inset-0" />
-          </div>
-          <div className="mt-5 space-y-2">
-            <p className="font-mono text-xs uppercase tracking-[0.22em] text-lc-cyan">Personalization engine</p>
-            <p className="text-sm leading-6 text-lc-text-muted">
-              Every step refines your roadmap — helix coils represent your learning path taking shape.
-            </p>
-          </div>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="hidden lg:block relative"
+          >
+            <div className="lc-glass h-80 overflow-hidden" style={{ background: 'radial-gradient(circle at 50% 50%, var(--lc-brand-violet) 0%, transparent 70%)' }}>
+            </div>
+            <div className="mt-5 space-y-2">
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-lc-cyan">Personalization engine</p>
+              <p className="text-sm leading-6 text-lc-text-muted">
+                Every step refines your roadmap — visual patterns represent your learning path taking shape.
+              </p>
+            </div>
+          </motion.div>
 
         <div className="w-full max-w-lg mx-auto lg:mx-0">
           {step < 8 && (
