@@ -22,6 +22,8 @@ export class InMemoryStore {
   auditLogs: any[] = [];
   passwordResetTokens: any[] = [];
   emailVerificationTokens: any[] = [];
+  aiMetricsList: any[] = [];
+  aiProviderHealthList: any[] = [];
 
   // Implement generic repositories
   user = this.createRepository('users');
@@ -45,6 +47,8 @@ export class InMemoryStore {
   authAuditLog = this.createRepository('auditLogs');
   passwordResetToken = this.createRepository('passwordResetTokens');
   emailVerificationToken = this.createRepository('emailVerificationTokens');
+  aiMetrics = this.createRepository('aiMetricsList');
+  aiProviderHealth = this.createRepository('aiProviderHealthList');
 
   private createRepository(arrayName: string) {
     const getArray = () => (this as any)[arrayName] as any[];

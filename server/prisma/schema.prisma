@@ -406,3 +406,62 @@ model Notification {
 
   @@index([userId, isRead, createdAt])
 }
+
+// ---------------------------------------------------------------- *
+// Phase 4 — AI observability (additive; no API contract changes)
+// ---------------------------------------------------------------- *
+enum AiOutcome {
+  SUCCESS
+  TIMEOUT
+  QUOTA_EXHAUSTED   // HTTP 402 / quota
+  RATE_LIMITED      // HTTP 429
+  SERVER_ERROR      // 5xx / connection
+  AUTH_FAILURE      // 401
+  INVALID_REQUEST   // 400 / non-retryable
+  CIRCUIT_OPEN      // fail-fast
+  PARSE_ERROR       // JSON salvage failed
+}
+
+model AiMetrics {
+  id          String    @id @default(uuid())
+  requestId   String?
+  userId      String?   // nullable: requests may be unauthenticated
+  feature     String
+  provider    String
+  model       String
+  startTime   DateTime
+  endTime     DateTime
+  durationMs  Int
+  outcome     AiOutcome
+  errorCategory String?
+  retryCount  Int       @default(0)
+  promptTokens    Int?
+  completionTokens Int?
+  totalTokens     Int?
+  estimatedCostUSD  Float?
+  createdAt   DateTime @default(now())
+
+  @@index([feature, createdAt])
+  @@index([provider, createdAt])
+  @@index([outcome, createdAt])
+  @@index([userId, createdAt])
+}
+
+model AiProviderHealth {
+  id              String   @id @default(uuid())
+  provider        String   @unique
+  healthy         Boolean
+  circuitState    String   @default("CLOSED")  // CLOSED | OPEN | HALF_OPEN
+  lastSuccessAt   DateTime?
+  lastFailureAt   DateTime?
+  lastError       String?
+  consecutiveFailures Int  @default(0)
+  avgLatencyMs    Int?
+  errorRate       Float?   // 0..1 over rolling window
+  quotaExhausted  Boolean  @default(false)
+  rateLimited     Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  @@index([provider])
+}
+

@@ -133,6 +133,16 @@ export type Resume = $Result.DefaultSelection<Prisma.$ResumePayload>
  * 
  */
 export type Notification = $Result.DefaultSelection<Prisma.$NotificationPayload>
+/**
+ * Model AiMetrics
+ * 
+ */
+export type AiMetrics = $Result.DefaultSelection<Prisma.$AiMetricsPayload>
+/**
+ * Model AiProviderHealth
+ * 
+ */
+export type AiProviderHealth = $Result.DefaultSelection<Prisma.$AiProviderHealthPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -496,6 +506,26 @@ export class PrismaClient<
     * ```
     */
   get notification(): Prisma.NotificationDelegate<ExtArgs>;
+
+  /**
+   * `prisma.aiMetrics`: Exposes CRUD operations for the **AiMetrics** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AiMetrics
+    * const aiMetrics = await prisma.aiMetrics.findMany()
+    * ```
+    */
+  get aiMetrics(): Prisma.AiMetricsDelegate<ExtArgs>;
+
+  /**
+   * `prisma.aiProviderHealth`: Exposes CRUD operations for the **AiProviderHealth** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more AiProviderHealths
+    * const aiProviderHealths = await prisma.aiProviderHealth.findMany()
+    * ```
+    */
+  get aiProviderHealth(): Prisma.AiProviderHealthDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -960,7 +990,9 @@ export namespace Prisma {
     InterviewMessage: 'InterviewMessage',
     UserAttempt: 'UserAttempt',
     Resume: 'Resume',
-    Notification: 'Notification'
+    Notification: 'Notification',
+    AiMetrics: 'AiMetrics',
+    AiProviderHealth: 'AiProviderHealth'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -976,7 +1008,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "profile" | "refreshToken" | "session" | "authAuditLog" | "passwordResetToken" | "emailVerificationToken" | "xpLog" | "leaderboard" | "aptitudeTopic" | "aptitudeVideo" | "aptitudeNotes" | "aptitudeQuestion" | "userBookmark" | "userTopicProgress" | "codingProblem" | "codingTestcase" | "codingSubmission" | "communicationSession" | "mockInterview" | "interviewMessage" | "userAttempt" | "resume" | "notification"
+      modelProps: "user" | "profile" | "refreshToken" | "session" | "authAuditLog" | "passwordResetToken" | "emailVerificationToken" | "xpLog" | "leaderboard" | "aptitudeTopic" | "aptitudeVideo" | "aptitudeNotes" | "aptitudeQuestion" | "userBookmark" | "userTopicProgress" | "codingProblem" | "codingTestcase" | "codingSubmission" | "communicationSession" | "mockInterview" | "interviewMessage" | "userAttempt" | "resume" | "notification" | "aiMetrics" | "aiProviderHealth"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2657,6 +2689,146 @@ export namespace Prisma {
           count: {
             args: Prisma.NotificationCountArgs<ExtArgs>
             result: $Utils.Optional<NotificationCountAggregateOutputType> | number
+          }
+        }
+      }
+      AiMetrics: {
+        payload: Prisma.$AiMetricsPayload<ExtArgs>
+        fields: Prisma.AiMetricsFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AiMetricsFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AiMetricsFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>
+          }
+          findFirst: {
+            args: Prisma.AiMetricsFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AiMetricsFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>
+          }
+          findMany: {
+            args: Prisma.AiMetricsFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>[]
+          }
+          create: {
+            args: Prisma.AiMetricsCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>
+          }
+          createMany: {
+            args: Prisma.AiMetricsCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AiMetricsCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>[]
+          }
+          delete: {
+            args: Prisma.AiMetricsDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>
+          }
+          update: {
+            args: Prisma.AiMetricsUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>
+          }
+          deleteMany: {
+            args: Prisma.AiMetricsDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AiMetricsUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AiMetricsUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiMetricsPayload>
+          }
+          aggregate: {
+            args: Prisma.AiMetricsAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAiMetrics>
+          }
+          groupBy: {
+            args: Prisma.AiMetricsGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AiMetricsGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AiMetricsCountArgs<ExtArgs>
+            result: $Utils.Optional<AiMetricsCountAggregateOutputType> | number
+          }
+        }
+      }
+      AiProviderHealth: {
+        payload: Prisma.$AiProviderHealthPayload<ExtArgs>
+        fields: Prisma.AiProviderHealthFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.AiProviderHealthFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.AiProviderHealthFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>
+          }
+          findFirst: {
+            args: Prisma.AiProviderHealthFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.AiProviderHealthFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>
+          }
+          findMany: {
+            args: Prisma.AiProviderHealthFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>[]
+          }
+          create: {
+            args: Prisma.AiProviderHealthCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>
+          }
+          createMany: {
+            args: Prisma.AiProviderHealthCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.AiProviderHealthCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>[]
+          }
+          delete: {
+            args: Prisma.AiProviderHealthDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>
+          }
+          update: {
+            args: Prisma.AiProviderHealthUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>
+          }
+          deleteMany: {
+            args: Prisma.AiProviderHealthDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.AiProviderHealthUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.AiProviderHealthUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$AiProviderHealthPayload>
+          }
+          aggregate: {
+            args: Prisma.AiProviderHealthAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateAiProviderHealth>
+          }
+          groupBy: {
+            args: Prisma.AiProviderHealthGroupByArgs<ExtArgs>
+            result: $Utils.Optional<AiProviderHealthGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.AiProviderHealthCountArgs<ExtArgs>
+            result: $Utils.Optional<AiProviderHealthCountAggregateOutputType> | number
           }
         }
       }
@@ -27389,6 +27561,2094 @@ export namespace Prisma {
 
 
   /**
+   * Model AiMetrics
+   */
+
+  export type AggregateAiMetrics = {
+    _count: AiMetricsCountAggregateOutputType | null
+    _avg: AiMetricsAvgAggregateOutputType | null
+    _sum: AiMetricsSumAggregateOutputType | null
+    _min: AiMetricsMinAggregateOutputType | null
+    _max: AiMetricsMaxAggregateOutputType | null
+  }
+
+  export type AiMetricsAvgAggregateOutputType = {
+    durationMs: number | null
+    retryCount: number | null
+    promptTokens: number | null
+    completionTokens: number | null
+    totalTokens: number | null
+    estimatedCostUSD: number | null
+  }
+
+  export type AiMetricsSumAggregateOutputType = {
+    durationMs: number | null
+    retryCount: number | null
+    promptTokens: number | null
+    completionTokens: number | null
+    totalTokens: number | null
+    estimatedCostUSD: number | null
+  }
+
+  export type AiMetricsMinAggregateOutputType = {
+    id: string | null
+    requestId: string | null
+    userId: string | null
+    feature: string | null
+    provider: string | null
+    model: string | null
+    startTime: Date | null
+    endTime: Date | null
+    durationMs: number | null
+    outcome: string | null
+    errorCategory: string | null
+    retryCount: number | null
+    promptTokens: number | null
+    completionTokens: number | null
+    totalTokens: number | null
+    estimatedCostUSD: number | null
+    createdAt: Date | null
+  }
+
+  export type AiMetricsMaxAggregateOutputType = {
+    id: string | null
+    requestId: string | null
+    userId: string | null
+    feature: string | null
+    provider: string | null
+    model: string | null
+    startTime: Date | null
+    endTime: Date | null
+    durationMs: number | null
+    outcome: string | null
+    errorCategory: string | null
+    retryCount: number | null
+    promptTokens: number | null
+    completionTokens: number | null
+    totalTokens: number | null
+    estimatedCostUSD: number | null
+    createdAt: Date | null
+  }
+
+  export type AiMetricsCountAggregateOutputType = {
+    id: number
+    requestId: number
+    userId: number
+    feature: number
+    provider: number
+    model: number
+    startTime: number
+    endTime: number
+    durationMs: number
+    outcome: number
+    errorCategory: number
+    retryCount: number
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+    estimatedCostUSD: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type AiMetricsAvgAggregateInputType = {
+    durationMs?: true
+    retryCount?: true
+    promptTokens?: true
+    completionTokens?: true
+    totalTokens?: true
+    estimatedCostUSD?: true
+  }
+
+  export type AiMetricsSumAggregateInputType = {
+    durationMs?: true
+    retryCount?: true
+    promptTokens?: true
+    completionTokens?: true
+    totalTokens?: true
+    estimatedCostUSD?: true
+  }
+
+  export type AiMetricsMinAggregateInputType = {
+    id?: true
+    requestId?: true
+    userId?: true
+    feature?: true
+    provider?: true
+    model?: true
+    startTime?: true
+    endTime?: true
+    durationMs?: true
+    outcome?: true
+    errorCategory?: true
+    retryCount?: true
+    promptTokens?: true
+    completionTokens?: true
+    totalTokens?: true
+    estimatedCostUSD?: true
+    createdAt?: true
+  }
+
+  export type AiMetricsMaxAggregateInputType = {
+    id?: true
+    requestId?: true
+    userId?: true
+    feature?: true
+    provider?: true
+    model?: true
+    startTime?: true
+    endTime?: true
+    durationMs?: true
+    outcome?: true
+    errorCategory?: true
+    retryCount?: true
+    promptTokens?: true
+    completionTokens?: true
+    totalTokens?: true
+    estimatedCostUSD?: true
+    createdAt?: true
+  }
+
+  export type AiMetricsCountAggregateInputType = {
+    id?: true
+    requestId?: true
+    userId?: true
+    feature?: true
+    provider?: true
+    model?: true
+    startTime?: true
+    endTime?: true
+    durationMs?: true
+    outcome?: true
+    errorCategory?: true
+    retryCount?: true
+    promptTokens?: true
+    completionTokens?: true
+    totalTokens?: true
+    estimatedCostUSD?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type AiMetricsAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AiMetrics to aggregate.
+     */
+    where?: AiMetricsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMetrics to fetch.
+     */
+    orderBy?: AiMetricsOrderByWithRelationInput | AiMetricsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AiMetricsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMetrics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMetrics.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AiMetrics
+    **/
+    _count?: true | AiMetricsCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AiMetricsAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AiMetricsSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AiMetricsMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AiMetricsMaxAggregateInputType
+  }
+
+  export type GetAiMetricsAggregateType<T extends AiMetricsAggregateArgs> = {
+        [P in keyof T & keyof AggregateAiMetrics]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAiMetrics[P]>
+      : GetScalarType<T[P], AggregateAiMetrics[P]>
+  }
+
+
+
+
+  export type AiMetricsGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AiMetricsWhereInput
+    orderBy?: AiMetricsOrderByWithAggregationInput | AiMetricsOrderByWithAggregationInput[]
+    by: AiMetricsScalarFieldEnum[] | AiMetricsScalarFieldEnum
+    having?: AiMetricsScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AiMetricsCountAggregateInputType | true
+    _avg?: AiMetricsAvgAggregateInputType
+    _sum?: AiMetricsSumAggregateInputType
+    _min?: AiMetricsMinAggregateInputType
+    _max?: AiMetricsMaxAggregateInputType
+  }
+
+  export type AiMetricsGroupByOutputType = {
+    id: string
+    requestId: string | null
+    userId: string | null
+    feature: string
+    provider: string
+    model: string
+    startTime: Date
+    endTime: Date
+    durationMs: number
+    outcome: string
+    errorCategory: string | null
+    retryCount: number
+    promptTokens: number | null
+    completionTokens: number | null
+    totalTokens: number | null
+    estimatedCostUSD: number | null
+    createdAt: Date
+    _count: AiMetricsCountAggregateOutputType | null
+    _avg: AiMetricsAvgAggregateOutputType | null
+    _sum: AiMetricsSumAggregateOutputType | null
+    _min: AiMetricsMinAggregateOutputType | null
+    _max: AiMetricsMaxAggregateOutputType | null
+  }
+
+  type GetAiMetricsGroupByPayload<T extends AiMetricsGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AiMetricsGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AiMetricsGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AiMetricsGroupByOutputType[P]>
+            : GetScalarType<T[P], AiMetricsGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AiMetricsSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    userId?: boolean
+    feature?: boolean
+    provider?: boolean
+    model?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    durationMs?: boolean
+    outcome?: boolean
+    errorCategory?: boolean
+    retryCount?: boolean
+    promptTokens?: boolean
+    completionTokens?: boolean
+    totalTokens?: boolean
+    estimatedCostUSD?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["aiMetrics"]>
+
+  export type AiMetricsSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    requestId?: boolean
+    userId?: boolean
+    feature?: boolean
+    provider?: boolean
+    model?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    durationMs?: boolean
+    outcome?: boolean
+    errorCategory?: boolean
+    retryCount?: boolean
+    promptTokens?: boolean
+    completionTokens?: boolean
+    totalTokens?: boolean
+    estimatedCostUSD?: boolean
+    createdAt?: boolean
+  }, ExtArgs["result"]["aiMetrics"]>
+
+  export type AiMetricsSelectScalar = {
+    id?: boolean
+    requestId?: boolean
+    userId?: boolean
+    feature?: boolean
+    provider?: boolean
+    model?: boolean
+    startTime?: boolean
+    endTime?: boolean
+    durationMs?: boolean
+    outcome?: boolean
+    errorCategory?: boolean
+    retryCount?: boolean
+    promptTokens?: boolean
+    completionTokens?: boolean
+    totalTokens?: boolean
+    estimatedCostUSD?: boolean
+    createdAt?: boolean
+  }
+
+
+  export type $AiMetricsPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AiMetrics"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      requestId: string | null
+      userId: string | null
+      feature: string
+      provider: string
+      model: string
+      startTime: Date
+      endTime: Date
+      durationMs: number
+      outcome: string
+      errorCategory: string | null
+      retryCount: number
+      promptTokens: number | null
+      completionTokens: number | null
+      totalTokens: number | null
+      estimatedCostUSD: number | null
+      createdAt: Date
+    }, ExtArgs["result"]["aiMetrics"]>
+    composites: {}
+  }
+
+  type AiMetricsGetPayload<S extends boolean | null | undefined | AiMetricsDefaultArgs> = $Result.GetResult<Prisma.$AiMetricsPayload, S>
+
+  type AiMetricsCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AiMetricsFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AiMetricsCountAggregateInputType | true
+    }
+
+  export interface AiMetricsDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AiMetrics'], meta: { name: 'AiMetrics' } }
+    /**
+     * Find zero or one AiMetrics that matches the filter.
+     * @param {AiMetricsFindUniqueArgs} args - Arguments to find a AiMetrics
+     * @example
+     * // Get one AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AiMetricsFindUniqueArgs>(args: SelectSubset<T, AiMetricsFindUniqueArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AiMetrics that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AiMetricsFindUniqueOrThrowArgs} args - Arguments to find a AiMetrics
+     * @example
+     * // Get one AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AiMetricsFindUniqueOrThrowArgs>(args: SelectSubset<T, AiMetricsFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AiMetrics that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsFindFirstArgs} args - Arguments to find a AiMetrics
+     * @example
+     * // Get one AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AiMetricsFindFirstArgs>(args?: SelectSubset<T, AiMetricsFindFirstArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AiMetrics that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsFindFirstOrThrowArgs} args - Arguments to find a AiMetrics
+     * @example
+     * // Get one AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AiMetricsFindFirstOrThrowArgs>(args?: SelectSubset<T, AiMetricsFindFirstOrThrowArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AiMetrics that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.findMany()
+     * 
+     * // Get first 10 AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const aiMetricsWithIdOnly = await prisma.aiMetrics.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AiMetricsFindManyArgs>(args?: SelectSubset<T, AiMetricsFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AiMetrics.
+     * @param {AiMetricsCreateArgs} args - Arguments to create a AiMetrics.
+     * @example
+     * // Create one AiMetrics
+     * const AiMetrics = await prisma.aiMetrics.create({
+     *   data: {
+     *     // ... data to create a AiMetrics
+     *   }
+     * })
+     * 
+     */
+    create<T extends AiMetricsCreateArgs>(args: SelectSubset<T, AiMetricsCreateArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AiMetrics.
+     * @param {AiMetricsCreateManyArgs} args - Arguments to create many AiMetrics.
+     * @example
+     * // Create many AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AiMetricsCreateManyArgs>(args?: SelectSubset<T, AiMetricsCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AiMetrics and returns the data saved in the database.
+     * @param {AiMetricsCreateManyAndReturnArgs} args - Arguments to create many AiMetrics.
+     * @example
+     * // Create many AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AiMetrics and only return the `id`
+     * const aiMetricsWithIdOnly = await prisma.aiMetrics.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AiMetricsCreateManyAndReturnArgs>(args?: SelectSubset<T, AiMetricsCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AiMetrics.
+     * @param {AiMetricsDeleteArgs} args - Arguments to delete one AiMetrics.
+     * @example
+     * // Delete one AiMetrics
+     * const AiMetrics = await prisma.aiMetrics.delete({
+     *   where: {
+     *     // ... filter to delete one AiMetrics
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AiMetricsDeleteArgs>(args: SelectSubset<T, AiMetricsDeleteArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AiMetrics.
+     * @param {AiMetricsUpdateArgs} args - Arguments to update one AiMetrics.
+     * @example
+     * // Update one AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AiMetricsUpdateArgs>(args: SelectSubset<T, AiMetricsUpdateArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AiMetrics.
+     * @param {AiMetricsDeleteManyArgs} args - Arguments to filter AiMetrics to delete.
+     * @example
+     * // Delete a few AiMetrics
+     * const { count } = await prisma.aiMetrics.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AiMetricsDeleteManyArgs>(args?: SelectSubset<T, AiMetricsDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AiMetrics.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AiMetricsUpdateManyArgs>(args: SelectSubset<T, AiMetricsUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AiMetrics.
+     * @param {AiMetricsUpsertArgs} args - Arguments to update or create a AiMetrics.
+     * @example
+     * // Update or create a AiMetrics
+     * const aiMetrics = await prisma.aiMetrics.upsert({
+     *   create: {
+     *     // ... data to create a AiMetrics
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AiMetrics we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AiMetricsUpsertArgs>(args: SelectSubset<T, AiMetricsUpsertArgs<ExtArgs>>): Prisma__AiMetricsClient<$Result.GetResult<Prisma.$AiMetricsPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AiMetrics.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsCountArgs} args - Arguments to filter AiMetrics to count.
+     * @example
+     * // Count the number of AiMetrics
+     * const count = await prisma.aiMetrics.count({
+     *   where: {
+     *     // ... the filter for the AiMetrics we want to count
+     *   }
+     * })
+    **/
+    count<T extends AiMetricsCountArgs>(
+      args?: Subset<T, AiMetricsCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AiMetricsCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AiMetrics.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AiMetricsAggregateArgs>(args: Subset<T, AiMetricsAggregateArgs>): Prisma.PrismaPromise<GetAiMetricsAggregateType<T>>
+
+    /**
+     * Group by AiMetrics.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiMetricsGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AiMetricsGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AiMetricsGroupByArgs['orderBy'] }
+        : { orderBy?: AiMetricsGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AiMetricsGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAiMetricsGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AiMetrics model
+   */
+  readonly fields: AiMetricsFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AiMetrics.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AiMetricsClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AiMetrics model
+   */ 
+  interface AiMetricsFieldRefs {
+    readonly id: FieldRef<"AiMetrics", 'String'>
+    readonly requestId: FieldRef<"AiMetrics", 'String'>
+    readonly userId: FieldRef<"AiMetrics", 'String'>
+    readonly feature: FieldRef<"AiMetrics", 'String'>
+    readonly provider: FieldRef<"AiMetrics", 'String'>
+    readonly model: FieldRef<"AiMetrics", 'String'>
+    readonly startTime: FieldRef<"AiMetrics", 'DateTime'>
+    readonly endTime: FieldRef<"AiMetrics", 'DateTime'>
+    readonly durationMs: FieldRef<"AiMetrics", 'Int'>
+    readonly outcome: FieldRef<"AiMetrics", 'String'>
+    readonly errorCategory: FieldRef<"AiMetrics", 'String'>
+    readonly retryCount: FieldRef<"AiMetrics", 'Int'>
+    readonly promptTokens: FieldRef<"AiMetrics", 'Int'>
+    readonly completionTokens: FieldRef<"AiMetrics", 'Int'>
+    readonly totalTokens: FieldRef<"AiMetrics", 'Int'>
+    readonly estimatedCostUSD: FieldRef<"AiMetrics", 'Float'>
+    readonly createdAt: FieldRef<"AiMetrics", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AiMetrics findUnique
+   */
+  export type AiMetricsFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * Filter, which AiMetrics to fetch.
+     */
+    where: AiMetricsWhereUniqueInput
+  }
+
+  /**
+   * AiMetrics findUniqueOrThrow
+   */
+  export type AiMetricsFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * Filter, which AiMetrics to fetch.
+     */
+    where: AiMetricsWhereUniqueInput
+  }
+
+  /**
+   * AiMetrics findFirst
+   */
+  export type AiMetricsFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * Filter, which AiMetrics to fetch.
+     */
+    where?: AiMetricsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMetrics to fetch.
+     */
+    orderBy?: AiMetricsOrderByWithRelationInput | AiMetricsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AiMetrics.
+     */
+    cursor?: AiMetricsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMetrics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMetrics.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AiMetrics.
+     */
+    distinct?: AiMetricsScalarFieldEnum | AiMetricsScalarFieldEnum[]
+  }
+
+  /**
+   * AiMetrics findFirstOrThrow
+   */
+  export type AiMetricsFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * Filter, which AiMetrics to fetch.
+     */
+    where?: AiMetricsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMetrics to fetch.
+     */
+    orderBy?: AiMetricsOrderByWithRelationInput | AiMetricsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AiMetrics.
+     */
+    cursor?: AiMetricsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMetrics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMetrics.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AiMetrics.
+     */
+    distinct?: AiMetricsScalarFieldEnum | AiMetricsScalarFieldEnum[]
+  }
+
+  /**
+   * AiMetrics findMany
+   */
+  export type AiMetricsFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * Filter, which AiMetrics to fetch.
+     */
+    where?: AiMetricsWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiMetrics to fetch.
+     */
+    orderBy?: AiMetricsOrderByWithRelationInput | AiMetricsOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AiMetrics.
+     */
+    cursor?: AiMetricsWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiMetrics from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiMetrics.
+     */
+    skip?: number
+    distinct?: AiMetricsScalarFieldEnum | AiMetricsScalarFieldEnum[]
+  }
+
+  /**
+   * AiMetrics create
+   */
+  export type AiMetricsCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * The data needed to create a AiMetrics.
+     */
+    data: XOR<AiMetricsCreateInput, AiMetricsUncheckedCreateInput>
+  }
+
+  /**
+   * AiMetrics createMany
+   */
+  export type AiMetricsCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AiMetrics.
+     */
+    data: AiMetricsCreateManyInput | AiMetricsCreateManyInput[]
+  }
+
+  /**
+   * AiMetrics createManyAndReturn
+   */
+  export type AiMetricsCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AiMetrics.
+     */
+    data: AiMetricsCreateManyInput | AiMetricsCreateManyInput[]
+  }
+
+  /**
+   * AiMetrics update
+   */
+  export type AiMetricsUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * The data needed to update a AiMetrics.
+     */
+    data: XOR<AiMetricsUpdateInput, AiMetricsUncheckedUpdateInput>
+    /**
+     * Choose, which AiMetrics to update.
+     */
+    where: AiMetricsWhereUniqueInput
+  }
+
+  /**
+   * AiMetrics updateMany
+   */
+  export type AiMetricsUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AiMetrics.
+     */
+    data: XOR<AiMetricsUpdateManyMutationInput, AiMetricsUncheckedUpdateManyInput>
+    /**
+     * Filter which AiMetrics to update
+     */
+    where?: AiMetricsWhereInput
+  }
+
+  /**
+   * AiMetrics upsert
+   */
+  export type AiMetricsUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * The filter to search for the AiMetrics to update in case it exists.
+     */
+    where: AiMetricsWhereUniqueInput
+    /**
+     * In case the AiMetrics found by the `where` argument doesn't exist, create a new AiMetrics with this data.
+     */
+    create: XOR<AiMetricsCreateInput, AiMetricsUncheckedCreateInput>
+    /**
+     * In case the AiMetrics was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AiMetricsUpdateInput, AiMetricsUncheckedUpdateInput>
+  }
+
+  /**
+   * AiMetrics delete
+   */
+  export type AiMetricsDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+    /**
+     * Filter which AiMetrics to delete.
+     */
+    where: AiMetricsWhereUniqueInput
+  }
+
+  /**
+   * AiMetrics deleteMany
+   */
+  export type AiMetricsDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AiMetrics to delete
+     */
+    where?: AiMetricsWhereInput
+  }
+
+  /**
+   * AiMetrics without action
+   */
+  export type AiMetricsDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiMetrics
+     */
+    select?: AiMetricsSelect<ExtArgs> | null
+  }
+
+
+  /**
+   * Model AiProviderHealth
+   */
+
+  export type AggregateAiProviderHealth = {
+    _count: AiProviderHealthCountAggregateOutputType | null
+    _avg: AiProviderHealthAvgAggregateOutputType | null
+    _sum: AiProviderHealthSumAggregateOutputType | null
+    _min: AiProviderHealthMinAggregateOutputType | null
+    _max: AiProviderHealthMaxAggregateOutputType | null
+  }
+
+  export type AiProviderHealthAvgAggregateOutputType = {
+    consecutiveFailures: number | null
+    avgLatencyMs: number | null
+    errorRate: number | null
+  }
+
+  export type AiProviderHealthSumAggregateOutputType = {
+    consecutiveFailures: number | null
+    avgLatencyMs: number | null
+    errorRate: number | null
+  }
+
+  export type AiProviderHealthMinAggregateOutputType = {
+    id: string | null
+    provider: string | null
+    healthy: boolean | null
+    circuitState: string | null
+    lastSuccessAt: Date | null
+    lastFailureAt: Date | null
+    lastError: string | null
+    consecutiveFailures: number | null
+    avgLatencyMs: number | null
+    errorRate: number | null
+    quotaExhausted: boolean | null
+    rateLimited: boolean | null
+    updatedAt: Date | null
+  }
+
+  export type AiProviderHealthMaxAggregateOutputType = {
+    id: string | null
+    provider: string | null
+    healthy: boolean | null
+    circuitState: string | null
+    lastSuccessAt: Date | null
+    lastFailureAt: Date | null
+    lastError: string | null
+    consecutiveFailures: number | null
+    avgLatencyMs: number | null
+    errorRate: number | null
+    quotaExhausted: boolean | null
+    rateLimited: boolean | null
+    updatedAt: Date | null
+  }
+
+  export type AiProviderHealthCountAggregateOutputType = {
+    id: number
+    provider: number
+    healthy: number
+    circuitState: number
+    lastSuccessAt: number
+    lastFailureAt: number
+    lastError: number
+    consecutiveFailures: number
+    avgLatencyMs: number
+    errorRate: number
+    quotaExhausted: number
+    rateLimited: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type AiProviderHealthAvgAggregateInputType = {
+    consecutiveFailures?: true
+    avgLatencyMs?: true
+    errorRate?: true
+  }
+
+  export type AiProviderHealthSumAggregateInputType = {
+    consecutiveFailures?: true
+    avgLatencyMs?: true
+    errorRate?: true
+  }
+
+  export type AiProviderHealthMinAggregateInputType = {
+    id?: true
+    provider?: true
+    healthy?: true
+    circuitState?: true
+    lastSuccessAt?: true
+    lastFailureAt?: true
+    lastError?: true
+    consecutiveFailures?: true
+    avgLatencyMs?: true
+    errorRate?: true
+    quotaExhausted?: true
+    rateLimited?: true
+    updatedAt?: true
+  }
+
+  export type AiProviderHealthMaxAggregateInputType = {
+    id?: true
+    provider?: true
+    healthy?: true
+    circuitState?: true
+    lastSuccessAt?: true
+    lastFailureAt?: true
+    lastError?: true
+    consecutiveFailures?: true
+    avgLatencyMs?: true
+    errorRate?: true
+    quotaExhausted?: true
+    rateLimited?: true
+    updatedAt?: true
+  }
+
+  export type AiProviderHealthCountAggregateInputType = {
+    id?: true
+    provider?: true
+    healthy?: true
+    circuitState?: true
+    lastSuccessAt?: true
+    lastFailureAt?: true
+    lastError?: true
+    consecutiveFailures?: true
+    avgLatencyMs?: true
+    errorRate?: true
+    quotaExhausted?: true
+    rateLimited?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type AiProviderHealthAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AiProviderHealth to aggregate.
+     */
+    where?: AiProviderHealthWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiProviderHealths to fetch.
+     */
+    orderBy?: AiProviderHealthOrderByWithRelationInput | AiProviderHealthOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: AiProviderHealthWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiProviderHealths from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiProviderHealths.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned AiProviderHealths
+    **/
+    _count?: true | AiProviderHealthCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: AiProviderHealthAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: AiProviderHealthSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: AiProviderHealthMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: AiProviderHealthMaxAggregateInputType
+  }
+
+  export type GetAiProviderHealthAggregateType<T extends AiProviderHealthAggregateArgs> = {
+        [P in keyof T & keyof AggregateAiProviderHealth]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateAiProviderHealth[P]>
+      : GetScalarType<T[P], AggregateAiProviderHealth[P]>
+  }
+
+
+
+
+  export type AiProviderHealthGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: AiProviderHealthWhereInput
+    orderBy?: AiProviderHealthOrderByWithAggregationInput | AiProviderHealthOrderByWithAggregationInput[]
+    by: AiProviderHealthScalarFieldEnum[] | AiProviderHealthScalarFieldEnum
+    having?: AiProviderHealthScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: AiProviderHealthCountAggregateInputType | true
+    _avg?: AiProviderHealthAvgAggregateInputType
+    _sum?: AiProviderHealthSumAggregateInputType
+    _min?: AiProviderHealthMinAggregateInputType
+    _max?: AiProviderHealthMaxAggregateInputType
+  }
+
+  export type AiProviderHealthGroupByOutputType = {
+    id: string
+    provider: string
+    healthy: boolean
+    circuitState: string
+    lastSuccessAt: Date | null
+    lastFailureAt: Date | null
+    lastError: string | null
+    consecutiveFailures: number
+    avgLatencyMs: number | null
+    errorRate: number | null
+    quotaExhausted: boolean
+    rateLimited: boolean
+    updatedAt: Date
+    _count: AiProviderHealthCountAggregateOutputType | null
+    _avg: AiProviderHealthAvgAggregateOutputType | null
+    _sum: AiProviderHealthSumAggregateOutputType | null
+    _min: AiProviderHealthMinAggregateOutputType | null
+    _max: AiProviderHealthMaxAggregateOutputType | null
+  }
+
+  type GetAiProviderHealthGroupByPayload<T extends AiProviderHealthGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<AiProviderHealthGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof AiProviderHealthGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], AiProviderHealthGroupByOutputType[P]>
+            : GetScalarType<T[P], AiProviderHealthGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type AiProviderHealthSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    provider?: boolean
+    healthy?: boolean
+    circuitState?: boolean
+    lastSuccessAt?: boolean
+    lastFailureAt?: boolean
+    lastError?: boolean
+    consecutiveFailures?: boolean
+    avgLatencyMs?: boolean
+    errorRate?: boolean
+    quotaExhausted?: boolean
+    rateLimited?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["aiProviderHealth"]>
+
+  export type AiProviderHealthSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    provider?: boolean
+    healthy?: boolean
+    circuitState?: boolean
+    lastSuccessAt?: boolean
+    lastFailureAt?: boolean
+    lastError?: boolean
+    consecutiveFailures?: boolean
+    avgLatencyMs?: boolean
+    errorRate?: boolean
+    quotaExhausted?: boolean
+    rateLimited?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["aiProviderHealth"]>
+
+  export type AiProviderHealthSelectScalar = {
+    id?: boolean
+    provider?: boolean
+    healthy?: boolean
+    circuitState?: boolean
+    lastSuccessAt?: boolean
+    lastFailureAt?: boolean
+    lastError?: boolean
+    consecutiveFailures?: boolean
+    avgLatencyMs?: boolean
+    errorRate?: boolean
+    quotaExhausted?: boolean
+    rateLimited?: boolean
+    updatedAt?: boolean
+  }
+
+
+  export type $AiProviderHealthPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "AiProviderHealth"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      provider: string
+      healthy: boolean
+      circuitState: string
+      lastSuccessAt: Date | null
+      lastFailureAt: Date | null
+      lastError: string | null
+      consecutiveFailures: number
+      avgLatencyMs: number | null
+      errorRate: number | null
+      quotaExhausted: boolean
+      rateLimited: boolean
+      updatedAt: Date
+    }, ExtArgs["result"]["aiProviderHealth"]>
+    composites: {}
+  }
+
+  type AiProviderHealthGetPayload<S extends boolean | null | undefined | AiProviderHealthDefaultArgs> = $Result.GetResult<Prisma.$AiProviderHealthPayload, S>
+
+  type AiProviderHealthCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<AiProviderHealthFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: AiProviderHealthCountAggregateInputType | true
+    }
+
+  export interface AiProviderHealthDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['AiProviderHealth'], meta: { name: 'AiProviderHealth' } }
+    /**
+     * Find zero or one AiProviderHealth that matches the filter.
+     * @param {AiProviderHealthFindUniqueArgs} args - Arguments to find a AiProviderHealth
+     * @example
+     * // Get one AiProviderHealth
+     * const aiProviderHealth = await prisma.aiProviderHealth.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends AiProviderHealthFindUniqueArgs>(args: SelectSubset<T, AiProviderHealthFindUniqueArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one AiProviderHealth that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {AiProviderHealthFindUniqueOrThrowArgs} args - Arguments to find a AiProviderHealth
+     * @example
+     * // Get one AiProviderHealth
+     * const aiProviderHealth = await prisma.aiProviderHealth.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends AiProviderHealthFindUniqueOrThrowArgs>(args: SelectSubset<T, AiProviderHealthFindUniqueOrThrowArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first AiProviderHealth that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthFindFirstArgs} args - Arguments to find a AiProviderHealth
+     * @example
+     * // Get one AiProviderHealth
+     * const aiProviderHealth = await prisma.aiProviderHealth.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends AiProviderHealthFindFirstArgs>(args?: SelectSubset<T, AiProviderHealthFindFirstArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first AiProviderHealth that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthFindFirstOrThrowArgs} args - Arguments to find a AiProviderHealth
+     * @example
+     * // Get one AiProviderHealth
+     * const aiProviderHealth = await prisma.aiProviderHealth.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends AiProviderHealthFindFirstOrThrowArgs>(args?: SelectSubset<T, AiProviderHealthFindFirstOrThrowArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more AiProviderHealths that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all AiProviderHealths
+     * const aiProviderHealths = await prisma.aiProviderHealth.findMany()
+     * 
+     * // Get first 10 AiProviderHealths
+     * const aiProviderHealths = await prisma.aiProviderHealth.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const aiProviderHealthWithIdOnly = await prisma.aiProviderHealth.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends AiProviderHealthFindManyArgs>(args?: SelectSubset<T, AiProviderHealthFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a AiProviderHealth.
+     * @param {AiProviderHealthCreateArgs} args - Arguments to create a AiProviderHealth.
+     * @example
+     * // Create one AiProviderHealth
+     * const AiProviderHealth = await prisma.aiProviderHealth.create({
+     *   data: {
+     *     // ... data to create a AiProviderHealth
+     *   }
+     * })
+     * 
+     */
+    create<T extends AiProviderHealthCreateArgs>(args: SelectSubset<T, AiProviderHealthCreateArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many AiProviderHealths.
+     * @param {AiProviderHealthCreateManyArgs} args - Arguments to create many AiProviderHealths.
+     * @example
+     * // Create many AiProviderHealths
+     * const aiProviderHealth = await prisma.aiProviderHealth.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends AiProviderHealthCreateManyArgs>(args?: SelectSubset<T, AiProviderHealthCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many AiProviderHealths and returns the data saved in the database.
+     * @param {AiProviderHealthCreateManyAndReturnArgs} args - Arguments to create many AiProviderHealths.
+     * @example
+     * // Create many AiProviderHealths
+     * const aiProviderHealth = await prisma.aiProviderHealth.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many AiProviderHealths and only return the `id`
+     * const aiProviderHealthWithIdOnly = await prisma.aiProviderHealth.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends AiProviderHealthCreateManyAndReturnArgs>(args?: SelectSubset<T, AiProviderHealthCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a AiProviderHealth.
+     * @param {AiProviderHealthDeleteArgs} args - Arguments to delete one AiProviderHealth.
+     * @example
+     * // Delete one AiProviderHealth
+     * const AiProviderHealth = await prisma.aiProviderHealth.delete({
+     *   where: {
+     *     // ... filter to delete one AiProviderHealth
+     *   }
+     * })
+     * 
+     */
+    delete<T extends AiProviderHealthDeleteArgs>(args: SelectSubset<T, AiProviderHealthDeleteArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one AiProviderHealth.
+     * @param {AiProviderHealthUpdateArgs} args - Arguments to update one AiProviderHealth.
+     * @example
+     * // Update one AiProviderHealth
+     * const aiProviderHealth = await prisma.aiProviderHealth.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends AiProviderHealthUpdateArgs>(args: SelectSubset<T, AiProviderHealthUpdateArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more AiProviderHealths.
+     * @param {AiProviderHealthDeleteManyArgs} args - Arguments to filter AiProviderHealths to delete.
+     * @example
+     * // Delete a few AiProviderHealths
+     * const { count } = await prisma.aiProviderHealth.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends AiProviderHealthDeleteManyArgs>(args?: SelectSubset<T, AiProviderHealthDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more AiProviderHealths.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many AiProviderHealths
+     * const aiProviderHealth = await prisma.aiProviderHealth.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends AiProviderHealthUpdateManyArgs>(args: SelectSubset<T, AiProviderHealthUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one AiProviderHealth.
+     * @param {AiProviderHealthUpsertArgs} args - Arguments to update or create a AiProviderHealth.
+     * @example
+     * // Update or create a AiProviderHealth
+     * const aiProviderHealth = await prisma.aiProviderHealth.upsert({
+     *   create: {
+     *     // ... data to create a AiProviderHealth
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the AiProviderHealth we want to update
+     *   }
+     * })
+     */
+    upsert<T extends AiProviderHealthUpsertArgs>(args: SelectSubset<T, AiProviderHealthUpsertArgs<ExtArgs>>): Prisma__AiProviderHealthClient<$Result.GetResult<Prisma.$AiProviderHealthPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of AiProviderHealths.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthCountArgs} args - Arguments to filter AiProviderHealths to count.
+     * @example
+     * // Count the number of AiProviderHealths
+     * const count = await prisma.aiProviderHealth.count({
+     *   where: {
+     *     // ... the filter for the AiProviderHealths we want to count
+     *   }
+     * })
+    **/
+    count<T extends AiProviderHealthCountArgs>(
+      args?: Subset<T, AiProviderHealthCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], AiProviderHealthCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a AiProviderHealth.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends AiProviderHealthAggregateArgs>(args: Subset<T, AiProviderHealthAggregateArgs>): Prisma.PrismaPromise<GetAiProviderHealthAggregateType<T>>
+
+    /**
+     * Group by AiProviderHealth.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {AiProviderHealthGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends AiProviderHealthGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: AiProviderHealthGroupByArgs['orderBy'] }
+        : { orderBy?: AiProviderHealthGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, AiProviderHealthGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetAiProviderHealthGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the AiProviderHealth model
+   */
+  readonly fields: AiProviderHealthFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for AiProviderHealth.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__AiProviderHealthClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the AiProviderHealth model
+   */ 
+  interface AiProviderHealthFieldRefs {
+    readonly id: FieldRef<"AiProviderHealth", 'String'>
+    readonly provider: FieldRef<"AiProviderHealth", 'String'>
+    readonly healthy: FieldRef<"AiProviderHealth", 'Boolean'>
+    readonly circuitState: FieldRef<"AiProviderHealth", 'String'>
+    readonly lastSuccessAt: FieldRef<"AiProviderHealth", 'DateTime'>
+    readonly lastFailureAt: FieldRef<"AiProviderHealth", 'DateTime'>
+    readonly lastError: FieldRef<"AiProviderHealth", 'String'>
+    readonly consecutiveFailures: FieldRef<"AiProviderHealth", 'Int'>
+    readonly avgLatencyMs: FieldRef<"AiProviderHealth", 'Int'>
+    readonly errorRate: FieldRef<"AiProviderHealth", 'Float'>
+    readonly quotaExhausted: FieldRef<"AiProviderHealth", 'Boolean'>
+    readonly rateLimited: FieldRef<"AiProviderHealth", 'Boolean'>
+    readonly updatedAt: FieldRef<"AiProviderHealth", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * AiProviderHealth findUnique
+   */
+  export type AiProviderHealthFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * Filter, which AiProviderHealth to fetch.
+     */
+    where: AiProviderHealthWhereUniqueInput
+  }
+
+  /**
+   * AiProviderHealth findUniqueOrThrow
+   */
+  export type AiProviderHealthFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * Filter, which AiProviderHealth to fetch.
+     */
+    where: AiProviderHealthWhereUniqueInput
+  }
+
+  /**
+   * AiProviderHealth findFirst
+   */
+  export type AiProviderHealthFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * Filter, which AiProviderHealth to fetch.
+     */
+    where?: AiProviderHealthWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiProviderHealths to fetch.
+     */
+    orderBy?: AiProviderHealthOrderByWithRelationInput | AiProviderHealthOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AiProviderHealths.
+     */
+    cursor?: AiProviderHealthWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiProviderHealths from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiProviderHealths.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AiProviderHealths.
+     */
+    distinct?: AiProviderHealthScalarFieldEnum | AiProviderHealthScalarFieldEnum[]
+  }
+
+  /**
+   * AiProviderHealth findFirstOrThrow
+   */
+  export type AiProviderHealthFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * Filter, which AiProviderHealth to fetch.
+     */
+    where?: AiProviderHealthWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiProviderHealths to fetch.
+     */
+    orderBy?: AiProviderHealthOrderByWithRelationInput | AiProviderHealthOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for AiProviderHealths.
+     */
+    cursor?: AiProviderHealthWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiProviderHealths from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiProviderHealths.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of AiProviderHealths.
+     */
+    distinct?: AiProviderHealthScalarFieldEnum | AiProviderHealthScalarFieldEnum[]
+  }
+
+  /**
+   * AiProviderHealth findMany
+   */
+  export type AiProviderHealthFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * Filter, which AiProviderHealths to fetch.
+     */
+    where?: AiProviderHealthWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of AiProviderHealths to fetch.
+     */
+    orderBy?: AiProviderHealthOrderByWithRelationInput | AiProviderHealthOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing AiProviderHealths.
+     */
+    cursor?: AiProviderHealthWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` AiProviderHealths from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` AiProviderHealths.
+     */
+    skip?: number
+    distinct?: AiProviderHealthScalarFieldEnum | AiProviderHealthScalarFieldEnum[]
+  }
+
+  /**
+   * AiProviderHealth create
+   */
+  export type AiProviderHealthCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * The data needed to create a AiProviderHealth.
+     */
+    data: XOR<AiProviderHealthCreateInput, AiProviderHealthUncheckedCreateInput>
+  }
+
+  /**
+   * AiProviderHealth createMany
+   */
+  export type AiProviderHealthCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many AiProviderHealths.
+     */
+    data: AiProviderHealthCreateManyInput | AiProviderHealthCreateManyInput[]
+  }
+
+  /**
+   * AiProviderHealth createManyAndReturn
+   */
+  export type AiProviderHealthCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many AiProviderHealths.
+     */
+    data: AiProviderHealthCreateManyInput | AiProviderHealthCreateManyInput[]
+  }
+
+  /**
+   * AiProviderHealth update
+   */
+  export type AiProviderHealthUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * The data needed to update a AiProviderHealth.
+     */
+    data: XOR<AiProviderHealthUpdateInput, AiProviderHealthUncheckedUpdateInput>
+    /**
+     * Choose, which AiProviderHealth to update.
+     */
+    where: AiProviderHealthWhereUniqueInput
+  }
+
+  /**
+   * AiProviderHealth updateMany
+   */
+  export type AiProviderHealthUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update AiProviderHealths.
+     */
+    data: XOR<AiProviderHealthUpdateManyMutationInput, AiProviderHealthUncheckedUpdateManyInput>
+    /**
+     * Filter which AiProviderHealths to update
+     */
+    where?: AiProviderHealthWhereInput
+  }
+
+  /**
+   * AiProviderHealth upsert
+   */
+  export type AiProviderHealthUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * The filter to search for the AiProviderHealth to update in case it exists.
+     */
+    where: AiProviderHealthWhereUniqueInput
+    /**
+     * In case the AiProviderHealth found by the `where` argument doesn't exist, create a new AiProviderHealth with this data.
+     */
+    create: XOR<AiProviderHealthCreateInput, AiProviderHealthUncheckedCreateInput>
+    /**
+     * In case the AiProviderHealth was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<AiProviderHealthUpdateInput, AiProviderHealthUncheckedUpdateInput>
+  }
+
+  /**
+   * AiProviderHealth delete
+   */
+  export type AiProviderHealthDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+    /**
+     * Filter which AiProviderHealth to delete.
+     */
+    where: AiProviderHealthWhereUniqueInput
+  }
+
+  /**
+   * AiProviderHealth deleteMany
+   */
+  export type AiProviderHealthDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which AiProviderHealths to delete
+     */
+    where?: AiProviderHealthWhereInput
+  }
+
+  /**
+   * AiProviderHealth without action
+   */
+  export type AiProviderHealthDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the AiProviderHealth
+     */
+    select?: AiProviderHealthSelect<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -27726,6 +29986,48 @@ export namespace Prisma {
   };
 
   export type NotificationScalarFieldEnum = (typeof NotificationScalarFieldEnum)[keyof typeof NotificationScalarFieldEnum]
+
+
+  export const AiMetricsScalarFieldEnum: {
+    id: 'id',
+    requestId: 'requestId',
+    userId: 'userId',
+    feature: 'feature',
+    provider: 'provider',
+    model: 'model',
+    startTime: 'startTime',
+    endTime: 'endTime',
+    durationMs: 'durationMs',
+    outcome: 'outcome',
+    errorCategory: 'errorCategory',
+    retryCount: 'retryCount',
+    promptTokens: 'promptTokens',
+    completionTokens: 'completionTokens',
+    totalTokens: 'totalTokens',
+    estimatedCostUSD: 'estimatedCostUSD',
+    createdAt: 'createdAt'
+  };
+
+  export type AiMetricsScalarFieldEnum = (typeof AiMetricsScalarFieldEnum)[keyof typeof AiMetricsScalarFieldEnum]
+
+
+  export const AiProviderHealthScalarFieldEnum: {
+    id: 'id',
+    provider: 'provider',
+    healthy: 'healthy',
+    circuitState: 'circuitState',
+    lastSuccessAt: 'lastSuccessAt',
+    lastFailureAt: 'lastFailureAt',
+    lastError: 'lastError',
+    consecutiveFailures: 'consecutiveFailures',
+    avgLatencyMs: 'avgLatencyMs',
+    errorRate: 'errorRate',
+    quotaExhausted: 'quotaExhausted',
+    rateLimited: 'rateLimited',
+    updatedAt: 'updatedAt'
+  };
+
+  export type AiProviderHealthScalarFieldEnum = (typeof AiProviderHealthScalarFieldEnum)[keyof typeof AiProviderHealthScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -29547,6 +31849,214 @@ export namespace Prisma {
     type?: StringWithAggregatesFilter<"Notification"> | string
     isRead?: BoolWithAggregatesFilter<"Notification"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"Notification"> | Date | string
+  }
+
+  export type AiMetricsWhereInput = {
+    AND?: AiMetricsWhereInput | AiMetricsWhereInput[]
+    OR?: AiMetricsWhereInput[]
+    NOT?: AiMetricsWhereInput | AiMetricsWhereInput[]
+    id?: StringFilter<"AiMetrics"> | string
+    requestId?: StringNullableFilter<"AiMetrics"> | string | null
+    userId?: StringNullableFilter<"AiMetrics"> | string | null
+    feature?: StringFilter<"AiMetrics"> | string
+    provider?: StringFilter<"AiMetrics"> | string
+    model?: StringFilter<"AiMetrics"> | string
+    startTime?: DateTimeFilter<"AiMetrics"> | Date | string
+    endTime?: DateTimeFilter<"AiMetrics"> | Date | string
+    durationMs?: IntFilter<"AiMetrics"> | number
+    outcome?: StringFilter<"AiMetrics"> | string
+    errorCategory?: StringNullableFilter<"AiMetrics"> | string | null
+    retryCount?: IntFilter<"AiMetrics"> | number
+    promptTokens?: IntNullableFilter<"AiMetrics"> | number | null
+    completionTokens?: IntNullableFilter<"AiMetrics"> | number | null
+    totalTokens?: IntNullableFilter<"AiMetrics"> | number | null
+    estimatedCostUSD?: FloatNullableFilter<"AiMetrics"> | number | null
+    createdAt?: DateTimeFilter<"AiMetrics"> | Date | string
+  }
+
+  export type AiMetricsOrderByWithRelationInput = {
+    id?: SortOrder
+    requestId?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    feature?: SortOrder
+    provider?: SortOrder
+    model?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    durationMs?: SortOrder
+    outcome?: SortOrder
+    errorCategory?: SortOrderInput | SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrderInput | SortOrder
+    completionTokens?: SortOrderInput | SortOrder
+    totalTokens?: SortOrderInput | SortOrder
+    estimatedCostUSD?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AiMetricsWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: AiMetricsWhereInput | AiMetricsWhereInput[]
+    OR?: AiMetricsWhereInput[]
+    NOT?: AiMetricsWhereInput | AiMetricsWhereInput[]
+    requestId?: StringNullableFilter<"AiMetrics"> | string | null
+    userId?: StringNullableFilter<"AiMetrics"> | string | null
+    feature?: StringFilter<"AiMetrics"> | string
+    provider?: StringFilter<"AiMetrics"> | string
+    model?: StringFilter<"AiMetrics"> | string
+    startTime?: DateTimeFilter<"AiMetrics"> | Date | string
+    endTime?: DateTimeFilter<"AiMetrics"> | Date | string
+    durationMs?: IntFilter<"AiMetrics"> | number
+    outcome?: StringFilter<"AiMetrics"> | string
+    errorCategory?: StringNullableFilter<"AiMetrics"> | string | null
+    retryCount?: IntFilter<"AiMetrics"> | number
+    promptTokens?: IntNullableFilter<"AiMetrics"> | number | null
+    completionTokens?: IntNullableFilter<"AiMetrics"> | number | null
+    totalTokens?: IntNullableFilter<"AiMetrics"> | number | null
+    estimatedCostUSD?: FloatNullableFilter<"AiMetrics"> | number | null
+    createdAt?: DateTimeFilter<"AiMetrics"> | Date | string
+  }, "id">
+
+  export type AiMetricsOrderByWithAggregationInput = {
+    id?: SortOrder
+    requestId?: SortOrderInput | SortOrder
+    userId?: SortOrderInput | SortOrder
+    feature?: SortOrder
+    provider?: SortOrder
+    model?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    durationMs?: SortOrder
+    outcome?: SortOrder
+    errorCategory?: SortOrderInput | SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrderInput | SortOrder
+    completionTokens?: SortOrderInput | SortOrder
+    totalTokens?: SortOrderInput | SortOrder
+    estimatedCostUSD?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: AiMetricsCountOrderByAggregateInput
+    _avg?: AiMetricsAvgOrderByAggregateInput
+    _max?: AiMetricsMaxOrderByAggregateInput
+    _min?: AiMetricsMinOrderByAggregateInput
+    _sum?: AiMetricsSumOrderByAggregateInput
+  }
+
+  export type AiMetricsScalarWhereWithAggregatesInput = {
+    AND?: AiMetricsScalarWhereWithAggregatesInput | AiMetricsScalarWhereWithAggregatesInput[]
+    OR?: AiMetricsScalarWhereWithAggregatesInput[]
+    NOT?: AiMetricsScalarWhereWithAggregatesInput | AiMetricsScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AiMetrics"> | string
+    requestId?: StringNullableWithAggregatesFilter<"AiMetrics"> | string | null
+    userId?: StringNullableWithAggregatesFilter<"AiMetrics"> | string | null
+    feature?: StringWithAggregatesFilter<"AiMetrics"> | string
+    provider?: StringWithAggregatesFilter<"AiMetrics"> | string
+    model?: StringWithAggregatesFilter<"AiMetrics"> | string
+    startTime?: DateTimeWithAggregatesFilter<"AiMetrics"> | Date | string
+    endTime?: DateTimeWithAggregatesFilter<"AiMetrics"> | Date | string
+    durationMs?: IntWithAggregatesFilter<"AiMetrics"> | number
+    outcome?: StringWithAggregatesFilter<"AiMetrics"> | string
+    errorCategory?: StringNullableWithAggregatesFilter<"AiMetrics"> | string | null
+    retryCount?: IntWithAggregatesFilter<"AiMetrics"> | number
+    promptTokens?: IntNullableWithAggregatesFilter<"AiMetrics"> | number | null
+    completionTokens?: IntNullableWithAggregatesFilter<"AiMetrics"> | number | null
+    totalTokens?: IntNullableWithAggregatesFilter<"AiMetrics"> | number | null
+    estimatedCostUSD?: FloatNullableWithAggregatesFilter<"AiMetrics"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"AiMetrics"> | Date | string
+  }
+
+  export type AiProviderHealthWhereInput = {
+    AND?: AiProviderHealthWhereInput | AiProviderHealthWhereInput[]
+    OR?: AiProviderHealthWhereInput[]
+    NOT?: AiProviderHealthWhereInput | AiProviderHealthWhereInput[]
+    id?: StringFilter<"AiProviderHealth"> | string
+    provider?: StringFilter<"AiProviderHealth"> | string
+    healthy?: BoolFilter<"AiProviderHealth"> | boolean
+    circuitState?: StringFilter<"AiProviderHealth"> | string
+    lastSuccessAt?: DateTimeNullableFilter<"AiProviderHealth"> | Date | string | null
+    lastFailureAt?: DateTimeNullableFilter<"AiProviderHealth"> | Date | string | null
+    lastError?: StringNullableFilter<"AiProviderHealth"> | string | null
+    consecutiveFailures?: IntFilter<"AiProviderHealth"> | number
+    avgLatencyMs?: IntNullableFilter<"AiProviderHealth"> | number | null
+    errorRate?: FloatNullableFilter<"AiProviderHealth"> | number | null
+    quotaExhausted?: BoolFilter<"AiProviderHealth"> | boolean
+    rateLimited?: BoolFilter<"AiProviderHealth"> | boolean
+    updatedAt?: DateTimeFilter<"AiProviderHealth"> | Date | string
+  }
+
+  export type AiProviderHealthOrderByWithRelationInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    healthy?: SortOrder
+    circuitState?: SortOrder
+    lastSuccessAt?: SortOrderInput | SortOrder
+    lastFailureAt?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrderInput | SortOrder
+    errorRate?: SortOrderInput | SortOrder
+    quotaExhausted?: SortOrder
+    rateLimited?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AiProviderHealthWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    provider?: string
+    AND?: AiProviderHealthWhereInput | AiProviderHealthWhereInput[]
+    OR?: AiProviderHealthWhereInput[]
+    NOT?: AiProviderHealthWhereInput | AiProviderHealthWhereInput[]
+    healthy?: BoolFilter<"AiProviderHealth"> | boolean
+    circuitState?: StringFilter<"AiProviderHealth"> | string
+    lastSuccessAt?: DateTimeNullableFilter<"AiProviderHealth"> | Date | string | null
+    lastFailureAt?: DateTimeNullableFilter<"AiProviderHealth"> | Date | string | null
+    lastError?: StringNullableFilter<"AiProviderHealth"> | string | null
+    consecutiveFailures?: IntFilter<"AiProviderHealth"> | number
+    avgLatencyMs?: IntNullableFilter<"AiProviderHealth"> | number | null
+    errorRate?: FloatNullableFilter<"AiProviderHealth"> | number | null
+    quotaExhausted?: BoolFilter<"AiProviderHealth"> | boolean
+    rateLimited?: BoolFilter<"AiProviderHealth"> | boolean
+    updatedAt?: DateTimeFilter<"AiProviderHealth"> | Date | string
+  }, "id" | "provider">
+
+  export type AiProviderHealthOrderByWithAggregationInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    healthy?: SortOrder
+    circuitState?: SortOrder
+    lastSuccessAt?: SortOrderInput | SortOrder
+    lastFailureAt?: SortOrderInput | SortOrder
+    lastError?: SortOrderInput | SortOrder
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrderInput | SortOrder
+    errorRate?: SortOrderInput | SortOrder
+    quotaExhausted?: SortOrder
+    rateLimited?: SortOrder
+    updatedAt?: SortOrder
+    _count?: AiProviderHealthCountOrderByAggregateInput
+    _avg?: AiProviderHealthAvgOrderByAggregateInput
+    _max?: AiProviderHealthMaxOrderByAggregateInput
+    _min?: AiProviderHealthMinOrderByAggregateInput
+    _sum?: AiProviderHealthSumOrderByAggregateInput
+  }
+
+  export type AiProviderHealthScalarWhereWithAggregatesInput = {
+    AND?: AiProviderHealthScalarWhereWithAggregatesInput | AiProviderHealthScalarWhereWithAggregatesInput[]
+    OR?: AiProviderHealthScalarWhereWithAggregatesInput[]
+    NOT?: AiProviderHealthScalarWhereWithAggregatesInput | AiProviderHealthScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"AiProviderHealth"> | string
+    provider?: StringWithAggregatesFilter<"AiProviderHealth"> | string
+    healthy?: BoolWithAggregatesFilter<"AiProviderHealth"> | boolean
+    circuitState?: StringWithAggregatesFilter<"AiProviderHealth"> | string
+    lastSuccessAt?: DateTimeNullableWithAggregatesFilter<"AiProviderHealth"> | Date | string | null
+    lastFailureAt?: DateTimeNullableWithAggregatesFilter<"AiProviderHealth"> | Date | string | null
+    lastError?: StringNullableWithAggregatesFilter<"AiProviderHealth"> | string | null
+    consecutiveFailures?: IntWithAggregatesFilter<"AiProviderHealth"> | number
+    avgLatencyMs?: IntNullableWithAggregatesFilter<"AiProviderHealth"> | number | null
+    errorRate?: FloatNullableWithAggregatesFilter<"AiProviderHealth"> | number | null
+    quotaExhausted?: BoolWithAggregatesFilter<"AiProviderHealth"> | boolean
+    rateLimited?: BoolWithAggregatesFilter<"AiProviderHealth"> | boolean
+    updatedAt?: DateTimeWithAggregatesFilter<"AiProviderHealth"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -31426,6 +33936,258 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type AiMetricsCreateInput = {
+    id?: string
+    requestId?: string | null
+    userId?: string | null
+    feature: string
+    provider: string
+    model: string
+    startTime: Date | string
+    endTime: Date | string
+    durationMs: number
+    outcome?: string
+    errorCategory?: string | null
+    retryCount?: number
+    promptTokens?: number | null
+    completionTokens?: number | null
+    totalTokens?: number | null
+    estimatedCostUSD?: number | null
+    createdAt?: Date | string
+  }
+
+  export type AiMetricsUncheckedCreateInput = {
+    id?: string
+    requestId?: string | null
+    userId?: string | null
+    feature: string
+    provider: string
+    model: string
+    startTime: Date | string
+    endTime: Date | string
+    durationMs: number
+    outcome?: string
+    errorCategory?: string | null
+    retryCount?: number
+    promptTokens?: number | null
+    completionTokens?: number | null
+    totalTokens?: number | null
+    estimatedCostUSD?: number | null
+    createdAt?: Date | string
+  }
+
+  export type AiMetricsUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    feature?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    durationMs?: IntFieldUpdateOperationsInput | number
+    outcome?: StringFieldUpdateOperationsInput | string
+    errorCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    retryCount?: IntFieldUpdateOperationsInput | number
+    promptTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    completionTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    totalTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    estimatedCostUSD?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMetricsUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    feature?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    durationMs?: IntFieldUpdateOperationsInput | number
+    outcome?: StringFieldUpdateOperationsInput | string
+    errorCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    retryCount?: IntFieldUpdateOperationsInput | number
+    promptTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    completionTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    totalTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    estimatedCostUSD?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMetricsCreateManyInput = {
+    id?: string
+    requestId?: string | null
+    userId?: string | null
+    feature: string
+    provider: string
+    model: string
+    startTime: Date | string
+    endTime: Date | string
+    durationMs: number
+    outcome?: string
+    errorCategory?: string | null
+    retryCount?: number
+    promptTokens?: number | null
+    completionTokens?: number | null
+    totalTokens?: number | null
+    estimatedCostUSD?: number | null
+    createdAt?: Date | string
+  }
+
+  export type AiMetricsUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    feature?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    durationMs?: IntFieldUpdateOperationsInput | number
+    outcome?: StringFieldUpdateOperationsInput | string
+    errorCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    retryCount?: IntFieldUpdateOperationsInput | number
+    promptTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    completionTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    totalTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    estimatedCostUSD?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiMetricsUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    requestId?: NullableStringFieldUpdateOperationsInput | string | null
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    feature?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    model?: StringFieldUpdateOperationsInput | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    durationMs?: IntFieldUpdateOperationsInput | number
+    outcome?: StringFieldUpdateOperationsInput | string
+    errorCategory?: NullableStringFieldUpdateOperationsInput | string | null
+    retryCount?: IntFieldUpdateOperationsInput | number
+    promptTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    completionTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    totalTokens?: NullableIntFieldUpdateOperationsInput | number | null
+    estimatedCostUSD?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiProviderHealthCreateInput = {
+    id?: string
+    provider: string
+    healthy: boolean
+    circuitState?: string
+    lastSuccessAt?: Date | string | null
+    lastFailureAt?: Date | string | null
+    lastError?: string | null
+    consecutiveFailures?: number
+    avgLatencyMs?: number | null
+    errorRate?: number | null
+    quotaExhausted?: boolean
+    rateLimited?: boolean
+    updatedAt?: Date | string
+  }
+
+  export type AiProviderHealthUncheckedCreateInput = {
+    id?: string
+    provider: string
+    healthy: boolean
+    circuitState?: string
+    lastSuccessAt?: Date | string | null
+    lastFailureAt?: Date | string | null
+    lastError?: string | null
+    consecutiveFailures?: number
+    avgLatencyMs?: number | null
+    errorRate?: number | null
+    quotaExhausted?: boolean
+    rateLimited?: boolean
+    updatedAt?: Date | string
+  }
+
+  export type AiProviderHealthUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    healthy?: BoolFieldUpdateOperationsInput | boolean
+    circuitState?: StringFieldUpdateOperationsInput | string
+    lastSuccessAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastFailureAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    consecutiveFailures?: IntFieldUpdateOperationsInput | number
+    avgLatencyMs?: NullableIntFieldUpdateOperationsInput | number | null
+    errorRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    quotaExhausted?: BoolFieldUpdateOperationsInput | boolean
+    rateLimited?: BoolFieldUpdateOperationsInput | boolean
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiProviderHealthUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    healthy?: BoolFieldUpdateOperationsInput | boolean
+    circuitState?: StringFieldUpdateOperationsInput | string
+    lastSuccessAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastFailureAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    consecutiveFailures?: IntFieldUpdateOperationsInput | number
+    avgLatencyMs?: NullableIntFieldUpdateOperationsInput | number | null
+    errorRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    quotaExhausted?: BoolFieldUpdateOperationsInput | boolean
+    rateLimited?: BoolFieldUpdateOperationsInput | boolean
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiProviderHealthCreateManyInput = {
+    id?: string
+    provider: string
+    healthy: boolean
+    circuitState?: string
+    lastSuccessAt?: Date | string | null
+    lastFailureAt?: Date | string | null
+    lastError?: string | null
+    consecutiveFailures?: number
+    avgLatencyMs?: number | null
+    errorRate?: number | null
+    quotaExhausted?: boolean
+    rateLimited?: boolean
+    updatedAt?: Date | string
+  }
+
+  export type AiProviderHealthUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    healthy?: BoolFieldUpdateOperationsInput | boolean
+    circuitState?: StringFieldUpdateOperationsInput | string
+    lastSuccessAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastFailureAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    consecutiveFailures?: IntFieldUpdateOperationsInput | number
+    avgLatencyMs?: NullableIntFieldUpdateOperationsInput | number | null
+    errorRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    quotaExhausted?: BoolFieldUpdateOperationsInput | boolean
+    rateLimited?: BoolFieldUpdateOperationsInput | boolean
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type AiProviderHealthUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    healthy?: BoolFieldUpdateOperationsInput | boolean
+    circuitState?: StringFieldUpdateOperationsInput | string
+    lastSuccessAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastFailureAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    consecutiveFailures?: IntFieldUpdateOperationsInput | number
+    avgLatencyMs?: NullableIntFieldUpdateOperationsInput | number | null
+    errorRate?: NullableFloatFieldUpdateOperationsInput | number | null
+    quotaExhausted?: BoolFieldUpdateOperationsInput | boolean
+    rateLimited?: BoolFieldUpdateOperationsInput | boolean
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -32788,6 +35550,171 @@ export namespace Prisma {
     type?: SortOrder
     isRead?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type FloatNullableFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type AiMetricsCountOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    userId?: SortOrder
+    feature?: SortOrder
+    provider?: SortOrder
+    model?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    durationMs?: SortOrder
+    outcome?: SortOrder
+    errorCategory?: SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrder
+    completionTokens?: SortOrder
+    totalTokens?: SortOrder
+    estimatedCostUSD?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AiMetricsAvgOrderByAggregateInput = {
+    durationMs?: SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrder
+    completionTokens?: SortOrder
+    totalTokens?: SortOrder
+    estimatedCostUSD?: SortOrder
+  }
+
+  export type AiMetricsMaxOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    userId?: SortOrder
+    feature?: SortOrder
+    provider?: SortOrder
+    model?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    durationMs?: SortOrder
+    outcome?: SortOrder
+    errorCategory?: SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrder
+    completionTokens?: SortOrder
+    totalTokens?: SortOrder
+    estimatedCostUSD?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AiMetricsMinOrderByAggregateInput = {
+    id?: SortOrder
+    requestId?: SortOrder
+    userId?: SortOrder
+    feature?: SortOrder
+    provider?: SortOrder
+    model?: SortOrder
+    startTime?: SortOrder
+    endTime?: SortOrder
+    durationMs?: SortOrder
+    outcome?: SortOrder
+    errorCategory?: SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrder
+    completionTokens?: SortOrder
+    totalTokens?: SortOrder
+    estimatedCostUSD?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type AiMetricsSumOrderByAggregateInput = {
+    durationMs?: SortOrder
+    retryCount?: SortOrder
+    promptTokens?: SortOrder
+    completionTokens?: SortOrder
+    totalTokens?: SortOrder
+    estimatedCostUSD?: SortOrder
+  }
+
+  export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
+  }
+
+  export type AiProviderHealthCountOrderByAggregateInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    healthy?: SortOrder
+    circuitState?: SortOrder
+    lastSuccessAt?: SortOrder
+    lastFailureAt?: SortOrder
+    lastError?: SortOrder
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrder
+    errorRate?: SortOrder
+    quotaExhausted?: SortOrder
+    rateLimited?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AiProviderHealthAvgOrderByAggregateInput = {
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrder
+    errorRate?: SortOrder
+  }
+
+  export type AiProviderHealthMaxOrderByAggregateInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    healthy?: SortOrder
+    circuitState?: SortOrder
+    lastSuccessAt?: SortOrder
+    lastFailureAt?: SortOrder
+    lastError?: SortOrder
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrder
+    errorRate?: SortOrder
+    quotaExhausted?: SortOrder
+    rateLimited?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AiProviderHealthMinOrderByAggregateInput = {
+    id?: SortOrder
+    provider?: SortOrder
+    healthy?: SortOrder
+    circuitState?: SortOrder
+    lastSuccessAt?: SortOrder
+    lastFailureAt?: SortOrder
+    lastError?: SortOrder
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrder
+    errorRate?: SortOrder
+    quotaExhausted?: SortOrder
+    rateLimited?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type AiProviderHealthSumOrderByAggregateInput = {
+    consecutiveFailures?: SortOrder
+    avgLatencyMs?: SortOrder
+    errorRate?: SortOrder
   }
 
   export type ProfileCreateNestedOneWithoutUserInput = {
@@ -34264,6 +37191,14 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutNotificationsInput, UserUpdateWithoutNotificationsInput>, UserUncheckedUpdateWithoutNotificationsInput>
   }
 
+  export type NullableFloatFieldUpdateOperationsInput = {
+    set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -34517,6 +37452,22 @@ export namespace Prisma {
     _sum?: NestedDecimalFilter<$PrismaModel>
     _min?: NestedDecimalFilter<$PrismaModel>
     _max?: NestedDecimalFilter<$PrismaModel>
+  }
+
+  export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel> | null
+    in?: number[] | null
+    notIn?: number[] | null
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedFloatNullableFilter<$PrismaModel>
+    _min?: NestedFloatNullableFilter<$PrismaModel>
+    _max?: NestedFloatNullableFilter<$PrismaModel>
   }
 
   export type ProfileCreateWithoutUserInput = {
@@ -39770,6 +42721,14 @@ export namespace Prisma {
      * @deprecated Use NotificationDefaultArgs instead
      */
     export type NotificationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = NotificationDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AiMetricsDefaultArgs instead
+     */
+    export type AiMetricsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AiMetricsDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use AiProviderHealthDefaultArgs instead
+     */
+    export type AiProviderHealthArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AiProviderHealthDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

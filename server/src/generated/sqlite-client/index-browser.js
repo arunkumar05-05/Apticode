@@ -376,6 +376,42 @@ exports.Prisma.NotificationScalarFieldEnum = {
   createdAt: 'createdAt'
 };
 
+exports.Prisma.AiMetricsScalarFieldEnum = {
+  id: 'id',
+  requestId: 'requestId',
+  userId: 'userId',
+  feature: 'feature',
+  provider: 'provider',
+  model: 'model',
+  startTime: 'startTime',
+  endTime: 'endTime',
+  durationMs: 'durationMs',
+  outcome: 'outcome',
+  errorCategory: 'errorCategory',
+  retryCount: 'retryCount',
+  promptTokens: 'promptTokens',
+  completionTokens: 'completionTokens',
+  totalTokens: 'totalTokens',
+  estimatedCostUSD: 'estimatedCostUSD',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.AiProviderHealthScalarFieldEnum = {
+  id: 'id',
+  provider: 'provider',
+  healthy: 'healthy',
+  circuitState: 'circuitState',
+  lastSuccessAt: 'lastSuccessAt',
+  lastFailureAt: 'lastFailureAt',
+  lastError: 'lastError',
+  consecutiveFailures: 'consecutiveFailures',
+  avgLatencyMs: 'avgLatencyMs',
+  errorRate: 'errorRate',
+  quotaExhausted: 'quotaExhausted',
+  rateLimited: 'rateLimited',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -411,7 +447,9 @@ exports.Prisma.ModelName = {
   InterviewMessage: 'InterviewMessage',
   UserAttempt: 'UserAttempt',
   Resume: 'Resume',
-  Notification: 'Notification'
+  Notification: 'Notification',
+  AiMetrics: 'AiMetrics',
+  AiProviderHealth: 'AiProviderHealth'
 };
 
 /**

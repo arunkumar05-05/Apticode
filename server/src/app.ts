@@ -117,6 +117,19 @@ async function healthHandler(_req: express.Request, res: express.Response) {
     logger.warn({ err: e }, 'health migration probe failed');
   }
 
+  // Phase 4 — AI diagnostics (additive, never blocks health response).
+  let aiInfo: Record<string, unknown> = {};
+  try {
+    const { isAiEnabled, aiProviderLabel, getProviderHealth } = await import('./services/aiProviderService');
+    aiInfo = {
+      aiEnabled: isAiEnabled(),
+      provider: aiProviderLabel(),
+      providers: getProviderHealth(),
+    };
+  } catch (e) {
+    logger.warn({ err: e }, 'health AI probe failed');
+  }
+
   const reachable = dbInfo ? dbInfo.reachable : false;
   const status = reachable ? 'UP' : 'DEGRADED';
   // Process metrics (additive; existing fields preserved).
@@ -140,6 +153,8 @@ async function healthHandler(_req: express.Request, res: express.Response) {
       external: mem.external,
       arrayBuffers: mem.arrayBuffers,
     },
+    // -- Phase 4: AI diagnostics (additive) --
+    ai: aiInfo,
   });
 }
 
