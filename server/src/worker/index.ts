@@ -17,6 +17,8 @@ import { createRedisConnection } from '../config/redis';
 import { createQueues } from '../queues/factory';
 import { JOB_NAMES, QUEUE_NAMES } from '../queues/constants';
 import { createJudge0Provider } from '../integrations/judge0/provider';
+import { publishSubmissionEvent } from '../events/submissionEvents';
+import type { SubmissionEvent } from '../events/submissionEvents';
 import { startHeartbeat } from './heartbeat';
 import { processSubmissionJob } from './processSubmission';
 import { processEvaluationJob } from './processEvaluation';
@@ -36,7 +38,14 @@ async function main(): Promise<void> {
   const connection = createRedisConnection();
   const queues = createQueues(connection);
   const judge0Provider = createJudge0Provider();
-  const deps: WorkerDeps = { db, logger, config, judge0Provider, queues };
+  const deps: WorkerDeps = {
+    db,
+    logger,
+    config,
+    judge0Provider,
+    queues,
+    publish: (evt: SubmissionEvent) => void publishSubmissionEvent(evt),
+  };
   const heartbeat = startHeartbeat(connection, { judge0Name: judge0Provider.name });
 
   const workerOptions = {
@@ -157,6 +166,19 @@ async function handleFailed(job: any, queueName: string, err: Error, deps: Worke
       data: { status: 'SYSTEM_ERROR', errorMessage: message, completedAt: new Date() },
     })
     .catch((e: any) => logger.warn({ err: e?.message }, 'SYSTEM_ERROR persist failed'));
+
+  const attempts = Number(job?.opts?.attempts ?? 1);
+  if (Number(job?.attemptsMade ?? 0) >= attempts && data.submissionId && data.userId) {
+    deps.publish?.({
+      type: 'SUBMISSION_UPDATED',
+      submissionId: data.submissionId,
+      userId: data.userId,
+      status: 'SYSTEM_ERROR',
+      stage: 'error',
+      message,
+      createdAt: new Date().toISOString(),
+    });
+  }
 }
 
 main().catch((err: any) => {

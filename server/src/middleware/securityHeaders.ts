@@ -8,16 +8,9 @@
  *
  * Applied early in app.ts, before routes.
  */
-import { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import compression from 'compression';
 import { config } from '../config';
-
-export function securityMiddleware(_req: Request, res: Response, next: NextFunction) {
-  void _req;
-  void res;
-  void next;
-}
 
 // Helmet options: tighten in prod, stay permissive in dev (fonts/icons, HMR).
 export function helmetMiddleware() {

@@ -10,9 +10,6 @@
  */
 import express, { Express } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import { rateLimit } from 'express-rate-limit';
 import apiRouter from './routes/api';
 import { errorHandler } from './middleware/errorHandler';
 import { requestId } from './middleware/requestId';

@@ -62,7 +62,7 @@ export function emitSessionExpired(): void {
 
 let refreshPromise: Promise<string | null> | null = null;
 
-async function attemptRefresh(): Promise<string | null> {
+export async function attemptRefresh(): Promise<string | null> {
   const session = getSession();
   if (!session?.refreshToken) return null;
   try {
@@ -146,6 +146,65 @@ export async function logout(): Promise<void> {
   });
 }
 
-export async function safeFetch(endpoint: string, options?: RequestInit): Promise<any> {
-  return apiFetch(endpoint, options);
+export interface SubmissionStreamEvent {
+  type: 'SUBMISSION_UPDATED';
+  submissionId: string;
+  userId: string;
+  status: string;
+  stage?: string;
+  message?: string;
+  xpAwarded?: number;
+  createdAt: string;
+}
+
+export interface StreamFetchOptions {
+  submissionId?: string;
+  signal?: AbortSignal;
+  onEvent: (evt: SubmissionStreamEvent) => void;
+}
+
+export async function streamFetch(options: StreamFetchOptions): Promise<void> {
+  let url = `${getApiBaseUrl()}/api/coding/submissions/stream`;
+  if (options.submissionId) {
+    url += `?submissionId=${encodeURIComponent(options.submissionId)}`;
+  }
+
+  const token = getSession()?.token;
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    signal: options.signal,
+  });
+
+  if (!response.ok || !response.body) {
+    throw new ApiError(response.status, `Stream failed (HTTP ${response.status})`);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let sep: number;
+      while ((sep = buffer.indexOf('\n\n')) !== -1) {
+        const frame = buffer.slice(0, sep);
+        buffer = buffer.slice(sep + 2);
+        for (const line of frame.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const evt = JSON.parse(line.slice(6)) as SubmissionStreamEvent;
+            if (evt && typeof evt === 'object' && evt.submissionId && evt.status) {
+              options.onEvent(evt);
+            }
+          } catch {
+            // Ignore malformed frames.
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }

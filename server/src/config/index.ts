@@ -111,6 +111,8 @@ const envSchema = z.object({
   CODE_MAX_BYTES: z.coerce.number().int().positive().default(65_536),
   WORKER_HEARTBEAT_INTERVAL_MS: z.coerce.number().int().positive().default(10_000),
   WORKER_HEARTBEAT_TTL_MS: z.coerce.number().int().positive().default(30_000),
+  // Real-time submission streaming (SSE) keep-alive cadence.
+  SSE_HEARTBEAT_INTERVAL_MS: z.coerce.number().int().positive().default(15_000),
   CODE_XP_REWARD_SUBMISSION: z.coerce.number().int().positive().default(250),
 });
 
@@ -203,6 +205,12 @@ export const config = {
     return {
       heartbeatIntervalMs: c.WORKER_HEARTBEAT_INTERVAL_MS,
       heartbeatTtlMs: c.WORKER_HEARTBEAT_TTL_MS,
+    };
+  },
+  get sse() {
+    const c = cfg();
+    return {
+      heartbeatIntervalMs: c.SSE_HEARTBEAT_INTERVAL_MS,
     };
   },
   get code() {

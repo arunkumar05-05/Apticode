@@ -46,7 +46,7 @@ export default function MockTestView() {
   const [score, setScore] = useState<number>(0);
   const [correctCount, setCorrectCount] = useState<number>(0);
   const [incorrectCount, setIncorrectCount] = useState<number>(0);
-  const [submitting, setSubmitting] = useState<boolean>(false);
+  const [_submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (testState !== 'ACTIVE' || timeLeft <= 0) return;

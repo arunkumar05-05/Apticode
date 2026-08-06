@@ -10,6 +10,7 @@ import type { Logger } from '../config';
 import type { AppConfig } from '../config';
 import type { Judge0Provider } from '../integrations/judge0/types';
 import type { QueueSet } from '../queues/factory';
+import type { SubmissionEvent } from '../events/submissionEvents';
 
 export interface SubmissionJobPayload {
   submissionId: string;
@@ -89,6 +90,7 @@ export interface WorkerDeps {
   judge0Provider: Judge0Provider;
   queues?: QueueSet;
   clock?: () => number;
+  publish?: (evt: SubmissionEvent) => void;
 }
 
 export const TERMINAL_STATUSES: ReadonlySet<string> = new Set([

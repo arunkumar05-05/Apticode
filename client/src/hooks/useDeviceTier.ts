@@ -46,8 +46,3 @@ export function useDeviceTier(): DeviceInfo {
 
   return info;
 }
-
-export function useTierValue<T>(values: { high: T; mid: T; low: T }): T {
-  const { tier } = useDeviceTier();
-  return values[tier];
-}

@@ -113,7 +113,7 @@ export default function AdminView() {
             solvedCount: p.solvedCount || 10
           })));
         }
-      } catch (err) {
+      } catch {
         console.warn('Backend server offline. Utilizing default mock database challenges.');
       }
     };
@@ -130,7 +130,7 @@ export default function AdminView() {
           }));
           if (mapped.length > 0) setActiveMcqList(mapped);
         }
-      } catch (err) {
+      } catch {
         console.warn('Backend server offline. Utilizing local mock MCQ active list.');
       }
     };
@@ -274,7 +274,7 @@ export default function AdminView() {
       } else {
         throw new Error(result.message || 'API fallback');
       }
-    } catch (err) {
+    } catch {
       setActiveProblemsList(prev => [
         ...prev,
         {
@@ -299,7 +299,7 @@ export default function AdminView() {
   const handleDeleteProblem = async (id: string) => {
     try {
       await apiFetch(`/coding/challenges/${id}`, { method: 'DELETE' });
-    } catch (err) {
+    } catch {
       console.warn('Backend offline; removed challenge locally.');
     }
     setActiveProblemsList(prev => prev.filter(p => p.id !== id));
@@ -338,7 +338,7 @@ export default function AdminView() {
       } else {
         throw new Error(result.message || 'API fallback');
       }
-    } catch (err) {
+    } catch {
       setActiveMcqList(prev => [
         ...prev,
         {
@@ -365,7 +365,7 @@ export default function AdminView() {
   const handleDeleteMcq = async (id: string) => {
     try {
       await apiFetch(`/mcqs/${id}`, { method: 'DELETE' });
-    } catch (err) {
+    } catch {
       console.warn('Backend offline; removed MCQ locally.');
     }
     setActiveMcqList(prev => prev.filter(q => q.id !== id));

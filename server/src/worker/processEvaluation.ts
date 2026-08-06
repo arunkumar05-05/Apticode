@@ -209,6 +209,14 @@ async function persistResult(submissionId: string, result: SubmissionResult, dep
       attempts: (row?.attempts ?? 0) + 1,
     },
   });
+  deps.publish?.({
+    type: 'SUBMISSION_UPDATED',
+    submissionId,
+    userId: row?.userId ?? '',
+    status: result.verdict,
+    stage: 'done',
+    createdAt: new Date().toISOString(),
+  });
 }
 
 async function persistFailure(
@@ -222,6 +230,15 @@ async function persistFailure(
   await db.codingSubmission.update({
     where: { id: submissionId },
     data: { status, errorMessage: message, completedAt: new Date() },
+  });
+  deps.publish?.({
+    type: 'SUBMISSION_UPDATED',
+    submissionId,
+    userId: payload.userId,
+    status,
+    stage: status === 'TIMED_OUT' ? 'done' : 'error',
+    message,
+    createdAt: new Date().toISOString(),
   });
   if (queues) {
     await queues.evaluationDlq.add(

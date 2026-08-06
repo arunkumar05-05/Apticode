@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Award, ClipboardList, Sparkles, Download, GraduationCap, RefreshCw } from 'lucide-react';
 import { apiFetch, ApiError } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
+import { formatHumanName, getAvatarInitial } from '../utils/format';
 
 interface ProfileData {
   fullName: string;
@@ -19,33 +20,6 @@ interface ProfileData {
   portfolio: string;
   profilePhoto: string;
   resume: string;
-}
-
-function formatHumanName(rawName?: string, email?: string): string {
-  let name = rawName?.trim();
-  if (!name || name === 'New Candidate' || name.includes('@')) {
-    if (email) {
-      name = email.split('@')[0];
-    }
-  }
-
-  if (!name) return 'Candidate';
-
-  let cleaned = name.replace(/^[0-9]{2}(it|cs|cse|ece|eee|mech|civil|ai|ds)?/i, '');
-  if (!cleaned) cleaned = name;
-
-  cleaned = cleaned.replace(/[._-]/g, ' ');
-  cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
-
-  const words = cleaned.split(/\s+/).filter(Boolean);
-  if (words.length > 0) {
-    const formatted = words
-      .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ');
-    if (formatted.length >= 2) return formatted;
-  }
-
-  return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
 export default function ProfileView() {
@@ -249,7 +223,7 @@ export default function ProfileView() {
         <div className="md:col-span-1 space-y-6">
           <div className="lc-glass p-6 flex flex-col items-center text-center space-y-4">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-lc-violet to-lc-cyan text-2xl font-extrabold text-lc-text shadow-neo">
-              {profile?.fullName ? profile.fullName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase() : 'AK'}
+              {getAvatarInitial(profile?.fullName, profile?.email)}
             </div>
             <div>
               <h2 className="text-lg font-bold text-lc-text">{profile?.fullName || 'Active Candidate'}</h2>

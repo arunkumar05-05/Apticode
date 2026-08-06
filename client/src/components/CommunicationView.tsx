@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, AlertTriangle, Volume2, Sparkles, MessageCircle, BookOpen } from 'lucide-react';
-import { supabase } from '../supabase';
 import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
@@ -145,8 +144,8 @@ export default function CommunicationView() {
 
   const computePronunciationScore = (spokenText: string, targetText: string): number => {
     if (!spokenText) return 0;
-    const spokenWords = spokenText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
-    const targetWords = targetText.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
+    const spokenWords = spokenText.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").split(/\s+/);
+    const targetWords = targetText.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").split(/\s+/);
 
     let matches = 0;
     targetWords.forEach(word => {
@@ -219,11 +218,11 @@ export default function CommunicationView() {
 
   // Word-by-word pronunciation highlights
   const getPromptHighlighting = () => {
-    const spoken = transcript.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").split(/\s+/);
+    const spoken = transcript.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"").split(/\s+/);
     const targetWords = readingPrompt.split(/\s+/);
 
     return targetWords.map((word, index) => {
-      const cleanWord = word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+      const cleanWord = word.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g,"");
       const isMatched = spoken.includes(cleanWord);
       return (
         <span

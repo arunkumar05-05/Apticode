@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Terminal, Sparkles, X
+  Sparkles, X
 } from 'lucide-react';
 import LandingView from './components/LandingView';
 import AuthView from './components/AuthView';
@@ -18,7 +18,7 @@ import AppLayout from './components/AppLayout';
 import CompanyPrepView from './components/CompanyPrepView';
 import MockTestView from './components/MockTestView';
 import ProfileView from './components/ProfileView';
-import { apiFetch, getSession, logout, saveSession } from './config/api';
+import { apiFetch, getSession, logout, saveSession, type SessionUser } from './config/api';
 import { supabase } from './supabase';
 
 
@@ -29,18 +29,8 @@ type ViewState =
   | 'communication' | 'interview' | 'resume'
   | 'leaderboard' | 'analytics' | 'admin';
 
-interface UserSession {
-  name: string;
-  email: string;
-  role: 'STUDENT' | 'ADMIN';
-  token: string;
-  refreshToken?: string;
-  isOnboarded?: boolean;
-  onboardingCompleted?: boolean;
-}
-
 export default function App() {
-  const [user, setUser] = useState<UserSession | null>(() => {
+  const [user, setUser] = useState<SessionUser | null>(() => {
     const saved = localStorage.getItem('apticode-user-session');
     if (saved) {
       try {
@@ -65,7 +55,7 @@ export default function App() {
             return 'onboarding';
           }
         }
-      } catch (e) {}
+      } catch {}
       if (savedView && savedView !== 'landing' && savedView !== 'auth') {
         return savedView;
       }
@@ -105,7 +95,7 @@ export default function App() {
             }
           }
         }
-      } catch (err) {
+      } catch {
         console.warn('Dashboard fetch offline fallback active.');
       }
     };

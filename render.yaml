@@ -49,6 +49,33 @@ services:
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
 
+  - type: worker
+    name: apticode-worker
+    region: oregon
+    plan: worker_free
+    runtime: node
+    rootDir: server
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npm run worker
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: apticode-db
+          property: connectionString
+      - key: REDIS_URL
+        fromRedis:
+          name: apticode-cache
+          property: connectionString
+      - key: JUDGE0_API_URL
+        sync: false            # set as a secret in the Render dashboard
+      - key: JUDGE0_AUTH_TOKEN
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
 databases:
   - name: apticode-db
     region: oregon

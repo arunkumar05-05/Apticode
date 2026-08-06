@@ -16,6 +16,7 @@ import * as mcqController from '../controllers/mcqController';
 import * as adminController from '../controllers/adminController';
 import * as aiMonitoringController from '../controllers/aiMonitoringController';
 import * as codingMonitoringController from '../controllers/codingMonitoringController';
+import { streamSubmissions } from '../controllers/submissionStreamController';
 
 const router = Router();
 
@@ -64,6 +65,8 @@ router.delete('/coding/challenges/:id', codingController.deleteChallenge as any)
 router.post('/coding/challenges/:id/testcases', codingController.addTestcase as any);
 router.post('/coding/submissions', codeSubmissionLimiter as any, codingController.submitCode as any);
 router.get('/coding/submissions', codingController.getHistory as any);
+// Registered before /coding/submissions/:id so 'stream' is not captured as an id.
+router.get('/coding/submissions/stream', streamSubmissions);
 router.get('/coding/submissions/:id', codingController.getSubmission as any);
 
 // Speech Audit Coach

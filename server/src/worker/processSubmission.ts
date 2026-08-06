@@ -48,6 +48,15 @@ export async function processSubmissionJob(
     data: { status: 'RUNNING', startedAt: new Date(), queueJobId: payload.submissionId },
   });
 
+  deps.publish?.({
+    type: 'SUBMISSION_UPDATED',
+    submissionId: payload.submissionId,
+    userId: payload.userId,
+    status: 'RUNNING',
+    stage: 'running',
+    createdAt: new Date().toISOString(),
+  });
+
   const languageId = await judge0Provider.resolveLanguageId(payload.language);
   const evaluation: EvaluationJobPayload = {
     submissionId: payload.submissionId,
@@ -96,6 +105,15 @@ export async function handleSubmissionFailed(
   await db.codingSubmission.update({
     where: { id: payload.submissionId },
     data: { status: 'SYSTEM_ERROR', errorMessage: message, completedAt: new Date() },
+  });
+  deps.publish?.({
+    type: 'SUBMISSION_UPDATED',
+    submissionId: payload.submissionId,
+    userId: payload.userId,
+    status: 'SYSTEM_ERROR',
+    stage: 'error',
+    message,
+    createdAt: new Date().toISOString(),
   });
   if (queues) {
     await queues.submissionDlq.add(

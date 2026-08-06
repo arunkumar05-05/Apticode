@@ -90,7 +90,7 @@ export default function AptitudeView() {
         setTopicsData(fallbackTopics);
         setActiveTopic(fallbackTopics[0]);
       }
-    } catch (err) {
+    } catch {
       console.warn('Failed to fetch API topics. Falling back to local data.');
       setTopicsData(fallbackTopics);
       setActiveTopic(fallbackTopics[0]);

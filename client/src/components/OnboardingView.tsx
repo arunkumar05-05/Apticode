@@ -204,7 +204,7 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
               : nameHandle
                 ? nameHandle.charAt(0).toUpperCase() + nameHandle.slice(1)
                 : 'Student';
-          const resData = await apiFetch<{ status?: string; profile?: any }>('/profile', {
+          await apiFetch<{ status?: string; profile?: any }>('/profile', {
             method: 'PUT',
             body: JSON.stringify({
               fullName: derivedName,
