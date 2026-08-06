@@ -148,7 +148,7 @@ async function handleFailed(job: any, queueName: string, err: Error, deps: Worke
 
   const dlq = queueName === QUEUE_NAMES.submission ? deps.queues?.submissionDlq : deps.queues?.evaluationDlq;
   await dlq
-    ?.add(JOB_NAMES.dlq, dlqPayload, { jobId: `${job.id}:dlq` })
+    ?.add(JOB_NAMES.dlq, dlqPayload, { jobId: `dlq-${job.id}` })
     .catch((e: any) => logger.error({ err: e?.message }, 'DLQ add failed'));
 
   await deps.db.codingSubmission

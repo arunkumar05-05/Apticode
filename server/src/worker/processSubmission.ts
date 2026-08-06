@@ -66,7 +66,7 @@ export async function processSubmissionJob(
 
   if (queues) {
     await queues.evaluation.add(JOB_NAMES.evaluation, evaluation, {
-      jobId: `${payload.submissionId}:evaluation`,
+      jobId: `evaluation-${payload.submissionId}`,
     });
     return { status: 'QUEUED' };
   }
@@ -107,7 +107,7 @@ export async function handleSubmissionFailed(
         originalQueue: QUEUE_NAMES.submission,
         errorMessage: message,
       },
-      { jobId: `${payload.submissionId}:dlq` }
+      { jobId: `dlq-${payload.submissionId}` }
     );
   }
 }

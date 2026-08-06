@@ -59,7 +59,7 @@ export async function processEvaluationJob(
           problemId: payload.problemId,
           verdict: result.verdict,
         },
-        { jobId: `${submissionId}:result` }
+        { jobId: `result-${submissionId}` }
       );
     }
     return result;
@@ -233,7 +233,7 @@ async function persistFailure(
         originalQueue: QUEUE_NAMES.evaluation,
         errorMessage: message,
       },
-      { jobId: `${submissionId}:dlq` }
+      { jobId: `dlq-${submissionId}` }
     );
   }
 }

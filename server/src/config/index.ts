@@ -163,7 +163,10 @@ export const config = {
   get judge0() {
     const c = cfg();
     const token = c.JUDGE0_API_TOKEN || c.JUDGE0_AUTH_TOKEN || '';
-    const unconfigured = !c.JUDGE0_API_URL || /your_url/i.test(c.JUDGE0_API_URL) || !token || /your_key/i.test(token);
+    const noAuth = c.JUDGE0_AUTH_TYPE === 'none';
+    // A token is only required for authenticated runners — JUDGE0_AUTH_TYPE=none
+    // (local Judge0 CE, no X-Auth-Token) is a valid configuration.
+    const unconfigured = !c.JUDGE0_API_URL || /your_url/i.test(c.JUDGE0_API_URL) || (!noAuth && (!token || /your_key/i.test(token)));
     return {
       apiUrl: c.JUDGE0_API_URL,
       apiToken: token,

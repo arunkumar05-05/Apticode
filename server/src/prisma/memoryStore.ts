@@ -73,6 +73,29 @@ export class InMemoryStore {
       return out;
     };
 
+    // Prisma atomic operations (e.g. `xp: { increment: 250 }`) have no
+    // direct memory analog — apply them against the stored value so update
+    // calls behave like Prisma (used by the XP reward path).
+    const applyAtomicOps = (data: any, existing: any) => {
+      if (!data || typeof data !== 'object') return data;
+      const out: any = {};
+      for (const [k, v] of Object.entries(data)) {
+        if (v && typeof v === 'object' && !Array.isArray(v)) {
+          const keys = Object.keys(v);
+          const op = v as Record<string, number>;
+          if (keys.length === 1 && (keys[0] === 'increment' || keys[0] === 'decrement' || keys[0] === 'set')) {
+            const current = typeof existing?.[k] === 'number' ? existing[k] : 0;
+            if (keys[0] === 'increment') out[k] = current + Number(op.increment);
+            else if (keys[0] === 'decrement') out[k] = current - Number(op.decrement);
+            else out[k] = op.set;
+            continue;
+          }
+        }
+        out[k] = v;
+      }
+      return out;
+    };
+
     // Apply `include` relations that matter to reads: testcases (as arrays)
     // and problem (the owning CodingProblem) on submissions.
     const applyIncludes = (item: any, args: any) => {
@@ -155,7 +178,7 @@ export class InMemoryStore {
         if (index === -1) throw new Error(`Record not found in memory store for update`);
         const updated = {
           ...arr[index],
-          ...flattenNestedArrays(args.data),
+          ...applyAtomicOps(flattenNestedArrays(args.data), arr[index]),
           updatedAt: new Date()
         };
         arr[index] = updated;
@@ -174,7 +197,7 @@ export class InMemoryStore {
             return item[key] === where[key];
           });
           if (matched) {
-            Object.assign(item, data, { updatedAt: new Date() });
+            Object.assign(item, applyAtomicOps(data, item), { updatedAt: new Date() });
             count++;
           }
         }
@@ -194,7 +217,7 @@ export class InMemoryStore {
         if (index !== -1) {
           const updated = {
             ...arr[index],
-            ...flattenNestedArrays(args.update),
+            ...applyAtomicOps(flattenNestedArrays(args.update), arr[index]),
             updatedAt: new Date()
           };
           arr[index] = updated;
