@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, User, Zap, RefreshCw } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -23,14 +23,7 @@ export default function LeaderboardView() {
     const fetchLeaderboard = async () => {
       try {
         setLoading(true);
-        const saved = localStorage.getItem('apticode-user-session');
-        const token = saved ? JSON.parse(saved).token : '';
-        const response = await fetch(`${getApiBaseUrl()}/api/leaderboard`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const resJson = await response.json();
+        const resJson = await apiFetch<{ status?: string; standings?: LeaderboardItem[] }>('/leaderboard');
         if (resJson.status === 'success') {
           setStandings(resJson.standings || []);
         }

@@ -22,7 +22,7 @@ const getSupabaseErrorMessage = (error: any, defaultFallback: string): string =>
 };
 
 interface AuthViewProps {
-  onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN'; token: string; isOnboarded?: boolean; onboardingCompleted?: boolean }) => void;
+  onAuthenticate: (user: { name: string; email: string; role: 'STUDENT' | 'ADMIN'; token: string; refreshToken?: string; isOnboarded?: boolean; onboardingCompleted?: boolean }) => void;
   onBack: () => void;
 }
 
@@ -152,6 +152,7 @@ export default function AuthView({ onAuthenticate, onBack }: AuthViewProps) {
             email: result.user.email,
             role: result.user.role,
             token: result.token,
+            refreshToken: result.refreshToken,
             isOnboarded: result.user.isOnboarded
           });
           return;

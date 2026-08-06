@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HelpCircle, Volume2, User, ChevronRight, Play, Mic, MicOff, RefreshCw } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -29,22 +29,10 @@ export default function InterviewView() {
   const [historyList, setHistoryList] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
 
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   const loadHistory = async () => {
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/interview/history`, {
-        headers: getHeaders()
-      });
-      const data = await response.json();
+      const data = await apiFetch<{ status?: string; history?: any[] }>('/interview/history');
       if (data.status === 'success') {
         setHistoryList(data.history || []);
       }
@@ -131,12 +119,10 @@ export default function InterviewView() {
   const handleStartInterview = async () => {
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/interview/start`, {
+      const data = await apiFetch<{ status?: string; questions?: Question[] }>('/interview/start', {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ type: interviewType, company: targetCompany })
       });
-      const data = await response.json();
       if (data.status === 'success' && Array.isArray(data.questions)) {
         setQuestions(data.questions);
         setAnswers([]);
@@ -176,9 +162,8 @@ export default function InterviewView() {
       // Submit dialogue report
       try {
         setIsAiReplying(true);
-        const response = await fetch(`${getApiBaseUrl()}/api/interview/submit`, {
+        const data = await apiFetch<{ status?: string; report?: any }>('/interview/submit', {
           method: 'POST',
-          headers: getHeaders(),
           body: JSON.stringify({
             type: interviewType,
             company: targetCompany,
@@ -186,7 +171,6 @@ export default function InterviewView() {
             answers: updatedAnswers
           })
         });
-        const data = await response.json();
         if (data.status === 'success') {
           setReportData(data.report);
           setSessionState('REPORT');

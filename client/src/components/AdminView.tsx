@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Users, FileSpreadsheet, Trash2, Search,
-  Sparkles, Code, BookOpen, Layers
+  Sparkles, Code, BookOpen, Layers, Activity, HeartPulse, Database, Cpu
 } from 'lucide-react';
 import { supabase } from '../supabase';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -66,7 +66,16 @@ export default function AdminView() {
   const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
 
   // Outer Admin tabs
-  const [adminActiveTab, setAdminActiveTab] = useState<'roster' | 'analytics' | 'cms'>('roster');
+  const [adminActiveTab, setAdminActiveTab] = useState<'roster' | 'analytics' | 'cms' | 'monitoring'>('roster');
+
+  // Pipeline monitoring state (AI health / code queue / workers)
+  const [monitoringLoading, setMonitoringLoading] = useState(false);
+  const [monitoringError, setMonitoringError] = useState<string | null>(null);
+  const [monitoring, setMonitoring] = useState<{
+    aiHealth: { aiEnabled?: boolean; overallHealthy?: boolean; providers?: any[] } | null;
+    queue: { redisReachable?: boolean; queues?: any[] } | null;
+    workers: { workers?: any[]; config?: any } | null;
+  }>({ aiHealth: null, queue: null, workers: null });
 
   // Inner CMS Tab Selection
   const [cmsTab, setCmsTab] = useState<'coding' | 'mcq'>('coding');
@@ -94,22 +103,10 @@ export default function AdminView() {
     { id: '2', text: 'Two dice are thrown simultaneously. Sum prime probability...', answer: 'A', topic: 'Probability' }
   ]);
 
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/coding/challenges`, {
-          headers: getHeaders()
-        });
-        const result = await response.json();
+        const result = await apiFetch<{ status?: string; challenges?: any[] }>('/coding/challenges');
         if (result.status === 'success' && Array.isArray(result.challenges)) {
           setActiveProblemsList(result.challenges.map((p: any) => ({
             id: p.id,
@@ -125,10 +122,7 @@ export default function AdminView() {
 
     const fetchMcqs = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/mcqs`, {
-          headers: getHeaders()
-        });
-        const result = await response.json();
+        const result = await apiFetch<{ status?: string; data?: any[] }>('/mcqs');
         if (result.status === 'success' && Array.isArray(result.data)) {
           const mapped: any[] = result.data.map((q: any) => ({
             id: q.id,
@@ -145,10 +139,7 @@ export default function AdminView() {
 
     const fetchStudents = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/admin/students`, {
-          headers: getHeaders()
-        });
-        const result = await response.json();
+        const result = await apiFetch<{ status?: string; data?: any[] }>('/admin/students');
         if (result.status === 'success' && Array.isArray(result.data)) {
           const list: StudentRecord[] = result.data.map((item: any) => ({
             id: item.id,
@@ -189,6 +180,33 @@ export default function AdminView() {
     fetchStudents();
   }, []);
 
+  // Load pipeline monitoring data whenever the Pipeline tab is opened
+  useEffect(() => {
+    if (adminActiveTab !== 'monitoring') return;
+    let cancelled = false;
+    setMonitoringLoading(true);
+    setMonitoringError(null);
+    const loadMonitoring = async () => {
+      try {
+        const [aiHealth, queueRes, workerRes] = await Promise.all([
+          apiFetch<{ aiEnabled?: boolean; overallHealthy?: boolean; providers?: any[] }>('/admin/ai/health'),
+          apiFetch<{ data?: { redisReachable?: boolean; queues?: any[] } }>('/admin/code/queue'),
+          apiFetch<{ data?: { workers?: any[]; config?: any } }>('/admin/code/worker')
+        ]);
+        if (!cancelled) {
+          setMonitoring({ aiHealth, queue: queueRes.data || null, workers: workerRes.data || null });
+        }
+      } catch (err: any) {
+        console.warn('[Admin Monitoring] fetch failed:', err.message);
+        if (!cancelled) setMonitoringError('Pipeline metrics unavailable right now.');
+      } finally {
+        if (!cancelled) setMonitoringLoading(false);
+      }
+    };
+    loadMonitoring();
+    return () => { cancelled = true; };
+  }, [adminActiveTab]);
+
   // MCQ Ingestion Form State
   const [newMcq, setNewMcq] = useState({
     questionText: '',
@@ -223,12 +241,10 @@ export default function AdminView() {
     };
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/coding/challenges`, {
+      const result = await apiFetch<{ status?: string; data?: any; message?: string }>('/coding/challenges', {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
       if (result.status === 'success' && result.data) {
         setActiveProblemsList(prev => [
           ...prev,
@@ -267,10 +283,7 @@ export default function AdminView() {
 
   const handleDeleteProblem = async (id: string) => {
     try {
-      await fetch(`${getApiBaseUrl()}/api/coding/challenges/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-      });
+      await apiFetch(`/coding/challenges/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.warn('Backend offline; removed challenge locally.');
     }
@@ -291,12 +304,10 @@ export default function AdminView() {
     };
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/mcqs`, {
+      const result = await apiFetch<{ status?: string; data?: any; message?: string }>('/mcqs', {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify(payload)
       });
-      const result = await response.json();
       if (result.status === 'success' && result.data) {
         const publishedMcq = result.data;
         setActiveMcqList(prev => [
@@ -338,10 +349,7 @@ export default function AdminView() {
 
   const handleDeleteMcq = async (id: string) => {
     try {
-      await fetch(`${getApiBaseUrl()}/api/mcqs/${id}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-      });
+      await apiFetch(`/mcqs/${id}`, { method: 'DELETE' });
     } catch (err) {
       console.warn('Backend offline; removed MCQ locally.');
     }
@@ -371,8 +379,8 @@ export default function AdminView() {
 
       <div className="space-y-6 text-left">
         {/* Admin Module Tabs Switcher */}
-        <div className="flex space-x-1.5 bg-lc-void/40 p-1.5 rounded-xl border border-lc-glass-border max-w-md">
-          {(['roster', 'analytics', 'cms'] as const).map((tab) => (
+        <div className="flex space-x-1.5 bg-lc-void/40 p-1.5 rounded-xl border border-lc-glass-border max-w-lg">
+          {(['roster', 'analytics', 'cms', 'monitoring'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setAdminActiveTab(tab)}
@@ -382,6 +390,7 @@ export default function AdminView() {
               {tab === 'roster' && 'Student Roster'}
               {tab === 'analytics' && 'Cohort Analytics'}
               {tab === 'cms' && 'CMS Publishing'}
+              {tab === 'monitoring' && 'Pipeline'}
             </button>
           ))}
         </div>
@@ -783,6 +792,121 @@ export default function AdminView() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* PIPELINE MONITORING VIEW */}
+        {adminActiveTab === 'monitoring' && (
+          <div className="space-y-6 text-left">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-extrabold uppercase tracking-wider text-lc-text-muted flex items-center space-x-1.5">
+                <Activity className="w-4.5 h-4.5 text-lc-cyan" />
+                <span>Execution Pipeline Monitor</span>
+              </h3>
+              {monitoringLoading && (
+                <span className="text-[10px] font-mono text-lc-text-muted">Refreshing...</span>
+              )}
+            </div>
+
+            {monitoringError && (
+              <div className="lc-glass p-4 border-lc-rose/20 text-[10px] font-mono text-lc-rose">{monitoringError}</div>
+            )}
+
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* AI PROVIDER HEALTH */}
+              <div className="lc-glass p-5 space-y-3">
+                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-lc-text-muted flex items-center space-x-1.5">
+                  <HeartPulse className="w-4 h-4 text-lc-violet" />
+                  <span>AI Provider Health</span>
+                </h4>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-lc-text-muted">AI Enabled</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${monitoring.aiHealth?.aiEnabled ? 'bg-lc-emerald/10 text-lc-emerald' : 'bg-lc-rose/10 text-lc-rose'}`}>
+                    {monitoring.aiHealth?.aiEnabled ? 'ONLINE' : 'OFFLINE'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-lc-text-muted">Overall</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${monitoring.aiHealth?.overallHealthy ? 'bg-lc-emerald/10 text-lc-emerald' : 'bg-lc-amber/10 text-lc-amber'}`}>
+                    {monitoring.aiHealth?.overallHealthy ? 'HEALTHY' : 'DEGRADED'}
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1 border-t border-lc-glass-border">
+                  {(monitoring.aiHealth?.providers || []).map((p: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="text-lc-text truncate pr-2">{p.name || p.provider || 'Provider'}</span>
+                      <span className={`whitespace-nowrap ${p.healthy ? 'text-lc-emerald' : 'text-lc-rose'}`}>
+                        {p.healthy ? 'UP' : 'DOWN'}{p.circuitState && p.circuitState !== 'CLOSED' ? ` · ${p.circuitState}` : ''}
+                      </span>
+                    </div>
+                  ))}
+                  {!monitoring.aiHealth?.providers?.length && (
+                    <p className="text-[10px] font-mono text-lc-text-muted/70">No provider data.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* CODE QUEUE */}
+              <div className="lc-glass p-5 space-y-3">
+                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-lc-text-muted flex items-center space-x-1.5">
+                  <Database className="w-4 h-4 text-lc-cyan" />
+                  <span>Code Queue</span>
+                </h4>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono text-lc-text-muted">Redis Broker</span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${monitoring.queue?.redisReachable ? 'bg-lc-emerald/10 text-lc-emerald' : 'bg-lc-rose/10 text-lc-rose'}`}>
+                    {monitoring.queue?.redisReachable ? 'REACHABLE' : 'DOWN'}
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1 border-t border-lc-glass-border">
+                  {(monitoring.queue?.queues || []).map((q: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between text-[10px] font-mono">
+                      <span className="text-lc-text truncate pr-2">{q.name}</span>
+                      <span className="text-lc-text-muted whitespace-nowrap">
+                        W:{q.waiting ?? 0} A:{q.active ?? 0} F:{q.failed ?? 0}
+                      </span>
+                    </div>
+                  ))}
+                  {!monitoring.queue?.queues?.length && (
+                    <p className="text-[10px] font-mono text-lc-text-muted/70">No queue data.</p>
+                  )}
+                </div>
+              </div>
+
+              {/* SANDBOX WORKERS */}
+              <div className="lc-glass p-5 space-y-3">
+                <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-lc-text-muted flex items-center space-x-1.5">
+                  <Cpu className="w-4 h-4 text-lc-emerald" />
+                  <span>Sandbox Workers</span>
+                </h4>
+                <div className="space-y-1.5">
+                  {(monitoring.workers?.workers || []).map((w: any, i: number) => (
+                    <div key={i} className="p-2.5 rounded-lg bg-lc-void/40 border border-lc-glass-border space-y-1 text-[10px] font-mono">
+                      <div className="flex items-center justify-between">
+                        <span className="text-lc-text">PID {w.pid}</span>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${w.healthy ? 'bg-lc-emerald/10 text-lc-emerald' : 'bg-lc-rose/10 text-lc-rose'}`}>
+                          {w.healthy ? 'HEALTHY' : 'STALE'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-lc-text-muted">
+                        <span>{w.judge0 || 'judge0'}</span>
+                        <span>{w.jobsProcessed ?? 0} jobs</span>
+                      </div>
+                      {w.currentJobId && <p className="text-lc-cyan truncate">job: {w.currentJobId}</p>}
+                    </div>
+                  ))}
+                  {!monitoring.workers?.workers?.length && (
+                    <p className="text-[10px] font-mono text-lc-text-muted/70">No workers running.</p>
+                  )}
+                </div>
+                {monitoring.workers?.config && (
+                  <div className="pt-1 border-t border-lc-glass-border text-[10px] font-mono text-lc-text-muted space-y-0.5">
+                    <p>judge0: {monitoring.workers.config.judge0Enabled ? 'enabled' : 'disabled'} · {monitoring.workers.config.provider}</p>
+                    <p>poll: {monitoring.workers.config.pollMode} · concurrency: {monitoring.workers.config.concurrency}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -3,7 +3,7 @@ import {
   FileText, Sparkles, RefreshCw, Plus,
   Mail, Phone, MapPin
 } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -39,22 +39,10 @@ export default function ResumeView() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [newVersionInput, setNewVersionInput] = useState<string>('');
 
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   const loadResumeData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/resume`, {
-        headers: getHeaders()
-      });
-      const data = await response.json();
+      const data = await apiFetch<{ status?: string; activeVersion?: any; versions?: any[] }>('/resume');
       if (data.status === 'success') {
         if (data.activeVersion && data.activeVersion.personal) {
           setPersonal(data.activeVersion.personal);
@@ -85,9 +73,8 @@ export default function ResumeView() {
     const timer = setTimeout(async () => {
       try {
         setIsSaving(true);
-        await fetch(`${getApiBaseUrl()}/api/resume`, {
+        await apiFetch('/resume', {
           method: 'POST',
-          headers: getHeaders(),
           body: JSON.stringify({
             versionName,
             personal,
@@ -110,14 +97,12 @@ export default function ResumeView() {
   const handleAuditResume = async () => {
     try {
       setIsAuditing(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/resume/audit`, {
+      const data = await apiFetch<{ status?: string; atsScore?: number; auditFeedback?: string[] }>('/resume/audit', {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({ personal, skills, projectText })
       });
-      const data = await response.json();
       if (data.status === 'success') {
-        setAtsScore(data.atsScore);
+        setAtsScore(data.atsScore as number);
         setAuditFeedback(data.auditFeedback || []);
       }
     } catch (err) {
@@ -149,10 +134,7 @@ export default function ResumeView() {
     // Find version details
     try {
       setLoading(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/resume`, {
-        headers: getHeaders()
-      });
-      const data = await response.json();
+      const data = await apiFetch<{ status?: string; versions?: any[] }>('/resume');
       if (data.status === 'success' && Array.isArray(data.versions)) {
         const selected = data.versions.find((v: any) => v.versionName === vName);
         if (selected) {

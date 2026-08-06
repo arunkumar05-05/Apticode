@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, BarChart2, Target, RefreshCw } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -8,22 +8,11 @@ export default function AnalyticsView() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${getApiBaseUrl()}/api/analytics`, {
-          headers: getHeaders()
-        });
-        const resJson = await response.json();
+        const resJson = await apiFetch<{ status?: string; analytics?: any }>('/analytics');
         if (resJson.status === 'success') {
           setData(resJson.analytics);
         }

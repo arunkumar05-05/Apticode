@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Play } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -72,19 +72,15 @@ export default function MockTestView() {
     // Fetch AI-generated questions from the API
     setLoadingQuestions(true);
     try {
-      const saved = localStorage.getItem('apticode-user-session');
-      const token = saved ? JSON.parse(saved).token : '';
       const topicMap: Record<string, string> = {
         TOPIC: 'Time and Work',
         COMPANY: 'Google Interview',
         FULL: 'General Aptitude'
       };
-      const res = await fetch(`${getApiBaseUrl()}/api/mcqs/generate`, {
+      const json = await apiFetch<{ status?: string; data?: any[] }>('/mcqs/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ topic: topicMap[testType], count: testType === 'FULL' ? 10 : 5, difficulty: 'MEDIUM' })
       });
-      const json = await res.json();
       if (json.status === 'success' && Array.isArray(json.data) && json.data.length > 0) {
         setQuestions(json.data.map((q: any) => ({
           questionText: q.questionText,
@@ -108,15 +104,6 @@ export default function MockTestView() {
 
   const handleAnswerSelect = (optionIdx: number) => {
     setSelectedAnswers((prev) => ({ ...prev, [currentIdx]: optionIdx }));
-  };
-
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
   };
 
   const handleSubmitTest = async () => {
@@ -144,9 +131,8 @@ export default function MockTestView() {
     // Save test scorecard to backend database
     try {
       setSubmitting(true);
-      await fetch(`${getApiBaseUrl()}/api/mcqs/progress`, {
+      await apiFetch('/mcqs/progress', {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({
           topicId: `mock_test_${testType.toLowerCase()}`,
           score: finalScore,

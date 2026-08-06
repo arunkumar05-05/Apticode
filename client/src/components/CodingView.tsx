@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, CheckCircle2, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import Scene3D from './three/LazyScene3D';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
@@ -129,6 +129,23 @@ function getCurrentUserEmail(): string {
   return 'student@college.edu';
 }
 
+type RunStatus = 'IDLE' | 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR' | 'PENDING';
+type HistoryStatus = 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR';
+
+function mapRunStatus(status: string | undefined): RunStatus {
+  if (status === 'SUCCESS' || status === 'ACCEPTED') return 'SUCCESS';
+  if (status === 'WRONG_ANSWER' || status === 'PARTIAL') return 'WRONG_ANSWER';
+  if (status === 'PENDING' || status === 'QUEUED' || status === 'RUNNING') return 'PENDING';
+  return 'COMPILE_ERROR';
+}
+
+function mapHistoryStatus(status: string | undefined): HistoryStatus {
+  const mapped = mapRunStatus(status);
+  if (mapped === 'SUCCESS') return 'SUCCESS';
+  if (mapped === 'WRONG_ANSWER') return 'WRONG_ANSWER';
+  return 'COMPILE_ERROR';
+}
+
 export default function CodingView() {
   const [activeProblem, setActiveProblem] = useState<Problem>(problemsList[0]);
   const [selectedLanguage, setSelectedLanguage] = useState<string>('python');
@@ -138,7 +155,9 @@ export default function CodingView() {
   const [mobileViewTab, setMobileViewTab] = useState<'problems' | 'desc' | 'editor'>('editor');
   
   const [isRunning, setIsRunning] = useState(false);
-  const [runStatus, setRunStatus] = useState<'IDLE' | 'SUCCESS' | 'WRONG_ANSWER' | 'COMPILE_ERROR'>('IDLE');
+  const [runStatus, setRunStatus] = useState<RunStatus>('IDLE');
+  const [lastExecutionMs, setLastExecutionMs] = useState<number | undefined>(undefined);
+  const [lastError, setLastError] = useState<string | undefined>(undefined);
   const [debugReport, setDebugReport] = useState('');
   const [isDebugging, setIsDebugging] = useState(false);
 
@@ -147,7 +166,7 @@ export default function CodingView() {
   const [submissionHistory, setSubmissionHistory] = useState<Array<{
     problemTitle: string;
     language: string;
-    status: 'SUCCESS' | 'WRONG_ANSWER';
+    status: HistoryStatus;
     timestamp: string;
   }>>([]);
 
@@ -166,10 +185,14 @@ export default function CodingView() {
       }
 
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions?email=${userEmail}`);
-        const result = await response.json();
-        if (result.status === 'success' && Array.isArray(result.data)) {
-          setSubmissionHistory(result.data);
+        const result = await apiFetch<{ history?: Array<{ problemTitle?: string; language?: string; status?: string; timestamp?: string }> }>('/coding/submissions');
+        if (result && Array.isArray(result.history)) {
+          setSubmissionHistory(result.history.map((h) => ({
+            problemTitle: h.problemTitle || 'Coding Problem',
+            language: h.language || 'python',
+            status: mapHistoryStatus(h.status),
+            timestamp: h.timestamp || ''
+          })));
         }
       } catch (err: any) {
         console.warn('[Coding] Failed to load submissions from backend API, using client state:', err.message);
@@ -215,52 +238,66 @@ export default function CodingView() {
   const handleRunCode = async () => {
     setIsRunning(true);
     setConsoleTab('console');
-    
+
     const userEmail = getCurrentUserEmail();
 
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/coding/submissions`, {
+      const submitResult = await apiFetch<{ submission?: any }>('/coding/submissions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: userEmail,
-          problemId: activeProblem.id,
           problemTitle: activeProblem.title,
           code: editorCode,
           language: selectedLanguage
         })
       });
-      
-      const result = await response.json();
-      setIsRunning(false);
 
-      if (result.status === 'success' && result.data) {
-        const statusResult: 'SUCCESS' | 'WRONG_ANSWER' = result.data.status;
-        setRunStatus(statusResult);
+      const submissionId = submitResult.submission?.id;
+      let statusResult: RunStatus = mapRunStatus(submitResult.submission?.status);
+      let executionMs: number | undefined;
+      let errorMessage: string | undefined;
 
-        const newSubmission = {
-          problemTitle: activeProblem.title,
-          language: selectedLanguage,
-          status: statusResult,
-          timestamp: result.data.timestamp || new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
-        };
-
-        const updatedHistory = [newSubmission, ...submissionHistory];
-        setSubmissionHistory(updatedHistory);
-
-        try {
-          localStorage.setItem(`apticode_submissions_${userEmail}`, JSON.stringify(updatedHistory));
-        } catch (err) {
-          console.error('Failed to save submission history backup:', err);
+      if (submissionId && statusResult === 'PENDING') {
+        for (let attempt = 0; attempt < 12; attempt += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+          const pollResult = await apiFetch<{ submission?: any }>(`/coding/submissions/${submissionId}`);
+          const sub = pollResult.submission;
+          if (!sub || mapRunStatus(sub.status) === 'PENDING') continue;
+          statusResult = mapRunStatus(sub.status);
+          executionMs = sub.executionMs;
+          errorMessage = sub.errorMessage;
+          break;
         }
-      } else {
-        throw new Error(result.message || 'Compiler failed');
+      }
+
+      setIsRunning(false);
+      setRunStatus(statusResult);
+      setLastExecutionMs(executionMs);
+      setLastError(errorMessage);
+
+      if (statusResult === 'PENDING') return;
+
+      const newSubmission = {
+        problemTitle: activeProblem.title,
+        language: selectedLanguage,
+        status: statusResult as HistoryStatus,
+        timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
+      };
+
+      const updatedHistory = [newSubmission, ...submissionHistory];
+      setSubmissionHistory(updatedHistory);
+
+      try {
+        localStorage.setItem(`apticode_submissions_${userEmail}`, JSON.stringify(updatedHistory));
+      } catch (err) {
+        console.error('Failed to save submission history backup:', err);
       }
     } catch (err: any) {
       console.warn('[Coding Backend] API execution failed. Simulating local sandbox compiler.', err.message);
       
       setTimeout(async () => {
         setIsRunning(false);
+        setLastExecutionMs(undefined);
+        setLastError(undefined);
         const containsPlaceholders = 
           editorCode.includes('pass') || 
           editorCode.includes('return new int[0]') || 
@@ -269,7 +306,7 @@ export default function CodingView() {
           editorCode.includes('return NULL');
 
         const isCorrect = !containsPlaceholders;
-        const statusResult: 'SUCCESS' | 'WRONG_ANSWER' = isCorrect ? 'SUCCESS' : 'WRONG_ANSWER';
+        const statusResult: HistoryStatus = isCorrect ? 'SUCCESS' : 'WRONG_ANSWER';
         setRunStatus(statusResult);
 
         const newSubmission = {
@@ -535,10 +572,24 @@ export default function CodingView() {
                         </div>
                       ) : runStatus === 'IDLE' ? (
                         <span className="text-lc-text-muted/70">Run code to test your inputs.</span>
+                      ) : runStatus === 'PENDING' ? (
+                        <div className="space-y-1.5">
+                          <p className="text-lc-amber flex items-center space-x-1"><RefreshCw className="w-3.5 h-3.5 animate-spin" /> <span>Pending — execution queued in sandbox pipeline.</span></p>
+                          <p className="text-lc-text-muted">Waiting for the worker to pick up the job...</p>
+                        </div>
                       ) : runStatus === 'SUCCESS' ? (
                         <div className="space-y-1.5">
                           <p className="text-lc-emerald flex items-center space-x-1"><CheckCircle2 className="w-3.5 h-3.5" /> <span>Accepted! All test cases passed.</span></p>
-                          <p className="text-lc-text-muted">Runtime: 12ms | Memory: 8.4MB</p>
+                          <p className="text-lc-text-muted">Runtime: 12ms | Memory: 8.4MB{lastExecutionMs !== undefined ? ` · ${lastExecutionMs}ms` : ''}</p>
+                        </div>
+                      ) : runStatus === 'COMPILE_ERROR' ? (
+                        <div className="space-y-1.5">
+                          <p className="text-lc-rose flex items-center space-x-1"><AlertCircle className="w-3.5 h-3.5" /> <span>Compile Error</span></p>
+                          {lastError ? (
+                            <p className="text-lc-text-muted whitespace-pre-wrap">{lastError}</p>
+                          ) : (
+                            <p className="text-lc-text-muted">The submitted code failed to compile in the sandbox.</p>
+                          )}
                         </div>
                       ) : (
                         <div className="space-y-1.5">
@@ -621,9 +672,9 @@ export default function CodingView() {
                           <p className="text-[10px] text-lc-text-muted">{sub.timestamp}</p>
                         </div>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          sub.status === 'SUCCESS' ? 'bg-lc-emerald/10 text-lc-emerald' : 'bg-lc-rose/10 text-lc-rose'
+                          sub.status === 'SUCCESS' ? 'bg-lc-emerald/10 text-lc-emerald' : sub.status === 'COMPILE_ERROR' ? 'bg-lc-amber/10 text-lc-amber' : 'bg-lc-rose/10 text-lc-rose'
                         }`}>
-                          {sub.status === 'SUCCESS' ? 'Accepted' : 'Wrong Answer'}
+                          {sub.status === 'SUCCESS' ? 'Accepted' : sub.status === 'COMPILE_ERROR' ? 'Compile Error' : 'Wrong Answer'}
                         </span>
                       </div>
                     ))}

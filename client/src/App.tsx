@@ -18,7 +18,7 @@ import AppLayout from './components/AppLayout';
 import CompanyPrepView from './components/CompanyPrepView';
 import MockTestView from './components/MockTestView';
 import ProfileView from './components/ProfileView';
-import { getApiBaseUrl } from './config/api';
+import { getApiBaseUrl, logout } from './config/api';
 import { supabase } from './supabase';
 
 
@@ -34,6 +34,7 @@ interface UserSession {
   email: string;
   role: 'STUDENT' | 'ADMIN';
   token: string;
+  refreshToken?: string;
   isOnboarded?: boolean;
   onboardingCompleted?: boolean;
 }
@@ -128,6 +129,19 @@ export default function App() {
     }
     localStorage.setItem('apticode-theme', theme);
   }, [theme]);
+
+  // When the API refresh-token rotation fails, every 401 clears the session
+  // and returns to the landing view instead of leaving a dead session behind.
+  React.useEffect(() => {
+    const handleSessionExpired = () => {
+      localStorage.removeItem('apticode-user-session');
+      localStorage.removeItem('apticode-current-view');
+      setUser(null);
+      setCurrentView('landing');
+    };
+    window.addEventListener('apticode:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('apticode:session-expired', handleSessionExpired);
+  }, []);
 
   React.useEffect(() => {
     const checkOnboarding = async () => {
@@ -230,6 +244,7 @@ export default function App() {
 
   const handleLogout = () => {
     supabase.auth.signOut().catch(err => console.error('[Auth] signOut error:', err));
+    logout().catch(() => {});
     localStorage.removeItem('apticode-user-session');
     localStorage.removeItem('apticode-current-view');
     setUser(null);

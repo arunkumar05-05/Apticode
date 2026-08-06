@@ -5,7 +5,7 @@ import {
   Target, Cpu, Compass, BookOpen, Layers, Zap, Flame,
   BarChart3, Star, Sparkles, X, Code, Users
 } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 import { NeoSlider } from './ui/NeoKey';
@@ -73,6 +73,11 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [registerNumber, setRegisterNumber] = useState('');
+  const [college, setCollege] = useState('');
+  const [skillsInput, setSkillsInput] = useState('');
+  const [saveErrors, setSaveErrors] = useState<{ field: string; message: string }[]>([]);
 
   const handleNext = useCallback(() => {
     if (step === 2 && goal.length === 0) return;
@@ -81,6 +86,12 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
     if (step === 5 && !codingLevel) return;
     setStep(prev => prev + 1);
   }, [step, goal.length, year, branch, codingLevel]);
+
+  useEffect(() => {
+    if (step === 9) {
+      setSkillsInput(prev => (prev.trim() ? prev : companies.join(', ')));
+    }
+  }, [step, companies]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -153,17 +164,21 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
 
   const saveOnboarding = async () => {
     setSaving(true);
+    setSaveErrors([]);
     const gradYearNum = year?.includes('Third') ? 2026 : (year?.includes('Final') ? 2025 : 2027);
     const generatedBio = `Targeting ${goal.join(', ') || 'Software Engineering'} placement roles. Preferred Companies: ${companies.join(', ') || 'Dream Companies'}. Coding level: ${codingLevel || 'Intermediate'}.`;
+    const finalSkills = skillsInput.trim() || companies.join(', ');
 
     const onboardingPayload = {
       email: userEmail,
-      college: 'AptiCode College',
+      college: college.trim(),
       branch: branch || 'Computer Science',
       department: branch || 'Computer Science',
       graduationYear: gradYearNum,
-      skills: companies.join(', '),
+      skills: finalSkills,
       bio: generatedBio,
+      phone: phone.trim(),
+      registerNumber: registerNumber.trim(),
       goal,
       year,
       codingLevel,
@@ -180,25 +195,42 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
       if (sessionStr) {
         const session = JSON.parse(sessionStr);
         if (session.token) {
-          const apiBase = getApiBaseUrl();
-          await fetch(`${apiBase}/api/profile`, {
+          // fullName has no input on this step — fall back to a derived name
+          // from email (mirrors the server's formatHumanName) so the required
+          // field can never block onboarding.
+          const nameHandle = (session.email || userEmail || '').split('@')[0].replace(/[^A-Za-z0-9]/g, '');
+          const derivedName =
+            session.name && session.name.trim().length >= 2
+              ? session.name.trim()
+              : nameHandle
+                ? nameHandle.charAt(0).toUpperCase() + nameHandle.slice(1)
+                : 'Student';
+          const resData = await apiFetch<{ status?: string; errors?: any[]; message?: string }>('/profile', {
             method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.token}`
-            },
             body: JSON.stringify({
-              fullName: session.name || undefined,
+              fullName: derivedName,
               email: session.email || userEmail,
-              college: 'AptiCode College',
+              college: college.trim(),
               branch: branch || 'Computer Science',
               department: branch || 'Computer Science',
               graduationYear: gradYearNum,
-              skills: companies.join(', '),
+              skills: finalSkills,
               bio: generatedBio,
+              phone: phone.trim(),
+              registerNumber: registerNumber.trim(),
               isOnboarded: true
             })
           });
+          if (resData.status === 'fail') {
+            setSaveErrors(
+              Array.isArray(resData.errors)
+                ? resData.errors
+                : [{ field: '', message: resData.message || 'Could not save profile details.' }]
+            );
+            setSaving(false);
+            return;
+          }
+          setSaveErrors([]);
         }
       }
     } catch (err) {
@@ -543,6 +575,61 @@ export default function OnboardingView({ onComplete, userEmail }: OnboardingView
                 <h4 className="text-[11px] font-bold text-lc-text">Aptitude Plan</h4>
                 <p className="text-[9px] leading-normal text-lc-text-muted">Quant, Logical & Verbal shortcuts calibrated for placements.</p>
               </div>
+            </div>
+            <div className="space-y-3 rounded-2xl lc-neo p-4 text-left">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-lc-text-muted">Profile details</p>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-semibold text-lc-text-muted">College</label>
+                  <input
+                    type="text"
+                    value={college}
+                    onChange={(e) => setCollege(e.target.value)}
+                    placeholder="Your college name"
+                    className="h-10 w-full lc-neo rounded-full px-4 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-semibold text-lc-text-muted">Phone</label>
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+919876543210"
+                    className="h-10 w-full lc-neo rounded-full px-4 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-semibold text-lc-text-muted">Register Number</label>
+                  <input
+                    type="text"
+                    value={registerNumber}
+                    onChange={(e) => setRegisterNumber(e.target.value)}
+                    placeholder="e.g. 22CS001"
+                    className="h-10 w-full lc-neo rounded-full px-4 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] font-semibold text-lc-text-muted">Skills</label>
+                  <input
+                    type="text"
+                    value={skillsInput}
+                    onChange={(e) => setSkillsInput(e.target.value)}
+                    placeholder="e.g. Python, React, DSA"
+                    className="h-10 w-full lc-neo rounded-full px-4 text-xs text-lc-text outline-none placeholder:text-lc-text-muted/60"
+                  />
+                </div>
+              </div>
+              {saveErrors.length > 0 && (
+                <div className="rounded-2xl border border-lc-rose/30 bg-lc-rose/10 p-3">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-lc-rose">Fix the following</p>
+                  <ul className="space-y-1">
+                    {saveErrors.map((err, i) => (
+                      <li key={i} className="text-[11px] text-lc-rose">{err.field ? `${err.field}: ` : ''}{err.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
             <button
               onClick={saveOnboarding}

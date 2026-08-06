@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, ClipboardList, Sparkles, Download, GraduationCap, RefreshCw } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -57,15 +57,7 @@ export default function ProfileView() {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editData, setEditData] = useState<Partial<ProfileData>>({});
   const [saving, setSaving] = useState<boolean>(false);
-
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
+  const [saveErrors, setSaveErrors] = useState<{ field: string; message: string }[]>([]);
 
   const loadProfileAndHistory = async () => {
     const savedSession = localStorage.getItem('apticode-user-session');
@@ -79,10 +71,7 @@ export default function ProfileView() {
     try {
       setLoading(true);
       // 1. Load profile from API
-      const profRes = await fetch(`${getApiBaseUrl()}/api/profile`, {
-        headers: getHeaders()
-      });
-      const profData = await profRes.json();
+      const profData = await apiFetch<{ status?: string; profile?: any }>('/profile');
       if (profData.status === 'success' && profData.profile) {
         const raw = profData.profile || {};
 
@@ -127,10 +116,7 @@ export default function ProfileView() {
 
       // 2. Load aptitude history
       try {
-        const aptRes = await fetch(`${getApiBaseUrl()}/api/mcqs/progress`, {
-          headers: getHeaders()
-        });
-        const aptData = await aptRes.json();
+        const aptData = await apiFetch<{ status?: string; history?: any[] }>('/mcqs/progress');
         if (aptData.status === 'success' && Array.isArray(aptData.history)) {
           setTestHistory(aptData.history);
         }
@@ -138,10 +124,7 @@ export default function ProfileView() {
 
       // 3. Load coding history
       try {
-        const codeRes = await fetch(`${getApiBaseUrl()}/api/coding/submissions`, {
-          headers: getHeaders()
-        });
-        const codeData = await codeRes.json();
+        const codeData = await apiFetch<{ status?: string; history?: any[] }>('/coding/submissions');
         if (codeData.status === 'success' && Array.isArray(codeData.history)) {
           setSubmissionsCount(codeData.history.length);
         }
@@ -167,6 +150,7 @@ export default function ProfileView() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setSaveErrors([]);
 
     // Save to local storage for instant mobile persistence
     const formattedData: ProfileData = {
@@ -186,34 +170,44 @@ export default function ProfileView() {
       profilePhoto: editData.profilePhoto || '',
       resume: editData.resume || ''
     };
-    setProfile(formattedData);
-    setEditData(formattedData);
-    if (formattedData.email) {
-      localStorage.setItem(`apticode-user-profile-${formattedData.email}`, JSON.stringify(formattedData));
-    }
-
+    // Defer all local persistence to the success branch below — on a server
+    // 400 the local state and localStorage must keep the last good profile.
+    let serverOk = true;
     try {
-      const response = await fetch(`${getApiBaseUrl()}/api/profile`, {
+      const resData = await apiFetch<{ status?: string; profile?: any; errors?: any[]; message?: string }>('/profile', {
         method: 'PUT',
-        headers: getHeaders(),
         body: JSON.stringify(formattedData)
       });
-      const resData = await response.json();
-      if (resData.status === 'success' && resData.profile) {
-        const raw = resData.profile;
-        const updated: ProfileData = {
-          ...formattedData,
-          fullName: formatHumanName(raw.fullName, raw.email)
-        };
-        setProfile(updated);
-        setEditData(updated);
+      if (resData.status === 'fail') {
+        setSaveErrors(
+          Array.isArray(resData.errors)
+            ? resData.errors
+            : [{ field: '', message: resData.message || 'Could not save profile.' }]
+        );
+        serverOk = false;
+      } else {
+        setSaveErrors([]);
+        if (resData.status === 'success' && resData.profile) {
+          const raw = resData.profile;
+          const updated: ProfileData = {
+            ...formattedData,
+            fullName: formatHumanName(raw.fullName, raw.email)
+          };
+          setProfile(updated);
+          setEditData(updated);
+          if (updated.email) {
+            localStorage.setItem(`apticode-user-profile-${updated.email}`, JSON.stringify(updated));
+          }
+        }
       }
     } catch {
       console.warn('[Profile Save] Server fetch offline fallback active.');
     } finally {
       setSaving(false);
-      setIsEditing(false);
-      alert('Profile saved successfully!');
+      if (serverOk) {
+        setIsEditing(false);
+        alert('Profile saved successfully!');
+      }
     }
   };
 
@@ -281,7 +275,7 @@ export default function ProfileView() {
 
             <div className="flex flex-col gap-2 w-full">
               <button
-                onClick={() => setIsEditing(!isEditing)}
+                onClick={() => { setSaveErrors([]); setIsEditing(!isEditing); }}
                 className="lc-neo lc-neo-pill w-full flex h-11 items-center justify-center gap-2 bg-gradient-to-r from-lc-violet to-lc-cyan text-xs font-bold text-lc-text transition-all cursor-pointer"
               >
                 <span>{isEditing ? 'Cancel Edit' : 'Edit Profile Details'}</span>
@@ -318,6 +312,16 @@ export default function ProfileView() {
           {isEditing ? (
             <div className="lc-glass p-6 space-y-4">
               <h3 className="text-xs font-bold text-lc-text-muted uppercase tracking-widest font-mono border-b border-lc-glass-border pb-2">Modify Database Profile Fields</h3>
+              {saveErrors.length > 0 && (
+                <div className="rounded-2xl border border-lc-rose/30 bg-lc-rose/10 p-3">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-lc-rose">Fix the following</p>
+                  <ul className="space-y-1">
+                    {saveErrors.map((err, i) => (
+                      <li key={i} className="text-[11px] text-lc-rose">{err.field ? `${err.field}: ` : ''}{err.message}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <form onSubmit={handleSave} className="space-y-4 text-xs">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="flex flex-col space-y-1">

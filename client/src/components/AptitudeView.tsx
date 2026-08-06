@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PlayCircle, CheckCircle2, ChevronRight, HelpCircle, Sparkles, Clock, Bookmark, RefreshCw, HelpCircle as HintIcon } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -66,22 +66,10 @@ export default function AptitudeView() {
   const [showHint, setShowHint] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   const loadTopics = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/topics`, {
-        headers: getHeaders()
-      });
-      const data = await response.json();
+      const data = await apiFetch<{ status?: string; topics?: any[] }>('/topics');
       if (data.status === 'success' && Array.isArray(data.topics)) {
         const verified = data.topics.map((t: any) => ({
           ...t,
@@ -212,9 +200,8 @@ export default function AptitudeView() {
 
     setSubmitting(true);
     try {
-      await fetch(`${getApiBaseUrl()}/api/mcqs/progress`, {
+      await apiFetch('/mcqs/progress', {
         method: 'POST',
-        headers: getHeaders(),
         body: JSON.stringify({
           topicId: activeTopic.id,
           score: scoreVal,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Mic, MicOff, AlertTriangle, Volume2, Sparkles, MessageCircle, BookOpen } from 'lucide-react';
 import { supabase } from '../supabase';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 import Scene3D from './three/LazyScene3D';
 
@@ -44,22 +44,10 @@ export default function CommunicationView() {
   const [historyList, setHistoryList] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState<boolean>(false);
 
-  const getHeaders = () => {
-    const saved = localStorage.getItem('apticode-user-session');
-    const token = saved ? JSON.parse(saved).token : '';
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    };
-  };
-
   const fetchHistory = async () => {
     try {
       setLoadingHistory(true);
-      const response = await fetch(`${getApiBaseUrl()}/api/communication/history`, {
-        headers: getHeaders()
-      });
-      const data = await response.json();
+      const data = await apiFetch<{ status?: string; history?: any[] }>('/communication/history');
       if (data.status === 'success') {
         setHistoryList(data.history || []);
       }
@@ -189,9 +177,8 @@ export default function CommunicationView() {
       const pronScore = activeMode === 'reading' ? computePronunciationScore(transcript, readingPrompt) : 90;
 
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/communication/eval`, {
+        const result = await apiFetch<{ evaluation?: any }>('/communication/eval', {
           method: 'POST',
-          headers: getHeaders(),
           body: JSON.stringify({
             sessionType: activeMode === 'reading' ? 'READING' : 'SPEAKING',
             transcript: transcript || (activeMode === 'reading' ? readingPrompt : 'Hello placement advisor, I want to talk about computer architecture.'),
@@ -199,18 +186,17 @@ export default function CommunicationView() {
             durationSeconds: seconds || 15
           })
         });
-        const result = await response.json();
-        if (result.status === 'success' && result.data) {
-          const evalData = result.data;
+        const evalData = result.evaluation;
+        if (evalData) {
           setMetrics({
             wpm: evalData.wpm || computedWpm,
             fluency: evalData.fluencyScore || Math.max(100 - computedFillers * 10, 40),
             grammar: evalData.grammarScore || 85,
-            fillers: computedFillers,
+            fillers: typeof evalData.fillerWords === 'number' ? evalData.fillerWords : computedFillers,
             confidence: evalData.confidenceScore || 80,
-            pronunciationMatch: pronScore
+            pronunciationMatch: typeof evalData.pronunciationMatch === 'number' ? evalData.pronunciationMatch : pronScore
           });
-          setAiFeedback(evalData.feedback || '');
+          setAiFeedback(evalData.recommendations || '');
           setHasEvaluated(true);
         } else {
           throw new Error('API failed');

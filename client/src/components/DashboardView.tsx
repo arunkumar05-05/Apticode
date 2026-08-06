@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Award, Zap, Play, CheckCircle2, Code, MessageSquare, BookOpen, Star, AlertCircle, Compass, Sparkles, Brain, ArrowRight } from 'lucide-react';
-import { getApiBaseUrl } from '../config/api';
+import { apiFetch } from '../config/api';
 import Scene3D from './three/LazyScene3D';
 import { StatOrb, XPBar, TiltCard, ConfettiBurst } from './ui/Gamified';
 import { GlassCard, GlassModal } from './ui/GlassCard';
@@ -38,14 +38,7 @@ export default function DashboardView({ onNavigate, xp, level, spendXp, openAiCo
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const saved = localStorage.getItem('apticode-user-session');
-        const token = saved ? JSON.parse(saved).token : '';
-        const response = await fetch(`${getApiBaseUrl()}/api/dashboard`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
+        const data = await apiFetch<{ status?: string; stats?: any }>('/dashboard');
         if (data.status === 'success') {
           setStatsData(data.stats);
         }
