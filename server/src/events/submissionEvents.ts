@@ -22,7 +22,6 @@ export interface SubmissionEvent {
   status: string;
   stage?: string;
   message?: string;
-  xpAwarded?: number;
   createdAt: string;
 }
 
@@ -39,6 +38,7 @@ const MAX_WRITE_BUFFER_BYTES = 64 * 1024;
 
 export async function publishSubmissionEvent(evt: SubmissionEvent): Promise<boolean> {
   let conn: Redis | null = null;
+  let guardTimer: NodeJS.Timeout | null = null;
   let timedOut = false;
   try {
     conn = createRedisConnection();
@@ -46,11 +46,11 @@ export async function publishSubmissionEvent(evt: SubmissionEvent): Promise<bool
       // Swallow connection-level errors; the guard below reports the outcome.
     });
     const guard = new Promise<never>((_, reject) => {
-      const timer = setTimeout(() => {
+      guardTimer = setTimeout(() => {
         timedOut = true;
         reject(new Error('publish timed out'));
       }, PUBLISH_TIMEOUT_MS);
-      timer.unref?.();
+      guardTimer.unref?.();
     });
     await Promise.race([conn.publish(SUBMISSION_EVENTS_CHANNEL, JSON.stringify(evt)), guard]);
     return true;
@@ -58,6 +58,7 @@ export async function publishSubmissionEvent(evt: SubmissionEvent): Promise<bool
     logger.warn({ err: err?.message, submissionId: evt.submissionId }, 'Submission event publish failed');
     return false;
   } finally {
+    if (guardTimer) clearTimeout(guardTimer);
     if (conn) {
       if (timedOut || conn.status !== 'ready') {
         conn.disconnect();
@@ -80,8 +81,9 @@ export async function subscribeSubmissionEvents(handler: SubmissionEventHandler)
   subscriberHandler = handler;
   subscriberStarted = true;
   if (subscriberConn) return;
+  let conn: Redis | null = null;
   try {
-    const conn = createRedisConnection();
+    conn = createRedisConnection();
     conn.on('error', () => {
       // Connection-level errors are handled by ioredis's retry strategy;
       // resubscription happens automatically on reconnect.
@@ -100,6 +102,7 @@ export async function subscribeSubmissionEvents(handler: SubmissionEventHandler)
     logger.info('Submission event subscriber connected');
   } catch (err: any) {
     subscriberConn = null;
+    conn?.disconnect?.();
     logger.warn({ err: err?.message }, 'Submission event subscriber failed to connect');
   }
 }

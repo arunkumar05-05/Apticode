@@ -19,6 +19,7 @@ import {
   WorkerDeps,
 } from '../src/worker/types';
 import { Judge0CaseOutcome, Judge0Provider } from '../src/integrations/judge0/types';
+import type { SubmissionEvent } from '../src/events/submissionEvents';
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -131,8 +132,8 @@ function makeFakeQueues() {
 
 const silentLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn() } as any;
 
-function makeDeps(db: FakeDb, provider: Judge0Provider, queues: any = undefined): WorkerDeps {
-  return { db: makeDbProxy(db), logger: silentLogger, config, judge0Provider: provider, queues };
+function makeDeps(db: FakeDb, provider: Judge0Provider, queues: any = undefined, publish?: (evt: SubmissionEvent) => void): WorkerDeps {
+  return { db: makeDbProxy(db), logger: silentLogger, config, judge0Provider: provider, queues, publish };
 }
 
 function acOutcome(): Judge0CaseOutcome { return { token: 't', statusId: 3, verdict: 'ACCEPTED', timeSec: 0.01, memoryKb: 800 }; }
@@ -145,28 +146,29 @@ function tleOutcome(): Judge0CaseOutcome { return { token: 't', statusId: 5, ver
 // Tests
 // ---------------------------------------------------------------------------
 
+function seedAll(statuses: string[]) {
+  const db = makeDb({
+    problems: [{ id: 'p1', timeLimitMs: 2000, memoryLimitKb: 262144 }],
+    testcases: statuses.map((_, i) => ({ id: `tc${i}`, problemId: 'p1', inputData: `${i}`, expectedOutput: `${i}`, isHidden: i === 1 })),
+    submissions: [{ id: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python', status: 'RUNNING', xpAwarded: false }],
+  });
+  const outcomes = statuses.map((s) => {
+    if (s === 'WA') return waOutcome();
+    if (s === 'CE') return ceOutcome();
+    if (s === 'RTE') return rteOutcome();
+    if (s === 'TLE') return tleOutcome();
+    return acOutcome();
+  });
+  const provider = makeFakeProvider(() => outcomes);
+  const queues = makeFakeQueues();
+  const payload: EvaluationJobPayload = {
+    submissionId: 's1', userId: 'u1', problemId: 'p1', languageId: 71,
+    testcases: db.testcases, code: 'x', language: 'python',
+  };
+  return { db, provider, queues, payload };
+}
+
 describe('processEvaluationJob — verdict aggregation', () => {
-  function seedAll(statuses: string[]) {
-    const db = makeDb({
-      problems: [{ id: 'p1', timeLimitMs: 2000, memoryLimitKb: 262144 }],
-      testcases: statuses.map((_, i) => ({ id: `tc${i}`, problemId: 'p1', inputData: `${i}`, expectedOutput: `${i}`, isHidden: i === 1 })),
-      submissions: [{ id: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python', status: 'RUNNING', xpAwarded: false }],
-    });
-    const outcomes = statuses.map((s) => {
-      if (s === 'WA') return waOutcome();
-      if (s === 'CE') return ceOutcome();
-      if (s === 'RTE') return rteOutcome();
-      if (s === 'TLE') return tleOutcome();
-      return acOutcome();
-    });
-    const provider = makeFakeProvider(() => outcomes);
-    const queues = makeFakeQueues();
-    const payload: EvaluationJobPayload = {
-      submissionId: 's1', userId: 'u1', problemId: 'p1', languageId: 71,
-      testcases: db.testcases, code: 'x', language: 'python',
-    };
-    return { db, provider, queues, payload };
-  }
 
   it('all ACCEPTED → ACCEPTED with resultJson + per-testcase fidelity', async () => {
     const { db, provider, queues, payload } = seedAll(['AC', 'AC']);
@@ -319,5 +321,83 @@ describe('handleSubmissionFailed', () => {
     expect(db.submissions[0].errorMessage?.length).toBeLessThanOrEqual(500);
     expect(queues.calls.submissionDlq).toHaveLength(1);
     expect(queues.calls.submissionDlq[0].originalQueue).toBe('code-submission');
+  });
+});
+
+describe('realtime submission events (deps.publish)', () => {
+  function recorder() {
+    const published: SubmissionEvent[] = [];
+    return { published, publish: (e: SubmissionEvent) => published.push(e) };
+  }
+
+  it('publishes RUNNING when intake starts processing', async () => {
+    const { published, publish } = recorder();
+    const db = makeDb({
+      problems: [{ id: 'p1', timeLimitMs: 2000, memoryLimitKb: 262144 }],
+      testcases: [{ id: 'tc1', problemId: 'p1', inputData: '1', expectedOutput: '1', isHidden: false }],
+      submissions: [{ id: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python', status: 'QUEUED', xpAwarded: false }],
+    });
+    const provider = makeFakeProvider(() => [acOutcome()]);
+    const queues = makeFakeQueues();
+    const payload: SubmissionJobPayload = { submissionId: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python' };
+    const r = await processSubmissionJob(payload, makeDeps(db, provider, queues, publish));
+    expect(r.status).toBe('QUEUED');
+    expect(published).toHaveLength(1);
+    expect(published[0]).toMatchObject({ type: 'SUBMISSION_UPDATED', submissionId: 's1', userId: 'u1', status: 'RUNNING', stage: 'running' });
+    expect(published[0].createdAt).toBeTruthy();
+  });
+
+  it('publishes the terminal verdict (stage done) after evaluation persists', async () => {
+    const { published, publish } = recorder();
+    const { db, provider, payload } = seedAll(['AC', 'AC']);
+    await processEvaluationJob(payload, makeDeps(db, provider, undefined, publish));
+    expect(published).toHaveLength(1);
+    expect(published[0]).toMatchObject({ type: 'SUBMISSION_UPDATED', submissionId: 's1', userId: 'u1', status: 'ACCEPTED', stage: 'done' });
+    expect(published[0].createdAt).toBeTruthy();
+  });
+
+  it('publishes SYSTEM_ERROR (stage error) when inline evaluation fails', async () => {
+    const { published, publish } = recorder();
+    const db = makeDb({
+      problems: [{ id: 'p1', timeLimitMs: 2000, memoryLimitKb: 262144 }],
+      testcases: [{ id: 'tc1', problemId: 'p1', inputData: '1', expectedOutput: '1', isHidden: false }],
+      submissions: [{ id: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python', status: 'RUNNING', xpAwarded: false }],
+    });
+    const provider = makeFakeProvider(() => {
+      throw new Error('judge0 down');
+    });
+    const payload: EvaluationJobPayload = { submissionId: 's1', userId: 'u1', problemId: 'p1', languageId: 71, testcases: db.testcases, code: 'x', language: 'python' };
+    const result = await processEvaluationJob(payload, makeDeps(db, provider, undefined, publish));
+    expect(result.verdict).toBe('SYSTEM_ERROR');
+    expect(db.submissions[0].status).toBe('SYSTEM_ERROR');
+    expect(published).toHaveLength(1);
+    expect(published[0]).toMatchObject({ status: 'SYSTEM_ERROR', stage: 'error', message: 'judge0 down' });
+  });
+
+  it('publishes SYSTEM_ERROR from handleSubmissionFailed with truncated message', async () => {
+    const { published, publish } = recorder();
+    const db = makeDb({
+      submissions: [{ id: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python', status: 'QUEUED', xpAwarded: false }],
+    });
+    const provider = makeFakeProvider(() => []);
+    const queues = makeFakeQueues();
+    const payload: SubmissionJobPayload = { submissionId: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python' };
+    const r = await processSubmissionJob(payload, makeDeps(db, provider, queues, publish));
+    expect(r.status).toBe('SYSTEM_ERROR');
+    expect(published).toHaveLength(1);
+    expect(published[0]).toMatchObject({ status: 'SYSTEM_ERROR', stage: 'error', message: 'Coding problem not found' });
+    expect(published[0].message!.length).toBeLessThanOrEqual(500);
+  });
+
+  it('publishes nothing for terminal no-op redeliveries', async () => {
+    const { published, publish } = recorder();
+    const db = makeDb({
+      submissions: [{ id: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python', status: 'ACCEPTED', xpAwarded: true }],
+    });
+    const provider = makeFakeProvider(() => []);
+    const payload: SubmissionJobPayload = { submissionId: 's1', userId: 'u1', problemId: 'p1', code: 'x', language: 'python' };
+    const r = await processSubmissionJob(payload, makeDeps(db, provider, undefined, publish));
+    expect(r.status).toBe('ACCEPTED');
+    expect(published).toHaveLength(0);
   });
 });

@@ -38,6 +38,8 @@ export function useSubmissionStream({ submissionId, enabled, onTerminal }: UseSu
   const [latest, setLatest] = useState<SubmissionStreamSnapshot | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+  const activeRef = useRef(true);
+  const pollingRef = useRef(false);
   const noEventTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastEventKeyRef = useRef<string>('');
@@ -69,7 +71,7 @@ export function useSubmissionStream({ submissionId, enabled, onTerminal }: UseSu
 
   const handleEvent = useCallback(
     (evt: SubmissionStreamEvent) => {
-      const key = `${evt.createdAt}:${evt.status}`;
+      const key = `${evt.status}`;
       if (lastEventKeyRef.current === key) return;
       lastEventKeyRef.current = key;
 
@@ -98,13 +100,18 @@ export function useSubmissionStream({ submissionId, enabled, onTerminal }: UseSu
 
   const fallbackToPolling = useCallback(() => {
     stopStream();
+    if (pollingRef.current) return;
+    pollingRef.current = true;
     setState('fallback');
     const submissionIdAtCall = submissionIdRef.current;
     if (!submissionIdAtCall) return;
     const poll = async () => {
+      if (!activeRef.current) return;
       if (submissionIdRef.current !== submissionIdAtCall) return;
       try {
         const row = await apiFetch<{ submission?: any }>(`/coding/submissions/${submissionIdAtCall}`);
+        if (!activeRef.current) return;
+        if (submissionIdRef.current !== submissionIdAtCall) return;
         const sub = row?.submission;
         if (sub?.status) {
           const snapshot: SubmissionStreamSnapshot = {
@@ -113,19 +120,26 @@ export function useSubmissionStream({ submissionId, enabled, onTerminal }: UseSu
             executionMs: sub.executionMs,
             updatedAt: sub.updatedAt || new Date().toISOString(),
           };
-          const key = `${snapshot.updatedAt}:${snapshot.status}`;
+          const key = `${snapshot.status}`;
+          const isTerminal = TERMINAL_STATUSES.has(snapshot.status);
           if (lastEventKeyRef.current !== key) {
             lastEventKeyRef.current = key;
             setLatest(snapshot);
-          }
-          if (TERMINAL_STATUSES.has(snapshot.status)) {
+            if (isTerminal) {
+              clearPollTimer();
+              pollingRef.current = false;
+              onTerminalRef.current?.(snapshot);
+              return;
+            }
+          } else if (isTerminal) {
             clearPollTimer();
-            onTerminalRef.current?.(snapshot);
             return;
           }
         }
       } catch {
+        if (!activeRef.current) return;
         clearPollTimer();
+        pollingRef.current = false;
         setState('error');
         return;
       }
@@ -137,19 +151,22 @@ export function useSubmissionStream({ submissionId, enabled, onTerminal }: UseSu
   useEffect(() => {
     if (!enabled || !submissionId) return;
     lastEventKeyRef.current = '';
+    pollingRef.current = false;
     setLatest(null);
     setState('connecting');
-    abortRef.current = new AbortController();
+    const controller = new AbortController();
+    abortRef.current = controller;
     noEventTimerRef.current = setTimeout(() => {
       fallbackToPolling();
     }, NO_EVENT_FALLBACK_MS);
 
     void streamFetch({
       submissionId,
-      signal: abortRef.current.signal,
+      signal: controller.signal,
       onEvent: handleEvent,
     }).catch(() => {
-      if (abortRef.current?.signal.aborted) return;
+      if (controller.signal.aborted) return;
+      if (!activeRef.current) return;
       fallbackToPolling();
     });
 
@@ -168,6 +185,7 @@ export function useSubmissionStream({ submissionId, enabled, onTerminal }: UseSu
 
   useEffect(() => {
     return () => {
+      activeRef.current = false;
       stopStream();
       clearPollTimer();
     };

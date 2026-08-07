@@ -153,7 +153,6 @@ export interface SubmissionStreamEvent {
   status: string;
   stage?: string;
   message?: string;
-  xpAwarded?: number;
   createdAt: string;
 }
 

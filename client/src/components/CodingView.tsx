@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Sparkles, AlertCircle, CheckCircle2, RefreshCw, Bookmark, FileText, Code2, History } from 'lucide-react';
 import { apiFetch, ApiError } from '../config/api';
+import { useSubmissionStream } from '../hooks/useSubmissionStream';
+import type { SubmissionStreamSnapshot } from '../hooks/useSubmissionStream';
 import { LiquidBackdrop } from './ui/LiquidBackdrop';
 
 interface Problem {
@@ -162,6 +164,58 @@ export default function CodingView() {
   const [debugReport, setDebugReport] = useState('');
   const [isDebugging, setIsDebugging] = useState(false);
 
+  // Real-time streaming of the async grading pipeline (SSE + fallback polling).
+  const [streamingSubmissionId, setStreamingSubmissionId] = useState<string | null>(null);
+
+  const recordSubmission = (status: HistoryStatus) => {
+    const userEmail = getCurrentUserEmail();
+    const newSubmission = {
+      problemTitle: activeProblem.title,
+      language: selectedLanguage,
+      status,
+      timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
+    };
+    const updatedHistory = [newSubmission, ...submissionHistory];
+    setSubmissionHistory(updatedHistory);
+    try {
+      localStorage.setItem(`apticode_submissions_${userEmail}`, JSON.stringify(updatedHistory));
+    } catch (err) {
+      console.error('Failed to save submission history backup:', err);
+    }
+  };
+
+  const handleStreamTerminal = (snapshot: SubmissionStreamSnapshot) => {
+    setIsRunning(false);
+    setStreamingSubmissionId(null);
+    setRunStatus(mapRunStatus(snapshot.status));
+    setLastError(snapshot.message);
+    if (snapshot.executionMs !== undefined) {
+      setLastExecutionMs(snapshot.executionMs);
+    } else if (streamingSubmissionId) {
+      void apiFetch<{ submission?: any }>(`/coding/submissions/${streamingSubmissionId}`)
+        .then((row) => {
+          setLastExecutionMs(row?.submission?.executionMs);
+          setLastError(row?.submission?.errorMessage || snapshot.message);
+        })
+        .catch(() => {});
+    }
+    recordSubmission(mapRunStatus(snapshot.status) as HistoryStatus);
+  };
+
+  const stream = useSubmissionStream({
+    submissionId: streamingSubmissionId ?? undefined,
+    enabled: streamingSubmissionId !== null,
+    onTerminal: handleStreamTerminal,
+  });
+
+  useEffect(() => {
+    if (stream.state === 'error') {
+      setIsRunning(false);
+      setPollTimedOut(true);
+      setStreamingSubmissionId(null);
+    }
+  }, [stream.state]);
+
   // Persistence Bookmarks & Submissions
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
   const [submissionHistory, setSubmissionHistory] = useState<Array<{
@@ -212,6 +266,8 @@ export default function CodingView() {
     setEditorCode(starter);
     setRunStatus('IDLE');
     setDebugReport('');
+    setStreamingSubmissionId(null);
+    setPollTimedOut(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProblem.id, selectedLanguage]);
 
@@ -254,22 +310,13 @@ export default function CodingView() {
       });
 
       const submissionId = submitResult.submission?.id;
-      let statusResult: RunStatus = mapRunStatus(submitResult.submission?.status);
-      let executionMs: number | undefined;
-      let errorMessage: string | undefined;
+      const statusResult: RunStatus = mapRunStatus(submitResult.submission?.status);
+      const executionMs: number | undefined = submitResult.submission?.executionMs;
+      const errorMessage: string | undefined = submitResult.submission?.errorMessage;
 
       if (submissionId && statusResult === 'PENDING') {
-        for (let attempt = 0; attempt < 12; attempt += 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-          const pollResult = await apiFetch<{ submission?: any }>(`/coding/submissions/${submissionId}`);
-          const sub = pollResult.submission;
-          if (!sub || mapRunStatus(sub.status) === 'PENDING') continue;
-          statusResult = mapRunStatus(sub.status);
-          executionMs = sub.executionMs;
-          errorMessage = sub.errorMessage;
-          break;
-        }
-        if (statusResult === 'PENDING') setPollTimedOut(true);
+        setStreamingSubmissionId(submissionId);
+        return;
       }
 
       setIsRunning(false);
@@ -279,21 +326,7 @@ export default function CodingView() {
 
       if (statusResult === 'PENDING') return;
 
-      const newSubmission = {
-        problemTitle: activeProblem.title,
-        language: selectedLanguage,
-        status: statusResult as HistoryStatus,
-        timestamp: new Date().toLocaleTimeString() + ' ' + new Date().toLocaleDateString()
-      };
-
-      const updatedHistory = [newSubmission, ...submissionHistory];
-      setSubmissionHistory(updatedHistory);
-
-      try {
-        localStorage.setItem(`apticode_submissions_${userEmail}`, JSON.stringify(updatedHistory));
-      } catch (err) {
-        console.error('Failed to save submission history backup:', err);
-      }
+      recordSubmission(statusResult as HistoryStatus);
     } catch (err: any) {
       // A real API error (validation, session expiry, server failure) must never
       // fake a local verdict — surface the server message instead.
@@ -587,7 +620,7 @@ export default function CodingView() {
                       ) : runStatus === 'PENDING' ? (
                         <div className="space-y-1.5">
                           <p className="text-lc-amber flex items-center space-x-1"><RefreshCw className="w-3.5 h-3.5 animate-spin" /> <span>Pending — execution queued in sandbox pipeline.</span></p>
-                          <p className="text-lc-text-muted">{pollTimedOut ? 'Still queued after ~18s — it will appear in Submission Logs once the worker processes it.' : 'Waiting for the worker to pick up the job...'}</p>
+                          <p className="text-lc-text-muted">{pollTimedOut ? 'Still queued — it will appear in Submission Logs once the worker processes it.' : 'Waiting for the worker to pick up the job...'}</p>
                         </div>
                       ) : runStatus === 'SUCCESS' ? (
                         <div className="space-y-1.5">

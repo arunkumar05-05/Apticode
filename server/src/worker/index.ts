@@ -160,15 +160,23 @@ async function handleFailed(job: any, queueName: string, err: Error, deps: Worke
     ?.add(JOB_NAMES.dlq, dlqPayload, { jobId: `dlq-${job.id}` })
     .catch((e: any) => logger.error({ err: e?.message }, 'DLQ add failed'));
 
-  await deps.db.codingSubmission
+  const updated = await deps.db.codingSubmission
     .updateMany({
       where: { id: data.submissionId, status: { notIn: [...TERMINAL_STATUSES] } },
       data: { status: 'SYSTEM_ERROR', errorMessage: message, completedAt: new Date() },
     })
-    .catch((e: any) => logger.warn({ err: e?.message }, 'SYSTEM_ERROR persist failed'));
+    .catch((e: any) => {
+      logger.warn({ err: e?.message }, 'SYSTEM_ERROR persist failed');
+      return { count: 0 };
+    });
 
   const attempts = Number(job?.opts?.attempts ?? 1);
-  if (Number(job?.attemptsMade ?? 0) >= attempts && data.submissionId && data.userId) {
+  if (
+    updated?.count &&
+    Number(job?.attemptsMade ?? 0) >= attempts &&
+    data.submissionId &&
+    data.userId
+  ) {
     deps.publish?.({
       type: 'SUBMISSION_UPDATED',
       submissionId: data.submissionId,

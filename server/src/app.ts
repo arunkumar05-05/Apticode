@@ -16,6 +16,7 @@ import { requestId } from './middleware/requestId';
 import { helmetMiddleware, compressionMiddleware } from './middleware/securityHeaders';
 import { generalLimiter, authLimiter } from './middleware/rateLimiter';
 import { config, logger } from './config';
+import { dispatchSubmissionEvent, subscribeSubmissionEvents } from './events/submissionEvents';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -65,6 +66,11 @@ export function createApp(): Express {
 
   // --- API routes (existing auth + API, untouched) ---
   app.use('/api', apiRouter);
+
+  // --- Realtime submission events: wire the SSE fan-out dispatcher ---
+  // Lazy Redis subscriber — no I/O at boot, never throws; idempotent across
+  // repeated createApp() calls (tests) since the subscriber is a singleton.
+  void subscribeSubmissionEvents(dispatchSubmissionEvent);
 
   // --- Health check (now includes DB liveness) ---
   app.get('/health', healthHandler);
